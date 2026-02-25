@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { expectSchemaAccepts, expectSchemaRejects } from "../helpers/schema.js";
-import { NumericString, OrderIdSchema, Percent, PositiveNumericString, ProductIdSchema } from "../../src/index.js";
+import {
+  NumericString,
+  OrderIdSchema,
+  Percent,
+  PositiveNumericString,
+  ProductIdSchema
+} from "../../src/lib/schemas/primitives.js";
 
 function toFiniteNumber(value: string): number {
   const num = Number(value);

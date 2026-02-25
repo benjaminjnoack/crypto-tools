@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  LimitOrderConfigurationSchema,
-  MarketOrderConfigurationSchema,
-  OrderRequestSchema,
-} from "../../src/index.js";
+import { LimitOrderConfigurationSchema, MarketOrderConfigurationSchema } from "../../src/lib/coinbase/schemas/orders.js";
+import { OrderRequestSchema } from "../../src/lib/coinbase/schemas/rest.js";
 
 describe("LimitOrderConfigurationSchema", () => {
   it("defaults post_only to true when omitted", () => {

@@ -26,7 +26,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && chmod +x dist/bin/validate-env.js",
+    "build": "tsc -p tsconfig.build.json && chmod +x dist/lib/bin/validate-env.js",
     "clean": "rm -rf dist",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts",
     "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts --fix",
