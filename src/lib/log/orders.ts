@@ -6,6 +6,7 @@ const ORDER_CONFIGURATION_KEY: Record<CoinbaseOrder["order_type"], string> = {
   LIMIT: "limit_limit_gtc",
   MARKET: "market_market_ioc",
   STOP_LIMIT: "stop_limit_stop_limit_gtc",
+  TAKE_PROFIT_STOP_LOSS: "trigger_bracket_gtc"
 };
 
 const ORDER_FIELDS = [
@@ -29,6 +30,7 @@ const ORDER_CONFIGURATION_FIELDS: Record<CoinbaseOrder["order_type"], readonly s
   LIMIT: ["base_size", "limit_price", "post_only"],
   MARKET: ["base_size", "quote_size"],
   STOP_LIMIT: ["base_size", "limit_price", "stop_direction", "stop_price"],
+  TAKE_PROFIT_STOP_LOSS: ["base_size", "limit_price", "stop_trigger_price"],
 };
 const ATTACHED_ORDER_CONFIGURATION_FIELDS = ["limit_price", "stop_trigger_price"] as const;
 

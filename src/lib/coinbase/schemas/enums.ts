@@ -32,6 +32,7 @@ export const OrderTypeSchema = z.enum([
   "STOP",
   "STOP_LIMIT",
   "BRACKET",
+  "TAKE_PROFIT_STOP_LOSS"
 ]);
 export const ORDER_TYPES = OrderTypeSchema.enum;
 

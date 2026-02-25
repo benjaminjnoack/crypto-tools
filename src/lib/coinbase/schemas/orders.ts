@@ -100,10 +100,16 @@ export const CoinbaseMarketOrderSchema = CoinbaseOrderBaseSchema.extend({
   order_configuration: MarketOrderConfigurationSchema,
 });
 
+export const CoinbaseTpSlOrderSchema = CoinbaseOrderBaseSchema.extend({
+  order_type: z.literal(ORDER_TYPES.TAKE_PROFIT_STOP_LOSS),
+  order_configuration: BracketOrderConfigurationSchema,
+});
+
 export const CoinbaseOrderSchema = z.discriminatedUnion("order_type", [
   CoinbaseBracketOrderSchema,
   CoinbaseLimitOrderSchema,
   CoinbaseStopLimitOrderSchema,
   CoinbaseMarketOrderSchema,
+  CoinbaseTpSlOrderSchema
 ]);
 export type CoinbaseOrder = z.infer<typeof CoinbaseOrderSchema>;
