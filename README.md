@@ -1,69 +1,39 @@
-# cb-lib
+# crypto-tools
 
-[![CI](https://github.com/benjaminjnoack/cb-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminjnoack/cb-lib/actions/workflows/ci.yml)
+[![CI](https://github.com/benjaminjnoack/crypto-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminjnoack/crypto-tools/actions/workflows/ci.yml)
 
-`cb-lib` is a TypeScript/Node.js library for interacting with Coinbase Advanced Trade APIs.
+`crypto-tools` is a consolidated TypeScript/Node.js repo containing:
+
+- `cb`: Coinbase trading CLI
+- Shared Coinbase library code used by the CLI
+- `helper-env-check`: environment and credentials validation CLI
 
 ## Requirements
 
 - Node.js `>=20`
 - npm
 
-## Installation
+## Setup
 
-```bash
-npm install cb-lib
-```
+1. Install dependencies:
+   - `npm install`
+2. Create default env location and copy template:
+   - `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"`
+   - `cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"`
+3. Set:
+   - `HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json`
 
-Or install directly from GitHub:
+You can override env loading with:
 
-```bash
-npm install github:benjaminjnoack/cb-lib
-```
+- `HELPER_ENV_FILE=/absolute/path/to/.env`
+- or `helper-env-check --env-file /absolute/path/to/.env`
 
-## Configuration
+## Coinbase CDP API Keys
 
-A template is available in `.env.example`.
+Use Coinbase App API credentials created in CDP.
 
-`cb-lib` loads environment variables from an env file in this order:
-
-1. Explicit path passed by tooling (for example `helper-env-check --env-file <path>`)
-2. `HELPER_ENV_FILE`
-3. Default path: `$XDG_CONFIG_HOME/helper/.env` (or `~/.config/helper/.env` if `XDG_CONFIG_HOME` is unset)
-
-Set the Coinbase credentials file path in that env file:
-
-```bash
-HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
-```
-
-Example setup using the default location:
-
-```bash
-mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"
-cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"
-```
-
-You can validate environment setup and credentials file parsing with:
-
-```bash
-npm run build
-npm link
-helper-env-check
-```
-
-Optional override:
-
-```bash
-helper-env-check --env-file /absolute/path/to/.env
-```
-
-### Coinbase CDP API Keys
-
-This library expects Coinbase App API credentials created in the CDP portal.
-
-- Use a CDP Secret API key with the `ECDSA`/`ES256` signature algorithm (not `Ed25519` for Coinbase App API auth).
-- The credentials JSON pointed to by `HELPER_COINBASE_CREDENTIALS_PATH` must match:
+- Use CDP Secret API key with `ECDSA`/`ES256`.
+- Credentials JSON should contain:
 
 ```json
 {
@@ -72,11 +42,75 @@ This library expects Coinbase App API credentials created in the CDP portal.
 }
 ```
 
-- Preserve private key newlines exactly (either real multiline PEM or `\n` escaped newlines in a single string).
+- Preserve private key newlines exactly.
 
 Reference: https://docs.cdp.coinbase.com/coinbase-app/authentication-authorization/api-key-authentication
 
-## Basic Usage
+## CLI Usage
+
+Build and link local binaries:
+
+```bash
+npm run build
+npm link
+```
+
+Then use:
+
+- `cb --help`
+- `helper-env-check --help`
+
+Run CLI directly during development:
+
+- `npm run dev -- --help`
+- `npm run dev -- price btc`
+
+Run built CLI directly:
+
+- `node dist/cb/cli.js --help`
+
+## Commands (`cb`)
+
+### Accounts
+
+- `cb accounts [product] [--crypto] [--cash]` (alias: `account`)
+- `cb balance` (alias: `usd`)
+- `cb cash`
+- `cb fees`
+
+### Products
+
+- `cb product [product]`
+- `cb price [product]`
+
+### Market Orders
+
+- `cb buy [product] [--baseSize <baseSize>] [--value <value>]`
+- `cb sell [product] [--baseSize <baseSize>] [--value <value>]`
+- `cb market [product] (--buy | --sell) [--baseSize <baseSize>] [--value <value>]`
+
+### Limit Orders
+
+- `cb bid [product] [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
+- `cb ask [product] [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
+- `cb limit [product] (--buy | --sell) --limitPrice <limitPrice> [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
+- `cb stop [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
+- `cb bracket [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
+- `cb max [product]`
+
+### Trade Plan
+
+- `cb plan [product] --buyPrice <price> --stopPrice <stopPrice> --takeProfitPrice <takeProfitPrice> [--riskPercent <riskPercent>] [--bufferPercent <bufferPercent>] [--all-in] [--dryRunFlag] [--no-postOnly]`
+
+### Orders
+
+- `cb orders [product]` (alias: `open`)
+- `cb order <order_id>`
+- `cb cancel <order_id>`
+
+## Library Usage
+
+Library exports are available from the package root:
 
 ```ts
 import {
@@ -85,7 +119,7 @@ import {
   requestCurrencyAccount,
   requestProduct,
   toIncrement,
-} from "cb-lib";
+} from "crypto-tools";
 
 const accounts = await requestAccounts();
 const product = await requestProduct("BTC-USD");
@@ -95,35 +129,9 @@ const usd = await requestCurrencyAccount("USD");
 const rounded = toIncrement("0.01", 123.456); // "123.45"
 ```
 
-## API Surface
-
-`cb-lib` uses named exports from `src/index.ts`:
-
-- REST helpers from `src/rest.ts` (for example `requestAccounts`, `requestProduct`)
-- Order helpers from `src/service/order.ts` (for example `createMarketOrder`, `createLimitOrder`)
-- Utilities from `src/lib/*` (for example `toIncrement`, `getEnvConfig`, `delay`, signing/cache/error helpers)
-- Credentials and logging helpers from `src/credentials.ts` and `src/log/*`
-- Schemas/types from `src/schemas/*`
-- `Product` class as a named export (`Product`)
-
-There is no default export.
-
-## What It Includes
-
-- REST request helpers for Coinbase brokerage endpoints (`src/rest.ts`)
-- Order creation helpers (`src/service/order.ts`)
-- Increment/rounding helpers (`src/lib/increment.ts`)
-- Cache and signing helpers (`src/lib/cache.ts`, `src/lib/signing.ts`)
-- Credentials loading helper (`src/credentials.ts`)
-- Logging helpers (`src/log/logger.ts`, `src/log/orders.ts`)
-- Product helpers (`src/product.ts`)
-- Transaction summary caching helper (`src/transaction_summary.ts`)
-- Zod schemas for runtime validation (`src/schemas/`)
-
 ## Development
 
 ```bash
-npm install
 npm run lint
 npm run typecheck
 npm run test
@@ -131,15 +139,12 @@ npm run build
 npm run release:check
 ```
 
-## CI
+Additional contributor details are in `CONTRIBUTING.md`.
 
-GitHub Actions runs on push to `main` and on pull requests, executing:
+## CI and Releases
 
-- `npm ci`
-- `npm run release:check`
-- `npm run build`
-
-Tag pushes matching `v*` also trigger automated GitHub Releases.
+- CI (`.github/workflows/ci.yml`) runs on PRs and pushes to `main`.
+- Release workflow (`.github/workflows/release.yml`) creates GitHub Releases for pushed `v*` tags.
 
 ## License
 

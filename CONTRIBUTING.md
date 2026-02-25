@@ -1,89 +1,113 @@
-# Contributing to cb-lib
+# Contributing to crypto-tools
 
-This document describes local setup, development workflow, and quality checks for this standalone library.
+This guide covers local setup, workflow, and quality checks for the consolidated repo.
 
 ## Requirements
 
 - Node.js `>=20`
 - npm
 
-## Environment Setup
+## Initial Setup
 
-1. Create the default env directory: `${XDG_CONFIG_HOME:-$HOME/.config}/helper`.
-2. Copy `.env.example` to `${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env`.
-3. Set `HELPER_COINBASE_CREDENTIALS_PATH` to your local Coinbase credentials JSON path.
-4. Optional: set `HELPER_ENV_FILE` if you want to use a non-default env file path.
-5. Never commit real secrets or credential files.
+1. Install dependencies:
+   - `npm install`
+2. Create default env location and copy template:
+   - `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"`
+   - `cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"`
+3. Set credentials path in the env file:
+   - `HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json`
 
-## Project Structure
+Never commit secrets or credential files.
 
-- `src/` library source code
-- `src/schemas/` Zod schemas and runtime validators
-- `src/service/` higher-level Coinbase service helpers
-- `src/lib/` internal utilities
-- `test/` Vitest tests
-- `dist/` compiled build output
+## Repository Layout
+
+- `src/lib/`: shared Coinbase/client utilities, schemas, and helper binaries
+- `src/cb/`: `cb` command-line app and command registration
+- `src/index.ts`: package root exports for library consumers
+- `test/`: Vitest suites
+- `test/setup/no-network.ts`: global outbound-network block for tests
+- `dist/`: compiled output
 
 ## Scripts
 
-- `npm run build` compiles TypeScript to `dist/`
-- `npm run clean` removes `dist/`
-- `npm run lint` runs ESLint
-- `npm run lint:fix` runs ESLint auto-fixes
-- `npm run typecheck` runs TypeScript checks without emitting
-- `npm run test` runs tests once
-- `npm run test:watch` runs tests in watch mode
-- `npm run pack:dry` previews npm package contents
-- `npm run release:check` runs lint + typecheck + test + pack dry run
-- `npm run prepare` builds the library (used for git-based installs)
+- `npm run dev`: run `cb` from TypeScript (`tsx src/cb/cli.ts`)
+- `npm run build`: compile TypeScript to `dist/` and set executable bits for CLIs
+- `npm run clean`: remove `dist/`
+- `npm run lint`: run ESLint
+- `npm run lint:fix`: run ESLint with autofix
+- `npm run typecheck`: run TypeScript checks without emitting
+- `npm run test`: run Vitest once
+- `npm run test:watch`: run Vitest in watch mode
+- `npm run smoke:bin`: run built `cb` help (`node dist/cb/cli.js --help`)
+- `npm run pack:dry`: preview package contents
+- `npm run release:check`: lint + typecheck + test + pack dry run
+- `npm run prepare`: build during install (for git-based installs)
 
-## Development Workflow
+## Local Workflow
 
-1. Install dependencies with `npm install`.
-2. Run `npm run typecheck` and `npm run lint` while developing.
-3. Add or update tests in `test/` with each behavior change.
-4. Before opening a PR, run `npm run release:check` and `npm run build`.
+1. Make code changes.
+2. Run checks:
+   - `npm run lint`
+   - `npm run typecheck`
+   - `npm run test`
+3. Validate distributable output:
+   - `npm run build`
+   - `npm run smoke:bin`
+4. Optional release preflight:
+   - `npm run release:check`
+
+## CLI Binaries
+
+After `npm run build`, package binaries are:
+
+- `cb` -> `dist/cb/cli.js`
+- `helper-env-check` -> `dist/lib/bin/validate-env.js`
+
+For local shell usage:
+
+- `npm link`
+
+## Testing Safety
+
+- Outbound network calls are blocked by default in tests.
+- Keep `test/setup/no-network.ts` enabled in `vitest.config.ts`.
+- Mock external service calls in tests.
 
 ## Pre-commit Hooks
 
-This repository uses Husky + lint-staged.
+Husky + lint-staged is configured:
 
-- `npm install` runs `prepare`, which builds the library.
-- If hooks are not active in your clone, set the hooks path with:
-  - `git config core.hooksPath .husky/_`
-- On commit, staged `*.{ts,tsx,js,mjs,cjs}` files are auto-fixed with `eslint --fix`.
+- `.husky/pre-commit` runs `npx lint-staged`
+- staged `*.{ts,tsx,js,mjs,cjs}` files run `eslint --fix`
 
-## Packaging Notes
+If hooks are not active in your clone, set:
 
-- Published files are controlled by `package.json#files` (`dist`, `README.md`, `LICENSE`).
-- `npm run prepack` performs a clean build before packaging/publish.
-
-## Releasing
-
-This repo uses tag-based GitHub Releases.
-
-- Use one of:
-  - `npm run patch`
-  - `npm run minor`
-  - `npm run major`
-- Each command runs `release:check`, bumps version with `npm version`, then pushes commits and tags.
-- Pushing a `v*` tag triggers `.github/workflows/release.yml`, which creates the GitHub Release automatically.
+- `git config core.hooksPath .husky/_`
 
 ## CI
 
 GitHub Actions workflow: `.github/workflows/ci.yml`
 
-- Runs on pull requests and pushes to `main`
+- Triggers on pull requests and pushes to `main`
 - Uses Node.js 20
-- Executes:
+- Runs:
   - `npm ci`
   - `npm run release:check`
   - `npm run build`
 
+## Releases
+
+- `npm run patch`
+- `npm run minor`
+- `npm run major`
+
+Each command runs `release:check`, bumps version via `npm version`, and pushes commits/tags.
+Pushing `v*` tags triggers `.github/workflows/release.yml` to create a GitHub Release.
+
 ## Pull Requests
 
-Please keep PRs focused and include:
+Please include:
 
-- A brief summary of the change
-- Tests for behavior changes
-- Notes about any API or schema changes
+- summary of behavior change
+- tests for behavior changes
+- notes on API/schema changes
