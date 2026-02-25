@@ -2,10 +2,18 @@
   "name": "crypto-tools",
   "version": "0.0.1",
   "author": "Ben Noack",
-  "description": "A collection of crypto tools",
+  "description": "Coinbase CLI tools and shared TypeScript library utilities",
   "license": "Apache-2.0",
-  "repository": "https://github.com/benjaminjnoack/crypto-tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benjaminjnoack/crypto-tools.git"
+  },
+  "homepage": "https://github.com/benjaminjnoack/crypto-tools#readme",
+  "bugs": {
+    "url": "https://github.com/benjaminjnoack/crypto-tools/issues"
+  },
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
@@ -46,6 +54,9 @@
   },
   "keywords": [
     "Coinbase",
+    "coinbase-advanced-trade",
+    "cli",
+    "command-line",
     "trading",
     "crypto",
     "library",
