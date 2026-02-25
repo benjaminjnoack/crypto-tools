@@ -7,15 +7,15 @@ import type {
   MarketOptions,
   StopOptions,
 } from "../commands/schemas/options.js";
-import { ORDER_SIDE, ORDER_TYPES } from "../../lib/coinbase/schemas/enums.js";
-import { getProductInfo } from "../../lib/coinbase/product.js";
-import { toIncrement } from "../../lib/common/increment.js";
+import { ORDER_SIDE, ORDER_TYPES } from "../../../shared/coinbase/schemas/enums.js";
+import { getProductInfo } from "../../../shared/coinbase/product.js";
+import { toIncrement } from "../../../shared/common/increment.js";
 import {
   createBracketOrder,
   createLimitOrder,
   createLimitTpSlOrder,
   createMarketOrder, createStopLimitOrder
-} from "../../lib/coinbase/order.js";
+} from "../../../shared/coinbase/order.js";
 
 function confirmOrder(
   type: string,

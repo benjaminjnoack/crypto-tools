@@ -21,8 +21,8 @@ Never commit secrets or credential files.
 
 ## Repository Layout
 
-- `src/lib/`: shared Coinbase/client utilities, schemas, and helper binaries
-- `src/cb/`: `cb` command-line app and command registration
+- `src/shared/`: shared Coinbase/client utilities, schemas, and helper binaries
+- `src/apps/cb/`: `cb` command-line app and command registration
 - `src/index.ts`: package root exports for library consumers
 - `test/`: Vitest suites
 - `test/setup/no-network.ts`: global outbound-network block for tests
@@ -30,7 +30,7 @@ Never commit secrets or credential files.
 
 ## Scripts
 
-- `npm run dev`: run `cb` from TypeScript (`tsx src/cb/cli.ts`)
+- `npm run dev`: run `cb` from TypeScript (`tsx src/apps/cb/cli.ts`)
 - `npm run build`: compile TypeScript to `dist/` and set executable bits for CLIs
 - `npm run clean`: remove `dist/`
 - `npm run lint`: run ESLint
@@ -38,7 +38,7 @@ Never commit secrets or credential files.
 - `npm run typecheck`: run TypeScript checks without emitting
 - `npm run test`: run Vitest once
 - `npm run test:watch`: run Vitest in watch mode
-- `npm run smoke:bin`: run built `cb` help (`node dist/cb/cli.js --help`)
+- `npm run smoke:bin`: run built `cb` help (`node dist/apps/cb/cli.js --help`)
 - `npm run pack:dry`: preview package contents
 - `npm run release:check`: lint + typecheck + test + pack dry run
 - `npm run prepare`: build during install (for git-based installs)
@@ -60,8 +60,8 @@ Never commit secrets or credential files.
 
 After `npm run build`, package binaries are:
 
-- `cb` -> `dist/cb/cli.js`
-- `helper-env-check` -> `dist/lib/bin/validate-env.js`
+- `cb` -> `dist/apps/cb/cli.js`
+- `helper-env-check` -> `dist/shared/bin/validate-env.js`
 
 For local shell usage:
 

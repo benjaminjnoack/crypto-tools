@@ -1,8 +1,8 @@
 import type { AccountsOptions } from "./schemas/options.js";
-import { toIncrement } from "../../lib/common/increment.js";
-import { requestAccounts, requestCurrencyAccount } from "../../lib/coinbase/rest.js";
-import { getProductInfo } from "../../lib/coinbase/product.js";
-import { getTransactionSummary } from "../../lib/coinbase/transaction_summary.js";
+import { toIncrement } from "../../../shared/common/increment.js";
+import { requestAccounts, requestCurrencyAccount } from "../../../shared/coinbase/rest.js";
+import { getProductInfo } from "../../../shared/coinbase/product.js";
+import { getTransactionSummary } from "../../../shared/coinbase/transaction_summary.js";
 
 export async function handleAccountsAction(
   product: string | null,

@@ -6,9 +6,9 @@ import type {
   StopOptions
 } from "./schemas/options.js";
 import { placeBracketOrder, placeLimitOrder, placeStopLimitOrder } from "../service/orders.js";
-import { getProductId, getProductInfo } from "../../lib/coinbase/product.js";
-import { requestBestBidAsk, requestCurrencyAccount } from "../../lib/coinbase/rest.js";
-import { toIncrement } from "../../lib/common/increment.js";
+import { getProductId, getProductInfo } from "../../../shared/coinbase/product.js";
+import { requestBestBidAsk, requestCurrencyAccount } from "../../../shared/coinbase/rest.js";
+import { toIncrement } from "../../../shared/common/increment.js";
 
 export async function handleAskAction(product: string = "btc", options: AskOptions): Promise<void> {
   const productId = getProductId(product);

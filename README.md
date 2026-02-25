@@ -67,7 +67,7 @@ Run CLI directly during development:
 
 Run built CLI directly:
 
-- `node dist/cb/cli.js --help`
+- `node dist/apps/cb/cli.js --help`
 
 ## Commands (`cb`)
 

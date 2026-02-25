@@ -1,9 +1,9 @@
 import type { LimitTpSlOptions, PlanOptions } from "./schemas/options.js";
 import { placeLimitTpSlOrder } from "../service/orders.js";
-import { getProductId, getProductInfo } from "../../lib/coinbase/product.js";
-import { toIncrement } from "../../lib/common/increment.js";
-import { requestCurrencyAccount } from "../../lib/coinbase/rest.js";
-import { getTransactionSummary } from "../../lib/coinbase/transaction_summary.js";
+import { getProductId, getProductInfo } from "../../../shared/coinbase/product.js";
+import { toIncrement } from "../../../shared/common/increment.js";
+import { requestCurrencyAccount } from "../../../shared/coinbase/rest.js";
+import { getTransactionSummary } from "../../../shared/coinbase/transaction_summary.js";
 
 type TradePlanBuildInput = {
   product: string;

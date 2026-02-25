@@ -25,8 +25,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "cb": "./dist/cb/cli.js",
-    "helper-env-check": "./dist/lib/bin/validate-env.js"
+    "cb": "./dist/apps/cb/cli.js",
+    "helper-env-check": "./dist/shared/bin/validate-env.js"
   },
   "exports": {
     ".": {
@@ -35,9 +35,9 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && chmod +x dist/lib/bin/validate-env.js && chmod +x dist/cb/cli.js",
+    "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js",
     "clean": "rm -rf dist",
-    "dev": "tsx src/cb/cli.ts",
+    "dev": "tsx src/apps/cb/cli.ts",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts",
     "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts --fix",
     "major": "npm run release:check && npm version major && git push && git push --tags",
@@ -47,7 +47,7 @@
     "prepare": "npm run build",
     "prepack": "npm run clean && npm run build",
     "release:check": "npm run lint && npm run typecheck && npm run test && npm run pack:dry",
-    "smoke:bin": "node dist/cb/cli.js --help",
+    "smoke:bin": "node dist/apps/cb/cli.js --help",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json"

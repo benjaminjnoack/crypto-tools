@@ -6,7 +6,7 @@ import {
   Percent,
   PositiveNumericString,
   ProductIdSchema
-} from "../../src/lib/schemas/primitives.js";
+} from "../../src/shared/schemas/primitives.js";
 
 function toFiniteNumber(value: string): number {
   const num = Number(value);

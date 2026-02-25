@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createProgram } from "../src/cb/cb.js";
+import { createProgram } from "../src/apps/cb/cb.js";
 
 
 describe("createProgram", () => {

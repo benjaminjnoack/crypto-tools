@@ -1,5 +1,5 @@
-import { getProductId, getProductInfo } from "../../lib/coinbase/product.js";
-import { requestMarketTrades } from "../../lib/coinbase/rest.js";
+import { getProductId, getProductInfo } from "../../../shared/coinbase/product.js";
+import { requestMarketTrades } from "../../../shared/coinbase/rest.js";
 
 export async function handleProductAction(product: string = "btc"): Promise<void> {
   const productId = getProductId(product);

@@ -1,7 +1,7 @@
-import { logger } from "../../lib/log/logger.js";
-import { requestOpenOrders, requestOrder, requestOrderCancellation } from "../../lib/coinbase/rest.js";
-import { printOrder } from "../../lib/log/orders.js";
-import type { ProductId } from "../../lib/schemas/primitives.js";
+import { logger } from "../../../shared/log/logger.js";
+import { requestOpenOrders, requestOrder, requestOrderCancellation } from "../../../shared/coinbase/rest.js";
+import { printOrder } from "../../../shared/log/orders.js";
+import type { ProductId } from "../../../shared/schemas/primitives.js";
 
 export async function handleOrderAction(orderId: string): Promise<void> {
   const order = await requestOrder(orderId);

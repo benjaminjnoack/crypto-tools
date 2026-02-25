@@ -1,23 +1,23 @@
-export * from "./lib/coinbase/cache.js";
-export * from "./lib/coinbase/credentials.js";
-export * from "./lib/coinbase/order.js";
-export * from "./lib/coinbase/product.js";
-export * from "./lib/coinbase/rest.js";
-export * from "./lib/coinbase/signing.js";
-export * from "./lib/coinbase/transaction_summary.js";
+export * from "./shared/coinbase/cache.js";
+export * from "./shared/coinbase/credentials.js";
+export * from "./shared/coinbase/order.js";
+export * from "./shared/coinbase/product.js";
+export * from "./shared/coinbase/rest.js";
+export * from "./shared/coinbase/signing.js";
+export * from "./shared/coinbase/transaction_summary.js";
 
-export * from "./lib/coinbase/schemas/credentials.js";
-export * from "./lib/coinbase/schemas/enums.js";
-export * from "./lib/coinbase/schemas/orders.js";
-export * from "./lib/coinbase/schemas/rest.js";
+export * from "./shared/coinbase/schemas/credentials.js";
+export * from "./shared/coinbase/schemas/enums.js";
+export * from "./shared/coinbase/schemas/orders.js";
+export * from "./shared/coinbase/schemas/rest.js";
 
-export * from "./lib/common/cache.js";
-export { default as delay } from "./lib/common/delay.js";
-export * from "./lib/common/env.js";
-export * from "./lib/common/increment.js";
+export * from "./shared/common/cache.js";
+export { default as delay } from "./shared/common/delay.js";
+export * from "./shared/common/env.js";
+export * from "./shared/common/increment.js";
 
-export * from "./lib/log/error.js";
-export * from "./lib/log/logger.js";
-export * from "./lib/log/orders.js";
+export * from "./shared/log/error.js";
+export * from "./shared/log/logger.js";
+export * from "./shared/log/orders.js";
 
-export * from "./lib/schemas/primitives.js";
+export * from "./shared/schemas/primitives.js";

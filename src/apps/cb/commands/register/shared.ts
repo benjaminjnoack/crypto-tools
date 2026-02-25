@@ -1,8 +1,8 @@
 import process from "node:process";
 import { type ZodType } from "zod";
-import { printError } from "../../../lib/log/error.js";
-import type { ProductId } from "../../../lib/schemas/primitives.js";
-import { getProductId } from "../../../lib/coinbase/product.js";
+import { printError } from "../../../../shared/log/error.js";
+import type { ProductId } from "../../../../shared/schemas/primitives.js";
+import { getProductId } from "../../../../shared/coinbase/product.js";
 
 export const OptionFlags = {
   baseSize: "-b, --baseSize <baseSize>",

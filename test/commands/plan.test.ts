@@ -77,25 +77,25 @@ vi.mock("cb-lib", () => {
   };
 });
 
-vi.mock("../../src/lib/common/increment.js", () => ({
+vi.mock("../../src/shared/common/increment.js", () => ({
   toIncrement: toIncrementForTest,
 }));
-vi.mock("../../src/lib/coinbase/product.js", () => ({
+vi.mock("../../src/shared/coinbase/product.js", () => ({
   getProductInfo: getProductInfoMock,
   getProductId: getProductIdMock,
 }));
-vi.mock("../../src/lib/coinbase/rest.js", () => ({
+vi.mock("../../src/shared/coinbase/rest.js", () => ({
   requestCurrencyAccount: requestCurrencyAccountMock,
 }));
-vi.mock("../../src/lib/coinbase/transaction_summary.js", () => ({
+vi.mock("../../src/shared/coinbase/transaction_summary.js", () => ({
   getTransactionSummary: getTransactionSummaryMock,
 }));
-vi.mock("../../src/cb/service/orders.js", () => ({
+vi.mock("../../src/apps/cb/service/orders.js", () => ({
   placeLimitTpSlOrder: placeLimitTpSlOrderMock,
 }));
 
-import { buildTradePlan, handlePlanAction } from "../../src/cb/commands/plan.js";
-import type { PlanOptions } from "../../src/cb/commands/schemas/options.js";
+import { buildTradePlan, handlePlanAction } from "../../src/apps/cb/commands/plan.js";
+import type { PlanOptions } from "../../src/apps/cb/commands/schemas/options.js";
 
 function baseInput(overrides: Partial<Parameters<typeof buildTradePlan>[0]> = {}) {
   return {

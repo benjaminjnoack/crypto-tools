@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { handleCancelAction, handleOrderAction, handleOrdersAction } from "../orders.js";
 import { withOptionalProduct, withValidatedArg } from "./shared.js";
-import { OrderIdSchema } from "../../../lib/schemas/primitives.js";
+import { OrderIdSchema } from "../../../../shared/schemas/primitives.js";
 
 export function registerOrderCommands(program: Command) {
   program
