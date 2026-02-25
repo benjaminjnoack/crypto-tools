@@ -1,14 +1,76 @@
 {
   "name": "crypto-tools",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "version": "0.0.1",
+  "author": "Ben Noack",
+  "description": "A collection of crypto tools",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/benjaminjnoack/crypto-tools",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "helper-env-check": "./dist/bin/validate-env.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc -p tsconfig.build.json && chmod +x dist/bin/validate-env.js",
+    "clean": "rm -rf dist",
+    "lint": "eslint src test eslint.config.mjs vitest.config.ts",
+    "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts --fix",
+    "major": "npm run release:check && npm version major && git push && git push --tags",
+    "minor": "npm run release:check && npm version minor && git push && git push --tags",
+    "pack:dry": "npm pack --dry-run",
+    "patch": "npm run release:check && npm version patch && git push && git push --tags",
+    "prepare": "npm run build",
+    "prepack": "npm run clean && npm run build",
+    "release:check": "npm run lint && npm run typecheck && npm run test && npm run pack:dry",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json"
   },
-  "dependencies": {},
+  "keywords": [
+    "Coinbase",
+    "trading",
+    "crypto",
+    "library",
+    "typescript"
+  ],
   "devDependencies": {
-    "typescript": "^5.5.3"
+    "@eslint/js": "^9.39.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
+    "vitest": "^3.2.4"
   },
-  "private": true
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "dotenv": "^17.3.1",
+    "env-paths": "^4.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
+  }
 }
