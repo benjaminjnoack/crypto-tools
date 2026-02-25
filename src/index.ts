@@ -12,7 +12,7 @@ export * from "./shared/coinbase/schemas/orders.js";
 export * from "./shared/coinbase/schemas/rest.js";
 
 export * from "./shared/common/cache.js";
-export { default as delay } from "./shared/common/delay.js";
+export * from "./shared/common/delay.js";
 export * from "./shared/common/env.js";
 export * from "./shared/common/increment.js";
 
