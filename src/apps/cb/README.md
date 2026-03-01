@@ -114,4 +114,4 @@ Notes:
 
 ## Contributing
 
-Project development workflow, tooling, and CI details are in `CONTRIBUTING.md`.
+Project development workflow, tooling, and CI details are in [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).
