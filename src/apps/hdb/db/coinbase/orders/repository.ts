@@ -329,11 +329,11 @@ export async function selectCoinbaseOrderByLastFillTime(first: boolean, last: bo
     const firstQuery = `
             SELECT last_fill_time
             FROM ${COINBASE_ORDERS_TABLE}
-            WHERE status = ${ORDER_STATUS.FILLED} AND last_fill_time IS NOT NULL
+            WHERE status = $1 AND last_fill_time IS NOT NULL
             ORDER BY last_fill_time ASC
                 LIMIT 1;
         `;
-    const firstRes = await client.query<LastFillTimeRow>(firstQuery);
+    const firstRes = await client.query<LastFillTimeRow>(firstQuery, [ORDER_STATUS.FILLED]);
     response.first = firstRes.rows[0]?.last_fill_time ?? null;
   }
 
@@ -341,11 +341,11 @@ export async function selectCoinbaseOrderByLastFillTime(first: boolean, last: bo
     const lastQuery = `
             SELECT last_fill_time
             FROM ${COINBASE_ORDERS_TABLE}
-            WHERE status = ${ORDER_STATUS.FILLED} AND last_fill_time IS NOT NULL
+            WHERE status = $1 AND last_fill_time IS NOT NULL
             ORDER BY last_fill_time DESC
                 LIMIT 1;
         `;
-    const lastRes = await client.query<LastFillTimeRow>(lastQuery);
+    const lastRes = await client.query<LastFillTimeRow>(lastQuery, [ORDER_STATUS.FILLED]);
     response.last = lastRes.rows[0]?.last_fill_time ?? null;
   }
 
