@@ -26,6 +26,7 @@
   "types": "./dist/index.d.ts",
   "bin": {
     "cb": "./dist/apps/cb/cli.js",
+    "hdb": "./dist/apps/hdb/cli.js",
     "helper-env-check": "./dist/shared/bin/validate-env.js"
   },
   "exports": {
@@ -35,7 +36,7 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js",
+    "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
     "clean": "rm -rf dist",
     "dev": "tsx src/apps/cb/cli.ts",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts",
@@ -65,7 +66,9 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^25.2.3",
+    "@types/pg": "^8.18.0",
     "@types/readline-sync": "^1.4.8",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.39.2",
@@ -88,6 +91,8 @@
     "dotenv": "^17.3.1",
     "env-paths": "^4.0.0",
     "jsonwebtoken": "^9.0.3",
+    "luxon": "^3.7.2",
+    "pg": "^8.19.0",
     "readline-sync": "^1.4.10",
     "uuid": "^13.0.0",
     "zod": "^4.3.6"

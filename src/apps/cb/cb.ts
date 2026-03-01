@@ -1,6 +1,6 @@
 import process from "node:process";
 import { Command } from "commander";
-import { getVersion } from "./version.js";
+import { getVersion } from "../../version.js";
 import { registerAccountsCommands } from "./commands/register/accounts.js";
 import { registerLimitCommands } from "./commands/register/limit.js";
 import { registerMarketCommands } from "./commands/register/market.js";

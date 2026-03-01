@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getVersion } from "../src/apps/cb/version.js";
+import { getVersion } from "../src/version.js";
 
 describe("getVersion", () => {
   it("reads a semver-like version string from package.json", () => {

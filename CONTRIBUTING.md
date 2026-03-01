@@ -23,7 +23,6 @@ Never commit secrets or credential files.
 
 - `src/shared/`: shared Coinbase/client utilities, schemas, and helper binaries
 - `src/apps/cb/`: `cb` command-line app and command registration
-- `src/index.ts`: package root exports for library consumers
 - `test/`: Vitest suites
 - `test/setup/no-network.ts`: global outbound-network block for tests
 - `dist/`: compiled output
