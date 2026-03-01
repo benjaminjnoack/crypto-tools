@@ -22,18 +22,10 @@
   "engines": {
     "node": ">=20"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
     "cb": "./dist/apps/cb/cli.js",
     "hdb": "./dist/apps/hdb/cli.js",
     "helper-env-check": "./dist/shared/bin/validate-env.js"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
   },
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
@@ -46,9 +38,10 @@
     "pack:dry": "npm pack --dry-run",
     "patch": "npm run release:check && npm version patch && git push && git push --tags",
     "prepare": "npm run build",
-    "prepack": "npm run clean && npm run build",
+    "prepack": "npm run build",
     "release:check": "npm run lint && npm run typecheck && npm run test && npm run pack:dry",
     "smoke:bin": "node dist/apps/cb/cli.js --help",
+    "smoke:hdb": "node dist/apps/hdb/cli.js --help",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json"
@@ -60,7 +53,6 @@
     "command-line",
     "trading",
     "crypto",
-    "library",
     "typescript"
   ],
   "devDependencies": {
