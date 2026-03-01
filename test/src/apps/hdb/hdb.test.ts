@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createProgram, main } from "../src/apps/hdb/hdb.js";
-import { getVersion } from "../src/version.js";
+import { createProgram, main } from "../../../../src/apps/hdb/hdb.js";
+import { getVersion } from "../../../../src/version.js";
 
 describe("createProgram", () => {
   it("creates a CLI program with expected core metadata", () => {

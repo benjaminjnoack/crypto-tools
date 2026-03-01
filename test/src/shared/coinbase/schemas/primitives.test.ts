@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { expectSchemaAccepts, expectSchemaRejects } from "../helpers/schema.js";
+import { expectSchemaAccepts, expectSchemaRejects } from "../../../../helpers/schema.js";
 import {
   CoinbaseUtcDateTimePattern,
   CoinbaseUtcDateTimeString,
-} from "../../src/shared/coinbase/schemas/primitives.js";
+} from "../../../../../src/shared/coinbase/schemas/primitives.js";
 
 const commonInvalidValues: unknown[] = [
   null,

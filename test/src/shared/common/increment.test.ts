@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toIncrement } from "../../src/shared/common/increment.js";
+import { toIncrement } from "../../../../src/shared/common/increment.js";
 
 describe("toIncrement", () => {
   it("matches documented examples", () => {
