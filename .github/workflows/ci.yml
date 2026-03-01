@@ -23,6 +23,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prepare CI environment fixtures
+        run: |
+          mkdir -p "$HOME/.config/helper"
+          cp test/fixtures/ci/helper.env "$HOME/.config/helper/.env"
+
       - name: Release checks
         run: npm run release:check
 
