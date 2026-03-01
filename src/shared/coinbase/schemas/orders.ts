@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NumericString } from "../../schemas/primitives.js";
-import { ORDER_TYPES, OrderSideSchema } from "./enums.js";
+import { ORDER_TYPES, OrderSideSchema, OrderStatusSchema, ProductTypeSchema } from "./enums.js";
+import { CoinbaseUtcDateTimeString } from "./primitives.js";
 
 export const LimitOrderConfigurationSchema = z
   .object({
@@ -62,20 +63,21 @@ export const OrderConfigurationSchema = z.union([
   StopLimitOrderConfigurationSchema,
 ]);
 
+
 export const CoinbaseOrderBaseSchema = z
   .object({
     order_id: z.uuid(),
     product_id: z.string(),
     side: OrderSideSchema,
-    status: z.string(),
-    completion_percentage: z.string(),
-    filled_size: z.string(),
-    average_filled_price: z.string(),
-    filled_value: z.string(),
-    total_fees: z.string(),
-    total_value_after_fees: z.string(),
-    product_type: z.string(),
-    last_fill_time: z.string().nullable(),
+    status: OrderStatusSchema,
+    completion_percentage: NumericString,
+    filled_size: NumericString,
+    average_filled_price: NumericString,
+    filled_value: NumericString,
+    total_fees: NumericString,
+    total_value_after_fees: NumericString,
+    product_type: ProductTypeSchema,
+    last_fill_time: CoinbaseUtcDateTimeString.nullable(),
   })
   .loose();
 

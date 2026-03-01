@@ -50,3 +50,13 @@ export const OrderPlacementValues = [
   OrderPlacementSource.ADVANCED,
 ];
 export const OrderPlacementSchema = z.enum(OrderPlacementValues);
+
+export const ProductType = {
+  SPOT: "SPOT",
+} as const;
+
+export type ProductTypeValue = (typeof ProductType)[keyof typeof ProductType];
+export const ProductTypeValues = [
+  ProductType.SPOT,
+];
+export const ProductTypeSchema = z.enum(ProductTypeValues);
