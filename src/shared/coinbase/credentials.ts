@@ -12,6 +12,9 @@ let credentials: Credentials | null = null;
 export async function getCredentials(): Promise<Credentials> {
   if (!credentials) {
     const { HELPER_COINBASE_CREDENTIALS_PATH } = getEnvConfig();
+    if (!HELPER_COINBASE_CREDENTIALS_PATH) {
+      throw new Error("Missing HELPER_COINBASE_CREDENTIALS_PATH in environment.");
+    }
     logger.debug(`loading credentials from ${HELPER_COINBASE_CREDENTIALS_PATH}`);
     const keyData = await promises.readFile(HELPER_COINBASE_CREDENTIALS_PATH, "utf8");
 

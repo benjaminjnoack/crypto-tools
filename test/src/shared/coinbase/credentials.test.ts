@@ -6,7 +6,7 @@ const {
   loggerDebugMock,
 } = vi.hoisted(() => ({
   readFileMock: vi.fn<(path: string, encoding: string) => Promise<string>>(() => Promise.resolve("")),
-  getEnvConfigMock: vi.fn(() => ({
+  getEnvConfigMock: vi.fn<() => { HELPER_COINBASE_CREDENTIALS_PATH?: string }>(() => ({
     HELPER_COINBASE_CREDENTIALS_PATH: "/tmp/coinbase-credentials.json",
   })),
   loggerDebugMock: vi.fn(),
@@ -61,6 +61,14 @@ describe("coinbase credentials", () => {
     const { getCredentials } = await loadModule();
 
     await expect(getCredentials()).rejects.toThrow("Cannot load credentials.");
+  });
+
+  it("throws when credentials path is missing from environment", async () => {
+    getEnvConfigMock.mockReturnValueOnce({});
+    const { getCredentials } = await loadModule();
+
+    await expect(getCredentials()).rejects.toThrow("Missing HELPER_COINBASE_CREDENTIALS_PATH in environment.");
+    expect(readFileMock).not.toHaveBeenCalled();
   });
 
   it("throws when credentials JSON fails schema validation", async () => {
