@@ -1,6 +1,6 @@
 # PostgreSQL Setup (Local Dev)
 
-This project (`hdb`) uses PostgreSQL for local development.
+`hdb` uses PostgreSQL for local development.
 
 ## Platform
 
@@ -47,12 +47,20 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE hdb TO hdb_user;"
 psql "postgresql://hdb_user:hdb_password@localhost:5432/hdb" -c "select now();"
 ```
 
-## Environment Variable Example
+## Environment Variables
 
-Use a standard Postgres connection string:
+`hdb` currently reads individual helper env vars (not `DATABASE_URL`):
 
 ```bash
-export DATABASE_URL="postgresql://hdb_user:hdb_password@localhost:5432/hdb"
+export HELPER_POSTGRES_DATABASE="hdb"
+export HELPER_POSTGRES_USERNAME="hdb_user"
+export HELPER_POSTGRES_PASSWORD="hdb_password"
+```
+
+You can also place those values in:
+
+```bash
+${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env
 ```
 
 ## Troubleshooting

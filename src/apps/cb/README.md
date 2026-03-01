@@ -1,58 +1,62 @@
 # cb
 
-[![CI](https://github.com/benjaminjnoack/cb/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminjnoack/cb/actions/workflows/ci.yml)
+`cb` is the Coinbase trading CLI in this monorepo.
 
-`cb` is a Node.js CLI for Coinbase account, product, and order workflows.
+Source location: `src/apps/cb`
 
 ## Requirements
 
 - Node.js `>=20`
 - npm
 
-## Installation
-
-- From source (recommended while developing):
-  - `npm install`
-  - `npm run build`
-  - `npm link`
-- Or install globally from this repository:
-  - `npm install -g .`
-
-After either method, run with:
-
-- `cb <command> [options]`
-
-Note:
-
-- This project depends on `cb-lib` from GitHub (`git+https://github.com/benjaminjnoack/cb-lib.git#v3.0.0`).
-- Installing dependencies requires GitHub access for that dependency (local and CI).
-
 ## Setup
 
-1. Create `.env` from the example:
-   - `cp .env.example .env`
-2. Set:
-   - `HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json`
-   - This is currently the only required env var in `.env`.
-   - See cb-lib [README](https://github.com/benjaminjnoack/cb-lib?tab=readme-ov-file#coinbase-cdp-api-keys) for more information.
-3. Keep secrets local:
-   - `.env` is ignored and should never be committed.
+Install dependencies from the repo root:
+
+```bash
+npm install
+```
+
+Configure env in the default helper path:
+
+```bash
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"
+cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"
+```
+
+Set:
+
+```bash
+HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
+```
+
+Optional override:
+
+```bash
+export HELPER_ENV_FILE=/absolute/path/to/.env
+```
 
 ## Usage
 
-Run in development without building:
+Run from TypeScript source:
 
-- `npm run dev -- <command> [options]`
+- `npm run dev -- --help`
+- `npm run dev -- price btc`
 
-Run built CLI directly:
+Run built CLI:
 
 - `npm run build`
-- `node dist/cli.js <command> [options]`
+- `node dist/apps/cb/cli.js --help`
 
-Get help:
+Install binary in your shell:
 
+- `npm link`
 - `cb --help`
-- `cb <command> --help`
+
+Notes:
+
+- `[product]` defaults to `BTC` when omitted.
+- Use `cb <command> --help` for command-specific options.
 
 ## Commands
 
@@ -72,13 +76,13 @@ Get help:
 
 - `cb buy [product] [--baseSize <baseSize>] [--value <value>]`
 - `cb sell [product] [--baseSize <baseSize>] [--value <value>]`
-- `cb market <product> (--buy | --sell) [--baseSize <baseSize>] [--value <value>]`
+- `cb market [product] (--buy | --sell) [--baseSize <baseSize>] [--value <value>]`
 
 ### Limit Orders
 
 - `cb bid [product] [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
 - `cb ask [product] [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
-- `cb limit [product] (--buy | --sell) [--baseSize <baseSize>] [--value <value>] --limitPrice <limitPrice> [--no-postOnly]`
+- `cb limit [product] (--buy | --sell) --limitPrice <limitPrice> [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
 - `cb stop [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
 - `cb bracket [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
 - `cb max [product]`
@@ -86,12 +90,6 @@ Get help:
 ### Plan
 
 - `cb plan [product] --buyPrice <price> --stopPrice <stopPrice> --takeProfitPrice <takeProfitPrice> [--riskPercent <riskPercent>] [--bufferPercent <bufferPercent>] [--all-in] [--dryRunFlag] [--no-postOnly]`
-
-Notes:
-
-- `--all-in` sizes to max affordable position and overrides risk-based sizing.
-- `--riskPercent` and `--bufferPercent` have defaults.
-- `--dryRunFlag` does not place orders and sizes using USD `total` (not `available`).
 
 ### Orders
 
@@ -107,11 +105,4 @@ Notes:
 - `npm run build`
 - `npm run release:check`
 
-### Test Safety
-
-- Tests block all outbound network calls by default through `test/setup/no-network.ts`.
-- Any real `http`, `https`, or `fetch` usage in tests must be mocked explicitly.
-
-## Contributing
-
-Project development workflow, tooling, and CI details are in [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).
+Project workflow and standards are in [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).
