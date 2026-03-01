@@ -30,6 +30,7 @@
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
     "clean": "rm -rf dist",
+    "coverage": "npm run test -- --coverage",
     "dev": "tsx src/apps/cb/cli.ts",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts",
     "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts --fix",

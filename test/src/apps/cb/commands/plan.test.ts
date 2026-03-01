@@ -39,12 +39,15 @@ function toIncrementForTest(increment: string, value: number): string {
 }
 
 const {
+  toIncrementMock,
   getProductInfoMock,
   getProductIdMock,
   requestCurrencyAccountMock,
   getTransactionSummaryMock,
   placeLimitTpSlOrderMock,
 } = vi.hoisted(() => ({
+  toIncrementMock: vi.fn<(increment: string, value: number) => string>((increment: string, value: number) =>
+    toIncrementForTest(increment, value)),
   getProductInfoMock: vi.fn<() => Promise<ProductInstance>>(() => Promise.resolve({
     base_increment: "0.00000001",
     price_increment: "0.01",
@@ -69,7 +72,7 @@ const {
 
 vi.mock("cb-lib", () => {
   return {
-    toIncrement: toIncrementForTest,
+    toIncrement: toIncrementMock,
     getProductInfo: getProductInfoMock,
     getProductId: getProductIdMock,
     requestCurrencyAccount: requestCurrencyAccountMock,
@@ -78,7 +81,7 @@ vi.mock("cb-lib", () => {
 });
 
 vi.mock("../../../../../src/shared/common/increment.js", () => ({
-  toIncrement: toIncrementForTest,
+  toIncrement: toIncrementMock,
 }));
 vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
   getProductInfo: getProductInfoMock,
@@ -240,6 +243,36 @@ describe("buildTradePlan", () => {
     expect(result.adjustedForUsdBalance).toBe(true);
     expect(result.totalCostWithFee).toBeLessThanOrEqual(1000 + 1e-8);
   });
+
+  it("fails when calculated position size is below base increment", () => {
+    const result = buildTradePlan(baseInput({
+      baseIncrement: "1",
+      riskPercent: 0.001,
+      usdBalance: 10000,
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected failure");
+    }
+    expect(result.error).toContain("Calculated position size is too small for the product base increment.");
+  });
+
+  it("fails when USD-balance adjustment drops position below base increment", () => {
+    const result = buildTradePlan(baseInput({
+      baseIncrement: "1",
+      usdBalance: 100,
+      riskPercent: 100,
+      buyPrice: 100,
+      stopPrice: 99,
+    }));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected failure");
+    }
+    expect(result.error).toContain("Available USD is too low for the product base increment.");
+  });
 });
 
 describe("handlePlanAction", () => {
@@ -255,6 +288,8 @@ describe("handlePlanAction", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    toIncrementMock.mockImplementation((increment: string, value: number) =>
+      toIncrementForTest(increment, value));
   });
 
   it("does not place an order in dry run mode", async () => {
@@ -283,5 +318,90 @@ describe("handlePlanAction", () => {
     expect(orderOptions.takeProfitPrice).toBe("120.00");
     expect(orderOptions.postOnly).toBe(true);
     expect(parseFloat(orderOptions.baseSize)).toBeGreaterThan(0);
+  });
+
+  it("returns early when rounded USD balance is zero", async () => {
+    requestCurrencyAccountMock.mockResolvedValueOnce({
+      available: "0.00",
+      hold: "0.00",
+      total: "0.00",
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    await handlePlanAction("btc", baseOptions);
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "handlePlanAction => Unable to retrieve USD balance or balance is zero.",
+    );
+    expect(getTransactionSummaryMock).not.toHaveBeenCalled();
+    expect(placeLimitTpSlOrderMock).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it("prints risk-adjustment guidance when plan fails with calculated-risk error", async () => {
+    toIncrementMock.mockImplementation((increment: string, value: number) => {
+      if (increment === "0.00000001" && value > 0) {
+        return "1.00000000";
+      }
+      return toIncrementForTest(increment, value);
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handlePlanAction("btc", {
+      ...baseOptions,
+      riskPercent: "0.25",
+    });
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("handlePlanAction => Calculated risk"),
+    );
+    expect(logSpy).toHaveBeenCalledWith("   Consider adjusting the stop price or risk percentage.");
+    expect(placeLimitTpSlOrderMock).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("warns when funds are under hold in live mode", async () => {
+    requestCurrencyAccountMock.mockResolvedValueOnce({
+      available: "1000.00",
+      hold: "25.00",
+      total: "1025.00",
+    });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    await handlePlanAction("btc", baseOptions);
+
+    expect(warnSpy).toHaveBeenCalledWith("$25.00 under hold. Other positions are open.");
+    warnSpy.mockRestore();
+  });
+
+  it("prints adjustment message when risk sizing exceeds available USD", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handlePlanAction("btc", {
+      ...baseOptions,
+      riskPercent: "80",
+      stopPrice: "99",
+    });
+
+    expect(logSpy).toHaveBeenCalledWith("\nAdjusting position size to fit within available USD...");
+    logSpy.mockRestore();
+  });
+
+  it("renders all-in sizing details when allIn mode is enabled", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const pauseSpy = vi.spyOn(process.stdin, "pause").mockImplementation(() => process.stdin);
+
+    await handlePlanAction("btc", {
+      ...baseOptions,
+      allIn: true,
+      dryRunFlag: true,
+    });
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Sizing Mode:       ALL-IN"));
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Risk Percentage:   0.25% (ignored for sizing)"));
+    pauseSpy.mockRestore();
+    logSpy.mockRestore();
   });
 });

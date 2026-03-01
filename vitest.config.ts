@@ -10,6 +10,7 @@ export default defineConfig({
       reporter: ["text", "html"],
       reportsDirectory: "coverage",
       include: ["src/**/*.ts"],
+      exclude: ["src/shared/bin/**", "src/apps/hdb/cli.ts", "src/apps/cb/cli.ts"],
     },
   },
 });
