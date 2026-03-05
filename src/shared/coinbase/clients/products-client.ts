@@ -1,5 +1,5 @@
-import { getSignedConfig, requestWithSchema } from "../http/http-client.js";
-import { type CoinbaseProduct, CoinbaseProductSchema } from "../schemas/coinbase-rest-schemas.js";
+import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
+import { type CoinbaseProduct, CoinbaseProductSchema } from "#shared/coinbase/schemas/coinbase-rest-schemas";
 
 export async function requestProduct(product_id: string): Promise<CoinbaseProduct> {
   const requestPath = `/api/v3/brokerage/products/${product_id}`;

@@ -11,8 +11,8 @@ import {
   ORDER_SIDE,
   ORDER_TYPES,
   type OrderSide,
-} from "../../../shared/coinbase/index.js";
-import { toIncrement } from "../../../shared/common/index.js";
+} from "#shared/coinbase/index";
+import { toIncrement } from "#shared/common/index";
 
 export function buildMarketOrderValues(
   options: MarketOptions,

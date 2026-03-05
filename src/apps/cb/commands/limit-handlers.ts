@@ -11,8 +11,8 @@ import {
   getProductInfo,
   requestBestBidAsk,
   requestCurrencyAccount,
-} from "../../../shared/coinbase/index.js";
-import { toIncrement } from "../../../shared/common/index.js";
+} from "#shared/coinbase/index";
+import { toIncrement } from "#shared/common/index";
 
 export async function handleAskAction(product: string = "btc", options: AskOptions): Promise<void> {
   const productId = getProductId(product);

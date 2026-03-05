@@ -1,7 +1,7 @@
 import path from "node:path";
 import envPaths from "env-paths";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { logger } from "../log/logger.js";
+import { logger } from "#shared/log/logger";
 
 const paths = envPaths("helper");
 export const cacheDir = paths.cache;
@@ -21,5 +21,4 @@ export function saveJsonToCache(cachePath: string, data: object): void {
   writeFileSync(cachePath, JSON.stringify(data, null, 2));
   logger.debug(`Cache saved for ${cachePath}`);
 }
-
 

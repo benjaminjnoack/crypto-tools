@@ -1,14 +1,14 @@
-import { getSigningKeys, hasSigningKeys, signUrl } from "../jwt-signing-service.js";
+import { getSigningKeys, hasSigningKeys, signUrl } from "#shared/coinbase/jwt-signing-service";
 import axios, {
   type AxiosError,
   type AxiosInstance,
   type AxiosRequestConfig,
   type Method,
 } from "axios";
+import { delay } from "#shared/common/delay";
+import { primeEnv } from "#shared/common/env";
+import { logger } from "#shared/log/logger";
 import { z, type ZodType } from "zod";
-import { delay } from "../../common/delay.js";
-import { primeEnv } from "../../common/env.js";
-import { logger } from "../../log/logger.js";
 
 const HOST = "https://api.coinbase.com";
 const MAX_RETRIES = 5;

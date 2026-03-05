@@ -1,6 +1,6 @@
 import path from "node:path";
-import { loadJsonFromCache, saveJsonToCache } from "../../common/cache.js";
-import { type CoinbaseOrder, CoinbaseOrderSchema } from "../schemas/coinbase-order-schemas.js";
+import { loadJsonFromCache, saveJsonToCache } from "#shared/common/cache";
+import { type CoinbaseOrder, CoinbaseOrderSchema } from "#shared/coinbase/schemas/coinbase-order-schemas";
 import { coinbaseOrdersDir } from "./coinbase-cache.js";
 
 export function loadOrderFromCache(orderId: string): CoinbaseOrder {

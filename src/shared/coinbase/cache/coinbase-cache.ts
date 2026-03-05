@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { cacheDir, loadJsonFromCache, saveJsonToCache } from "../../common/cache.js";
+import { cacheDir, loadJsonFromCache, saveJsonToCache } from "#shared/common/cache";
 
 export const coinbaseDir = path.join(cacheDir, "coinbase");
 mkdirSync(coinbaseDir, { recursive: true });

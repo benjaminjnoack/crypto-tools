@@ -1,6 +1,6 @@
-import { toIncrement } from "../../common/increment.js";
-import { getSignedConfig, requestWithSchema } from "../http/http-client.js";
-import { AccountsResponseSchema, type CoinbaseAccount } from "../schemas/coinbase-rest-schemas.js";
+import { toIncrement } from "#shared/common/increment";
+import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
+import { AccountsResponseSchema, type CoinbaseAccount } from "#shared/coinbase/schemas/coinbase-rest-schemas";
 
 export async function requestAccounts(): Promise<CoinbaseAccount[]> {
   const requestPath = "/api/v3/brokerage/accounts";

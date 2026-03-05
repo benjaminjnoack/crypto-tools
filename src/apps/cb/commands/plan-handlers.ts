@@ -5,8 +5,8 @@ import {
   getProductInfo,
   getTransactionSummary,
   requestCurrencyAccount,
-} from "../../../shared/coinbase/index.js";
-import { toIncrement } from "../../../shared/common/index.js";
+} from "#shared/coinbase/index";
+import { toIncrement } from "#shared/common/index";
 
 type TradePlanBuildInput = {
   product: string;

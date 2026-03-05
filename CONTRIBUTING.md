@@ -45,6 +45,16 @@ Never commit secrets, `.env` files, or credential material.
 - `test/setup/no-network.ts`: global outbound-network block for tests
 - `dist/`: compiled output
 
+## Module Imports
+
+Use path aliases for cross-module imports:
+
+- `#shared/*` -> `src/shared/*`
+- `#cb/*` -> `src/apps/cb/*`
+- `#hdb/*` -> `src/apps/hdb/*`
+
+Prefer aliases instead of deep relative paths like `../../../...`.
+
 ### CLI Entrypoints
 
 - `src/apps/cb/cli.ts`

@@ -1,6 +1,6 @@
 import { getClient } from "../db/client.js";
 import { z } from "zod";
-import { logger } from "../../../shared/log/index.js";
+import { logger } from "#shared/log/index";
 
 const TestQueryRowSchema = z.object({
   now: z.union([z.date(), z.string()]),

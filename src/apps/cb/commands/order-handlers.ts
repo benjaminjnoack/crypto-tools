@@ -1,6 +1,6 @@
-import { cancelOrder, getOpenOrders, getOrder } from "../../../shared/coinbase/index.js";
-import { logger, printOrder } from "../../../shared/log/index.js";
-import type { ProductId } from "../../../shared/schemas/shared-primitives.js";
+import { cancelOrder, getOpenOrders, getOrder } from "#shared/coinbase/index";
+import { logger, printOrder } from "#shared/log/index";
+import type { ProductId } from "#shared/schemas/shared-primitives";
 import type { ModifyOptions } from "./schemas/command-options.js";
 import { placeModifyOrder } from "../service/order-service.js";
 

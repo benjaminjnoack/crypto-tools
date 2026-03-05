@@ -2,7 +2,7 @@ import {
   getProductId,
   getProductInfo,
   requestMarketTrades,
-} from "../../../shared/coinbase/index.js";
+} from "#shared/coinbase/index";
 
 export async function handleProductAction(product: string = "btc"): Promise<void> {
   const productId = getProductId(product);

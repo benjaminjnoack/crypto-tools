@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { requestOpenOrders } from "../coinbase/rest.js";
-import { printOrder } from "../log/orders.js";
+import { requestOpenOrders } from "#shared/coinbase/rest";
+import { printOrder } from "#shared/log/orders";
 
 async function run(): Promise<void> {
   const orders = await requestOpenOrders();

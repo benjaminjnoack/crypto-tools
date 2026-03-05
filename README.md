@@ -9,6 +9,14 @@ Monorepo for Coinbase-related CLI tooling and shared TypeScript modules.
 - `shared`: shared Coinbase/env/log/schema modules (`src/shared`)
 - `helper-env-check`: env/credential validation binary (`src/shared/bin/validate-env.ts`)
 
+## Import Aliases
+
+Prefer path aliases over deep relative imports:
+
+- `#shared/*` -> `src/shared/*`
+- `#cb/*` -> `src/apps/cb/*`
+- `#hdb/*` -> `src/apps/hdb/*`
+
 ## Requirements
 
 - Node.js `>=20`

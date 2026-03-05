@@ -13,6 +13,20 @@
     "url": "https://github.com/benjaminjnoack/crypto-tools/issues"
   },
   "type": "module",
+  "imports": {
+    "#shared/*": {
+      "types": "./src/shared/*.ts",
+      "default": "./dist/shared/*.js"
+    },
+    "#cb/*": {
+      "types": "./src/apps/cb/*.ts",
+      "default": "./dist/apps/cb/*.js"
+    },
+    "#hdb/*": {
+      "types": "./src/apps/hdb/*.ts",
+      "default": "./dist/apps/hdb/*.js"
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist",

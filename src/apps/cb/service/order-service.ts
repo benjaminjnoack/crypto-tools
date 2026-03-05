@@ -17,7 +17,7 @@ import {
   getProductInfo,
   ORDER_SIDE,
   ORDER_TYPES,
-} from "../../../shared/coinbase/index.js";
+} from "#shared/coinbase/index";
 import {
   buildBracketOrderValues,
   buildLimitOrderValues,

@@ -1,7 +1,7 @@
-import { logger } from "../../log/logger.js";
-import { getSignedConfig, requestWithSchema } from "../http/http-client.js";
-import { ORDER_STATUS } from "../schemas/coinbase-enum-schemas.js";
-import type { CoinbaseOrder } from "../schemas/coinbase-order-schemas.js";
+import { logger } from "#shared/log/logger";
+import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
+import { ORDER_STATUS } from "#shared/coinbase/schemas/coinbase-enum-schemas";
+import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
 import {
   type EditOrderRequest,
   EditOrderResponseSchema,
@@ -11,7 +11,7 @@ import {
   OrdersBatchCancelResponseSchema,
   OrdersHistoricalBatchResponseSchema,
   OrdersHistoricalResponseSchema,
-} from "../schemas/coinbase-rest-schemas.js";
+} from "#shared/coinbase/schemas/coinbase-rest-schemas";
 
 const ORDER_PLACEMENT_SOURCE = {
   UNKNOWN: "UNKNOWN_PLACEMENT_SOURCE",

@@ -8,14 +8,14 @@ import type { CoinbaseOrdersFeesOptions, CoinbaseOrdersUpdateOptions } from "./s
 import { COINBASE_EPOCH, getToAndFromDates } from "../../shared/utils.js";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { coinbaseOrdersDir } from "../../../../../shared/coinbase/cache/coinbase-cache.js";
-import { loadOrderFromCache, saveOrderToCache } from "../../../../../shared/coinbase/cache/order-cache.js";
+import { coinbaseOrdersDir } from "#shared/coinbase/cache/coinbase-cache";
+import { loadOrderFromCache, saveOrderToCache } from "#shared/coinbase/cache/order-cache";
 import {
   getProductId,
-} from "../../../../../shared/coinbase/index.js";
-import { requestOrder, requestOrders } from "../../../../../shared/coinbase/rest.js";
-import { ORDER_STATUS, OrderPlacementValues } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
-import { logger, printOrder } from "../../../../../shared/log/index.js";
+} from "#shared/coinbase/index";
+import { requestOrder, requestOrders } from "#shared/coinbase/rest";
+import { ORDER_STATUS, OrderPlacementValues } from "#shared/coinbase/schemas/coinbase-enum-schemas";
+import { logger, printOrder } from "#shared/log/index";
 
 export async function coinbaseOrders(orderId: string) {
   const order = await selectCoinbaseOrder(orderId);
