@@ -85,6 +85,19 @@ export const MarketOptionsSchema = z
   });
 export type MarketOptions = z.infer<typeof MarketOptionsSchema>;
 
+export const ModifyOptionsSchema = z
+  .object({
+    baseSize: PositiveNumericString.optional(),
+    limitPrice: PositiveNumericString.optional(),
+    stopPrice: PositiveNumericString.optional(),
+  })
+  .strict()
+  .refine((v) => Boolean(v.baseSize ?? v.limitPrice ?? v.stopPrice), {
+    message: "At least one of --baseSize, --limitPrice, or --stopPrice is required.",
+    path: ["baseSize"],
+  });
+export type ModifyOptions = z.infer<typeof ModifyOptionsSchema>;
+
 
 export const PlanOptionsSchema = z
   .object({

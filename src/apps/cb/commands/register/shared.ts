@@ -59,6 +59,19 @@ export function withValidatedArg<TArg>(
   });
 }
 
+export function withValidatedArgOptions<TArg, TOptions>(
+  commandName: string,
+  argSchema: ZodType<TArg>,
+  optionsSchema: ZodType<TOptions>,
+  handler: (arg: TArg, options: TOptions) => AsyncVoid,
+) {
+  return withCommandError(commandName, async (rawArg: unknown, rawOptions: unknown) => {
+    const arg = argSchema.parse(rawArg);
+    const options = optionsSchema.parse(rawOptions);
+    await handler(arg, options);
+  });
+}
+
 export function withOptionalProduct(commandName: string, handler: (productId: ProductId | null) => AsyncVoid) {
   return withCommandError(commandName, async (rawProduct: unknown) => {
     if (rawProduct) {

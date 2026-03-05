@@ -5,17 +5,20 @@ import type {
   LimitOptions,
   LimitTpSlOptions,
   MarketOptions,
+  ModifyOptions,
   StopOptions,
 } from "../commands/schemas/options.js";
 import { ORDER_SIDE, ORDER_TYPES } from "../../../shared/coinbase/schemas/enums.js";
 import { getProductInfo } from "../../../shared/coinbase/product.js";
 import { toIncrement } from "../../../shared/common/increment.js";
+import { requestOrder, requestOrderEdit } from "../../../shared/coinbase/rest.js";
 import {
   createBracketOrder,
   createLimitOrder,
   createLimitTpSlOrder,
   createMarketOrder, createStopLimitOrder
 } from "../../../shared/coinbase/order.js";
+import type { CoinbaseOrder } from "../../../shared/coinbase/schemas/orders.js";
 
 function confirmOrder(
   type: string,
@@ -245,4 +248,67 @@ export async function placeStopLimitOrder(productId: string, options: StopOption
   } else {
     console.log("Action canceled.");
   }
+}
+
+function getModifiableOrderValues(order: CoinbaseOrder): {
+  baseSize: string;
+  limitPrice: string;
+  stopPrice?: string;
+} {
+  switch (order.order_type) {
+    case ORDER_TYPES.LIMIT: {
+      const config = order.order_configuration.limit_limit_gtc;
+      const attached = order.attached_order_configuration?.trigger_bracket_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        ...(attached?.stop_trigger_price
+          ? { stopPrice: attached.stop_trigger_price }
+          : {}),
+      };
+    }
+    case ORDER_TYPES.BRACKET:
+    case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS: {
+      const config = order.order_configuration.trigger_bracket_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        stopPrice: config.stop_trigger_price,
+      };
+    }
+    case ORDER_TYPES.STOP_LIMIT: {
+      const config = order.order_configuration.stop_limit_stop_limit_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        stopPrice: config.stop_price,
+      };
+    }
+    case ORDER_TYPES.MARKET:
+      throw new Error("Cannot modify market orders.");
+  }
+}
+
+export async function placeModifyOrder(orderId: string, options: ModifyOptions): Promise<void> {
+  let baseSize = options.baseSize;
+  let limitPrice = options.limitPrice;
+  let stopPrice = options.stopPrice;
+
+  if (!baseSize || !limitPrice || !stopPrice) {
+    const order = await requestOrder(orderId);
+    const existing = getModifiableOrderValues(order);
+    baseSize = baseSize ?? existing.baseSize;
+    limitPrice = limitPrice ?? existing.limitPrice;
+    stopPrice = stopPrice ?? existing.stopPrice;
+  }
+
+  if (!baseSize || !limitPrice) {
+    throw new Error("Unable to determine base size and limit price for order modification.");
+  }
+
+  await requestOrderEdit(orderId, {
+    price: limitPrice,
+    size: baseSize,
+    stop_price: stopPrice,
+  });
 }

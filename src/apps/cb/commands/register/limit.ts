@@ -4,6 +4,7 @@ import {
   BidOptionsSchema,
   BracketOptionsSchema,
   LimitOptionsSchema,
+  ModifyOptionsSchema,
   StopOptionsSchema,
 } from "../schemas/options.js";
 
@@ -13,14 +14,17 @@ import {
   handleBracketAction,
   handleLimitAction,
   handleMaxAction,
+  handleModifyAction,
   handleStopAction,
 } from "../limit.js";
 
 import {
   OptionFlags,
+  withValidatedArgOptions,
   withValidatedProductId,
   withValidatedProductIdOptions,
 } from "./shared.js";
+import { OrderIdSchema } from "../../../../shared/schemas/primitives.js";
 
 export function registerLimitCommands(program: Command) {
   program
@@ -89,6 +93,14 @@ export function registerLimitCommands(program: Command) {
       "Notional USD value to buy/sell (positive number; required unless --baseSize is provided)",
     )
     .action(withValidatedProductIdOptions("limit", LimitOptionsSchema, handleLimitAction));
+
+  program
+    .command("modify <order_id>")
+    .description("Modify an open limit/bracket/TP-SL order")
+    .option(OptionFlags.baseSize, "Updated base amount")
+    .option(OptionFlags.limitPrice, "Updated limit price in USD")
+    .option(OptionFlags.stopPrice, "Updated stop trigger price in USD")
+    .action(withValidatedArgOptions("modify", OrderIdSchema, ModifyOptionsSchema, handleModifyAction));
 
   program
     .command("max [product]")

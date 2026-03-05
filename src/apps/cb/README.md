@@ -85,6 +85,7 @@ Notes:
 - `cb limit [product] (--buy | --sell) --limitPrice <limitPrice> [--baseSize <baseSize>] [--value <value>] [--no-postOnly]`
 - `cb stop [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
 - `cb bracket [product] --baseSize <baseSize> --limitPrice <limitPrice> --stopPrice <stopPrice>`
+- `cb modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>]`
 - `cb max [product]`
 
 ### Plan

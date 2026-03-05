@@ -41,6 +41,7 @@ import {
   requestMarketTrades,
   requestOrderCancellation,
   requestOrderCreation,
+  requestOrderEdit,
   requestOrders,
   requestProduct,
   requestTransactionSummary,
@@ -211,6 +212,29 @@ describe("coinbase rest helpers", () => {
       results: [{ order_id: "223e4567-e89b-42d3-a456-426614174000", success: true, failure_reason: "" }],
     }]);
     await expect(requestOrderCancellation(VALID_UUID)).rejects.toThrow("not found in response");
+  });
+
+  it("requestOrderEdit handles success and failure paths", async () => {
+    mockHttpSequence([{
+      success: true,
+      errors: [],
+    }]);
+
+    await expect(requestOrderEdit(VALID_UUID, {
+      price: "100.00",
+      size: "1.0",
+      stop_price: "95.00",
+    })).resolves.toBe(true);
+
+    mockHttpSequence([{
+      success: false,
+      errors: [{ message: "cannot_edit" }],
+    }]);
+
+    await expect(requestOrderEdit(VALID_UUID, {
+      price: "100.00",
+      size: "1.0",
+    })).rejects.toThrow("Edit failed: cannot_edit");
   });
 
   it("requestOrders paginates until has_next is false", async () => {

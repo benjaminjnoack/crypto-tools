@@ -17,6 +17,8 @@ import {
   type CoinbasePriceBook,
   type CoinbaseProduct,
   CoinbaseProductSchema,
+  type EditOrderRequest,
+  EditOrderResponseSchema,
   type OrderHistoricalBatchResponse,
   type OrderRequest,
   OrderResponseSchema,
@@ -190,6 +192,28 @@ export async function requestOrderCancellation(order_id: string) {
   }
 
   throw new Error(`Cancel failed: ${result.failure_reason || "Unknown reason"}`);
+}
+
+export async function requestOrderEdit(order_id: string, order: Omit<EditOrderRequest, "order_id">): Promise<boolean> {
+  const requestPath = "/api/v3/brokerage/orders/edit";
+  const data: EditOrderRequest = {
+    order_id,
+    price: order.price,
+    size: order.size,
+    stop_price: order.stop_price,
+  };
+  const config = await getConfig("POST", requestPath, null, data);
+  const parsed = await requestWithSchema(config, EditOrderResponseSchema);
+  if (parsed.success) {
+    return true;
+  }
+
+  const firstError = parsed.errors?.[0];
+  const message = firstError?.message
+    ?? firstError?.edit_failure_reason
+    ?? firstError?.preview_failure_reason
+    ?? "Unknown reason";
+  throw new Error(`Edit failed: ${message}`);
 }
 
 export async function requestOpenOrders(

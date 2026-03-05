@@ -87,6 +87,16 @@ export const OrderRequestSchema = z
   .strict();
 export type OrderRequest = z.infer<typeof OrderRequestSchema>;
 
+export const EditOrderRequestSchema = z
+  .object({
+    order_id: z.uuid(),
+    price: NumericString,
+    size: NumericString,
+    stop_price: NumericString.optional(),
+  })
+  .strict();
+export type EditOrderRequest = z.infer<typeof EditOrderRequestSchema>;
+
 export const AccountsResponseSchema = z
   .object({
     accounts: z.array(CoinbaseAccountSchema),
@@ -104,6 +114,21 @@ export const OrderResponseSchema = z
     success: z.boolean(),
     success_response: SuccessResponseSchema.optional(),
     error_response: ErrorResponseSchema.optional(),
+  })
+  .loose();
+
+export const EditOrderErrorSchema = z
+  .object({
+    edit_failure_reason: z.string().optional(),
+    message: z.string().optional(),
+    preview_failure_reason: z.string().optional(),
+  })
+  .loose();
+
+export const EditOrderResponseSchema = z
+  .object({
+    success: z.boolean(),
+    errors: z.array(EditOrderErrorSchema).optional(),
   })
   .loose();
 

@@ -3,9 +3,10 @@ import type {
   BidOptions,
   BracketOptions,
   LimitOptions,
+  ModifyOptions,
   StopOptions
 } from "./schemas/options.js";
-import { placeBracketOrder, placeLimitOrder, placeStopLimitOrder } from "../service/orders.js";
+import { placeBracketOrder, placeLimitOrder, placeModifyOrder, placeStopLimitOrder } from "../service/orders.js";
 import { getProductId, getProductInfo } from "../../../shared/coinbase/product.js";
 import { requestBestBidAsk, requestCurrencyAccount } from "../../../shared/coinbase/rest.js";
 import { toIncrement } from "../../../shared/common/increment.js";
@@ -54,6 +55,10 @@ export async function handleLimitAction(
   options: LimitOptions,
 ): Promise<void> {
   await placeLimitOrder(getProductId(product), options);
+}
+
+export async function handleModifyAction(orderId: string, options: ModifyOptions): Promise<void> {
+  await placeModifyOrder(orderId, options);
 }
 
 export async function handleMaxAction(product: string = "btc"): Promise<void> {
