@@ -6,6 +6,8 @@ import { CoinbaseOrderSchema, OrderConfigurationSchema } from "./orders.js";
 export const ErrorResponseSchema = z
   .object({
     preview_failure_reason: z.string(),
+    error: z.string().optional(),
+    message: z.string().optional(),
   })
   .loose();
 

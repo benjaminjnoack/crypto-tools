@@ -157,7 +157,13 @@ export async function requestOrderCreation(order: OrderRequest): Promise<string>
     }
   } else {
     if (parsed.error_response) {
-      throw new Error(parsed.error_response.preview_failure_reason);
+      if (parsed.error_response.message) {
+        throw new Error(parsed.error_response.message);
+      } else if (parsed.error_response.error) {
+        throw new Error(parsed.error_response.error);
+      } else {
+        throw new Error(parsed.error_response.preview_failure_reason);
+      }
     } else {
       throw new Error("Missing error response");
     }
