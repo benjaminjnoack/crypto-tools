@@ -28,7 +28,9 @@ This document describes setup, architecture, tooling, and contributor workflow f
    - `cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"`
 3. Set Coinbase credentials path in that env file:
    - `HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json`
-4. Optional env override:
+4. Explicitly opt in to live Coinbase requests:
+   - `HELPER_ALLOW_LIVE_EXCHANGE=true`
+5. Optional env override:
    - `HELPER_ENV_FILE=/absolute/path/to/.env`
 
 Never commit secrets, `.env` files, or credential material.

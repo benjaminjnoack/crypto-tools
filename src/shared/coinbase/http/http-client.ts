@@ -7,10 +7,12 @@ import axios, {
 } from "axios";
 import { z, type ZodType } from "zod";
 import { delay } from "../../common/delay.js";
+import { primeEnv } from "../../common/env.js";
 import { logger } from "../../log/logger.js";
 
 const HOST = "https://api.coinbase.com";
 const MAX_RETRIES = 5;
+const LIVE_EXCHANGE_OPT_IN = "HELPER_ALLOW_LIVE_EXCHANGE";
 
 export const http: AxiosInstance = axios.create({
   baseURL: HOST,
@@ -18,12 +20,24 @@ export const http: AxiosInstance = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+function assertLiveExchangeEnabled(): void {
+  primeEnv();
+  if (process.env.HELPER_ALLOW_LIVE_EXCHANGE === "true") {
+    return;
+  }
+  throw new Error(
+    `Live exchange calls are disabled by default. Set ${LIVE_EXCHANGE_OPT_IN}=true in your env file to enable Coinbase API requests.`,
+  );
+}
+
 export async function getSignedConfig(
   method: Method,
   requestPath: string,
   queryString: string | null = null,
   data: unknown = null,
 ): Promise<AxiosRequestConfig> {
+  assertLiveExchangeEnabled();
+
   if (!hasSigningKeys()) {
     await getSigningKeys();
   }

@@ -68,6 +68,7 @@ async function run(): Promise<void> {
   logger.log("Environment configuration is valid.");
   logger.log(`Env file: ${resolvedEnvPath}`);
   logger.log(`Credentials file: ${loadedEnv.HELPER_COINBASE_CREDENTIALS_PATH}`);
+  logger.log(`Live exchange enabled: ${loadedEnv.HELPER_ALLOW_LIVE_EXCHANGE === "true" ? "yes" : "no"}`);
 }
 
 run().catch((error: unknown) => {

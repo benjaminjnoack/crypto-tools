@@ -2,6 +2,8 @@ import http from "node:http";
 import https from "node:https";
 import { afterAll } from "vitest";
 
+process.env.HELPER_ALLOW_LIVE_EXCHANGE = "true";
+
 type RequestModule = {
   request: typeof http.request;
   get: typeof http.get;

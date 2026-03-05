@@ -26,6 +26,7 @@ Set this value in the env file:
 
 ```bash
 HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
+HELPER_ALLOW_LIVE_EXCHANGE=true
 ```
 
 Build and link binaries locally:

@@ -26,6 +26,7 @@ Minimum required Coinbase variable:
 
 ```bash
 HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
+HELPER_ALLOW_LIVE_EXCHANGE=true
 ```
 
 `hdb` also requires:
