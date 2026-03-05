@@ -44,7 +44,7 @@ npm link
 From source:
 
 - `npm run dev -- --help` (runs `cb`)
-- `tsx src/apps/hdb/cli.ts --help` (runs `hdb`)
+- `npm run dev:hdb -- --help` (runs `hdb`)
 
 ## Documentation
 

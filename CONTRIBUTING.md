@@ -77,6 +77,7 @@ Order command topology is intentionally nested:
 ## Commands and Scripts
 
 - `npm run dev`: run `cb` from TypeScript (`tsx src/apps/cb/cli.ts`)
+- `npm run dev:hdb`: run `hdb` from TypeScript (`tsx src/apps/hdb/cli.ts`)
 - `npm run build`: clean + compile to `dist/` + mark CLI files executable
 - `npm run clean`: remove `dist/`
 - `npm run lint`: run ESLint
@@ -90,9 +91,8 @@ Order command topology is intentionally nested:
 - `npm run prepare`: build during install (including git-based installs)
 - `npm run patch|minor|major`: version bump + push commit/tag after checks
 
-Useful direct commands that are not mapped to npm scripts:
+Useful direct commands:
 
-- `tsx src/apps/hdb/cli.ts --help` (run `hdb` from source)
 - `node dist/apps/hdb/cli.js --help` (run built `hdb`)
 
 ## Local Development Workflow
@@ -165,7 +165,6 @@ GitHub Actions workflow: `.github/workflows/ci.yml`
 - Runs:
   - `npm ci`
   - `npm run release:check`
-  - `npm run build`
 
 ## Releases
 

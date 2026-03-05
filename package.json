@@ -32,6 +32,7 @@
     "clean": "rm -rf dist",
     "coverage": "npm run test -- --coverage",
     "dev": "tsx src/apps/cb/cli.ts",
+    "dev:hdb": "tsx src/apps/hdb/cli.ts",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts",
     "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts --fix",
     "major": "npm run release:check && npm version major && git push && git push --tags",
