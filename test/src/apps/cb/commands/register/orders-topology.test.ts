@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Command } from "commander";
 
 const {
+  handleBreakEvenStopActionMock,
   handleCancelActionMock,
   handleModifyActionMock,
   handleOrderActionMock,
   handleOrdersActionMock,
 } = vi.hoisted(() => ({
+  handleBreakEvenStopActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleCancelActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleModifyActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleOrderActionMock: vi.fn(() => Promise.resolve(undefined)),
@@ -14,6 +16,7 @@ const {
 }));
 
 vi.mock("../../../../../../src/apps/cb/commands/order-handlers.js", () => ({
+  handleBreakEvenStopAction: handleBreakEvenStopActionMock,
   handleCancelAction: handleCancelActionMock,
   handleModifyAction: handleModifyActionMock,
   handleOrderAction: handleOrderActionMock,
@@ -42,6 +45,7 @@ describe("order command topology", () => {
     await run(["order", "cancel", VALID_UUID]);
     await run(["order", "modify", VALID_UUID, "--limitPrice", "101.50"]);
     await run(["order", "modify", VALID_UUID, "--breakEvenStop", "--buyPrice", "100", "--limitPrice", "101.50"]);
+    await run(["order", "breakeven", VALID_UUID, "--buyPrice", "100", "--limitPrice", "101.50"]);
 
     expect(handleOrderActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleOrdersActionMock).toHaveBeenCalledWith(null);
@@ -49,6 +53,10 @@ describe("order command topology", () => {
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { limitPrice: "101.50" });
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, {
       breakEvenStop: true,
+      buyPrice: "100",
+      limitPrice: "101.50",
+    });
+    expect(handleBreakEvenStopActionMock).toHaveBeenCalledWith(VALID_UUID, {
       buyPrice: "100",
       limitPrice: "101.50",
     });
@@ -61,10 +69,12 @@ describe("order command topology", () => {
     await expect(run(["cancel", VALID_UUID])).rejects.toThrow();
     await expect(run(["modify", VALID_UUID, "--baseSize", "1.25"])).rejects.toThrow();
     await expect(run(["order", "modify", VALID_UUID, "--breakEvenStop"])).rejects.toThrow();
+    await expect(run(["order", "breakeven", VALID_UUID])).rejects.toThrow();
 
     expect(handleOrderActionMock).not.toHaveBeenCalled();
     expect(handleOrdersActionMock).not.toHaveBeenCalled();
     expect(handleCancelActionMock).not.toHaveBeenCalled();
     expect(handleModifyActionMock).not.toHaveBeenCalled();
+    expect(handleBreakEvenStopActionMock).not.toHaveBeenCalled();
   });
 });

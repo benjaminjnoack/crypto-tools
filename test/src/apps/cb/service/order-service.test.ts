@@ -86,6 +86,7 @@ vi.mock("../../../../../src/shared/coinbase/orders-client.js", () => ({
 
 import {
   placeBracketOrder,
+  placeBreakEvenStopOrder,
   placeLimitOrder,
   placeLimitTpSlOrder,
   placeMarketOrder,
@@ -270,5 +271,34 @@ describe("cb service orders", () => {
       size: "1.50",
       stop_price: "100.31",
     });
+  });
+
+  it("modifies bracket-like orders via dedicated breakeven command", async () => {
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174004",
+      product_id: "BTC-USD",
+    }));
+
+    await placeBreakEvenStopOrder("123e4567-e89b-42d3-a456-426614174004", {
+      buyPrice: "100",
+      limitPrice: "122.00",
+    });
+
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174004", {
+      price: "122.00",
+      size: "1.50",
+      stop_price: "100.31",
+    });
+  });
+
+  it("rejects dedicated breakeven for non-bracket orders", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174005",
+      product_id: "BTC-USD",
+    }));
+
+    await expect(placeBreakEvenStopOrder("123e4567-e89b-42d3-a456-426614174005", {
+      buyPrice: "100",
+    })).rejects.toThrow("Break-even stop is only supported for BRACKET and TAKE_PROFIT_STOP_LOSS orders.");
   });
 });

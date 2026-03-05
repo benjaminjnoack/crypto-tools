@@ -1,11 +1,12 @@
 import type { Command } from "commander";
 import {
+  handleBreakEvenStopAction,
   handleCancelAction,
   handleModifyAction,
   handleOrderAction,
   handleOrdersAction,
 } from "../order-handlers.js";
-import { ModifyOptionsSchema } from "../schemas/command-options.js";
+import { BreakEvenStopOptionsSchema, ModifyOptionsSchema } from "../schemas/command-options.js";
 import {
   OptionFlags,
   parseArg,
@@ -46,6 +47,19 @@ export function registerOrderCommands(program: Command) {
         "order modify",
         parseArgOptions(OrderIdSchema, ModifyOptionsSchema),
         handleModifyAction,
+      ),
+    );
+
+  order
+    .command("breakeven <order_id>")
+    .description("Move stop to fee-inclusive break-even (bracket/TP-SL orders only)")
+    .requiredOption(OptionFlags.modifyBuyPrice, "Filled entry buy price in USD")
+    .option(OptionFlags.limitPrice, "Updated limit price in USD")
+    .action(
+      withAction(
+        "order breakeven",
+        parseArgOptions(OrderIdSchema, BreakEvenStopOptionsSchema),
+        handleBreakEvenStopAction,
       ),
     );
 }

@@ -108,6 +108,14 @@ export const ModifyOptionsSchema = z
   });
 export type ModifyOptions = z.infer<typeof ModifyOptionsSchema>;
 
+export const BreakEvenStopOptionsSchema = z
+  .object({
+    buyPrice: PositiveNumericString,
+    limitPrice: PositiveNumericString.optional(),
+  })
+  .strict();
+export type BreakEvenStopOptions = z.infer<typeof BreakEvenStopOptionsSchema>;
+
 
 export const PlanOptionsSchema = z
   .object({

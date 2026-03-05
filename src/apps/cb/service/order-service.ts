@@ -1,5 +1,6 @@
 import type {
   BracketOptions,
+  BreakEvenStopOptions,
   LimitOptions,
   LimitTpSlOptions,
   MarketOptions,
@@ -200,6 +201,43 @@ export async function placeModifyOrder(orderId: string, options: ModifyOptions):
   }
 
   const values = buildModifyOrderValues(resolvedOptions, existing);
+
+  await editOrder(orderId, {
+    price: values.limitPrice,
+    size: values.baseSize,
+    stop_price: values.stopPrice,
+  });
+}
+
+export async function placeBreakEvenStopOrder(
+  orderId: string,
+  options: BreakEvenStopOptions,
+): Promise<void> {
+  const order = await getOrder(orderId);
+  if (
+    order.order_type !== ORDER_TYPES.BRACKET
+    && order.order_type !== ORDER_TYPES.TAKE_PROFIT_STOP_LOSS
+  ) {
+    throw new Error("Break-even stop is only supported for BRACKET and TAKE_PROFIT_STOP_LOSS orders.");
+  }
+
+  const existing = getModifiableOrderValues(order);
+  const { price_increment } = await getProductInfo(order.product_id);
+  const { fee_tier } = await getTransactionSummary();
+  const stopPrice = buildBreakEvenStopPrice(
+    options.buyPrice,
+    parseFloat(fee_tier.maker_fee_rate),
+    parseFloat(fee_tier.taker_fee_rate),
+    price_increment,
+  );
+
+  const values = buildModifyOrderValues(
+    {
+      limitPrice: options.limitPrice,
+      stopPrice,
+    },
+    existing,
+  );
 
   await editOrder(orderId, {
     price: values.limitPrice,

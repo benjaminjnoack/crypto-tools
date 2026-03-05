@@ -1,8 +1,8 @@
 import { cancelOrder, getOpenOrders, getOrder } from "#shared/coinbase/index";
 import { logger, printOrder } from "#shared/log/index";
 import type { ProductId } from "#shared/schemas/shared-primitives";
-import type { ModifyOptions } from "./schemas/command-options.js";
-import { placeModifyOrder } from "../service/order-service.js";
+import type { BreakEvenStopOptions, ModifyOptions } from "./schemas/command-options.js";
+import { placeBreakEvenStopOrder, placeModifyOrder } from "../service/order-service.js";
 
 export async function handleOrderAction(orderId: string): Promise<void> {
   const order = await getOrder(orderId);
@@ -28,4 +28,11 @@ export async function handleCancelAction(order_id: string): Promise<void> {
 
 export async function handleModifyAction(orderId: string, options: ModifyOptions): Promise<void> {
   await placeModifyOrder(orderId, options);
+}
+
+export async function handleBreakEvenStopAction(
+  orderId: string,
+  options: BreakEvenStopOptions,
+): Promise<void> {
+  await placeBreakEvenStopOrder(orderId, options);
 }

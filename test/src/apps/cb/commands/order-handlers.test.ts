@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  placeBreakEvenStopOrderMock,
   loggerInfoMock,
   getOpenOrdersMock,
   getOrderMock,
@@ -8,6 +9,7 @@ const {
   placeModifyOrderMock,
   printOrderMock,
 } = vi.hoisted(() => ({
+  placeBreakEvenStopOrderMock: vi.fn(() => Promise.resolve(undefined)),
   loggerInfoMock: vi.fn(),
   getOpenOrdersMock: vi.fn<(productId: string | null) => Promise<Array<{ order_id: string }>>>(() => Promise.resolve([])),
   getOrderMock: vi.fn(() => Promise.resolve({ order_id: "order-1" })),
@@ -33,10 +35,12 @@ vi.mock("../../../../../src/shared/log/orders.js", () => ({
 }));
 
 vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
+  placeBreakEvenStopOrder: placeBreakEvenStopOrderMock,
   placeModifyOrder: placeModifyOrderMock,
 }));
 
 import {
+  handleBreakEvenStopAction,
   handleCancelAction,
   handleModifyAction,
   handleOrderAction,
@@ -93,6 +97,18 @@ describe("orders command handlers", () => {
     await handleModifyAction("123e4567-e89b-42d3-a456-426614174000", { limitPrice: "101.50" });
 
     expect(placeModifyOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
+      limitPrice: "101.50",
+    });
+  });
+
+  it("delegates breakeven action to service", async () => {
+    await handleBreakEvenStopAction("123e4567-e89b-42d3-a456-426614174000", {
+      buyPrice: "100",
+      limitPrice: "101.50",
+    });
+
+    expect(placeBreakEvenStopOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
+      buyPrice: "100",
       limitPrice: "101.50",
     });
   });
