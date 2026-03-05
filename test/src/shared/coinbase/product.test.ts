@@ -34,7 +34,7 @@ vi.mock("../../../../src/shared/coinbase/rest.js", () => ({
   requestProduct: requestProductMock,
 }));
 
-vi.mock("../../../../src/shared/coinbase/cache.js", () => ({
+vi.mock("../../../../src/shared/coinbase/cache/product-cache.js", () => ({
   loadProductFromCache: loadProductFromCacheMock,
   saveProductToCache: saveProductToCacheMock,
 }));
@@ -51,7 +51,7 @@ vi.mock("../../../../src/shared/log/logger.js", () => ({
   },
 }));
 
-import { getProductId, getProductInfo } from "../../../../src/shared/coinbase/product.js";
+import { getProductId, getProductInfo } from "../../../../src/shared/coinbase/product-service.js";
 
 describe("coinbase product helpers", () => {
   beforeEach(() => {

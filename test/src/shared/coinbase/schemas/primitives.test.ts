@@ -3,7 +3,7 @@ import { expectSchemaAccepts, expectSchemaRejects } from "../../../../helpers/sc
 import {
   CoinbaseUtcDateTimePattern,
   CoinbaseUtcDateTimeString,
-} from "../../../../../src/shared/coinbase/schemas/primitives.js";
+} from "../../../../../src/shared/coinbase/schemas/coinbase-primitives-schemas.js";
 
 const commonInvalidValues: unknown[] = [
   null,

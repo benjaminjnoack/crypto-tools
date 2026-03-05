@@ -1,6 +1,6 @@
 import type { BuyOptions, MarketOptions, SellOptions } from "./schemas/command-options.js";
 import { placeMarketOrder } from "../service/order-service.js";
-import { getProductId } from "../../../shared/coinbase/product.js";
+import { getProductId } from "../../../shared/coinbase/index.js";
 
 export async function handleBuyAction(product: string = "btc", options: BuyOptions): Promise<void> {
   const marketOptions = {

@@ -25,12 +25,16 @@ import {
   coinbaseOrdersDir,
   coinbaseProductsDir,
   loadCoinbaseFromCache,
-  loadOrderFromCache,
-  loadProductFromCache,
   saveCoinbaseToCache,
-  saveOrderToCache,
+} from "../../../../src/shared/coinbase/cache/coinbase-cache.js";
+import {
+  loadProductFromCache,
   saveProductToCache,
-} from "../../../../src/shared/coinbase/cache.js";
+} from "../../../../src/shared/coinbase/cache/product-cache.js";
+import {
+  loadOrderFromCache,
+  saveOrderToCache,
+} from "../../../../src/shared/coinbase/cache/order-cache.js";
 
 const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
 

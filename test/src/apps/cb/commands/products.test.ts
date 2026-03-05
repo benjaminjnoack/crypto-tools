@@ -17,7 +17,7 @@ const {
   })),
 }));
 
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductId: getProductIdMock,
   getProductInfo: getProductInfoMock,
 }));

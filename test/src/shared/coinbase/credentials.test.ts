@@ -29,7 +29,7 @@ vi.mock("../../../../src/shared/log/logger.js", () => ({
 }));
 
 async function loadModule() {
-  return import("../../../../src/shared/coinbase/credentials.js");
+  return import("../../../../src/shared/coinbase/credentials-service.js");
 }
 
 describe("coinbase credentials", () => {

@@ -7,6 +7,13 @@
 - Treat this as a hard stop rule for all development work, debugging, and validation.
 - If a requested action could hit the exchange, stop and require an explicit safe alternative (mock/fixture/stub/offline-only path).
 
+## Engineering Quality Standard
+
+- Implement changes as idiomatically as possible for the language/runtime/tooling in use.
+- Default to established best practices for readability, maintainability, correctness, and testability.
+- Treat this repository as both production tooling and interview/demo material: code should be clean, coherent, and easy to reason about at a glance.
+- Prefer simple, explicit designs over clever shortcuts, and leave code in a better state after each change.
+
 ## Required Validation Workflow
 
 For code changes, run these checks unless the task is docs-only:

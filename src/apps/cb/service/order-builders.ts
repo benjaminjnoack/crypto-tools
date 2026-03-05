@@ -6,9 +6,13 @@ import type {
   ModifyOptions,
   StopOptions,
 } from "../commands/schemas/command-options.js";
-import { ORDER_SIDE, ORDER_TYPES, type OrderSide } from "../../../shared/coinbase/schemas/enums.js";
-import { toIncrement } from "../../../shared/common/increment.js";
-import type { CoinbaseOrder } from "../../../shared/coinbase/schemas/orders.js";
+import {
+  type CoinbaseOrder,
+  ORDER_SIDE,
+  ORDER_TYPES,
+  type OrderSide,
+} from "../../../shared/coinbase/index.js";
+import { toIncrement } from "../../../shared/common/index.js";
 
 export function buildMarketOrderValues(
   options: MarketOptions,

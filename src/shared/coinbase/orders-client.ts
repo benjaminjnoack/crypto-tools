@@ -1,5 +1,5 @@
-import type { CoinbaseOrder } from "./schemas/orders.js";
-import type { EditOrderRequest, OrderRequest } from "./schemas/rest.js";
+import type { CoinbaseOrder } from "./schemas/coinbase-order-schemas.js";
+import type { EditOrderRequest, OrderRequest } from "./schemas/coinbase-rest-schemas.js";
 import {
   requestOpenOrders,
   requestOrder,

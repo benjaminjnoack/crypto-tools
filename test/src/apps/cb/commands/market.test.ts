@@ -12,7 +12,7 @@ vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeMarketOrder: placeMarketOrderMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductId: getProductIdMock,
 }));
 

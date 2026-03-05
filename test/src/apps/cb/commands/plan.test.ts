@@ -83,14 +83,14 @@ vi.mock("cb-lib", () => {
 vi.mock("../../../../../src/shared/common/increment.js", () => ({
   toIncrement: toIncrementMock,
 }));
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductInfo: getProductInfoMock,
   getProductId: getProductIdMock,
 }));
 vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
   requestCurrencyAccount: requestCurrencyAccountMock,
 }));
-vi.mock("../../../../../src/shared/coinbase/transaction_summary.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/transaction-summary-service.js", () => ({
   getTransactionSummary: getTransactionSummaryMock,
 }));
 vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({

@@ -17,7 +17,7 @@ const {
   loggerInfoMock: vi.fn(),
 }));
 
-vi.mock("../../../../src/shared/coinbase/signing.js", () => ({
+vi.mock("../../../../src/shared/coinbase/jwt-signing-service.js", () => ({
   hasSigningKeys: hasSigningKeysMock,
   getSigningKeys: getSigningKeysMock,
   signUrl: signUrlMock,

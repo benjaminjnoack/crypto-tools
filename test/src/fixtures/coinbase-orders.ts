@@ -1,4 +1,4 @@
-import type { CoinbaseOrder } from "../../../src/shared/coinbase/schemas/orders.js";
+import type { CoinbaseOrder } from "../../../src/shared/coinbase/schemas/coinbase-order-schemas.js";
 
 const DEFAULT_ORDER_ID = "123e4567-e89b-42d3-a456-426614174000";
 const DEFAULT_PRODUCT_ID = "BTC-USD";

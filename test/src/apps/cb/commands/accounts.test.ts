@@ -44,11 +44,11 @@ vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
   requestCurrencyAccount: requestCurrencyAccountMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductInfo: getProductInfoMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/transaction_summary.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/transaction-summary-service.js", () => ({
   getTransactionSummary: getTransactionSummaryMock,
 }));
 

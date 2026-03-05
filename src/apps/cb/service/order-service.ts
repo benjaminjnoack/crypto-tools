@@ -6,15 +6,18 @@ import type {
   ModifyOptions,
   StopOptions,
 } from "../commands/schemas/command-options.js";
-import { ORDER_SIDE, ORDER_TYPES } from "../../../shared/coinbase/schemas/enums.js";
-import { getProductInfo } from "../../../shared/coinbase/product.js";
-import { editOrder, getOrder } from "../../../shared/coinbase/orders-client.js";
 import {
   createBracketOrder,
   createLimitOrder,
   createLimitTpSlOrder,
-  createMarketOrder, createStopLimitOrder
-} from "../../../shared/coinbase/order-payloads.js";
+  createMarketOrder,
+  createStopLimitOrder,
+  editOrder,
+  getOrder,
+  getProductInfo,
+  ORDER_SIDE,
+  ORDER_TYPES,
+} from "../../../shared/coinbase/index.js";
 import {
   buildBracketOrderValues,
   buildLimitOrderValues,

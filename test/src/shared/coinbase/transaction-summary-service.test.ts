@@ -29,7 +29,7 @@ vi.mock("../../../../src/shared/coinbase/rest.js", () => ({
   requestTransactionSummary: requestTransactionSummaryMock,
 }));
 
-vi.mock("../../../../src/shared/coinbase/cache.js", () => ({
+vi.mock("../../../../src/shared/coinbase/cache/coinbase-cache.js", () => ({
   loadCoinbaseFromCache: loadCoinbaseFromCacheMock,
   saveCoinbaseToCache: saveCoinbaseToCacheMock,
 }));
@@ -43,7 +43,7 @@ vi.mock("../../../../src/shared/log/logger.js", () => ({
 }));
 
 async function loadModule() {
-  return import("../../../../src/shared/coinbase/transaction_summary.js");
+  return import("../../../../src/shared/coinbase/transaction-summary-service.js");
 }
 
 describe("transaction summary caching", () => {

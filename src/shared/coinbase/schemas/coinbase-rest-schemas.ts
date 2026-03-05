@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { NumericString } from "../../schemas/primitives.js";
-import { AccountType, OrderSideSchema } from "./enums.js"
-import { CoinbaseOrderSchema, OrderConfigurationSchema } from "./orders.js";
+import { NumericString } from "../../schemas/shared-primitives.js";
+import { AccountType, OrderSideSchema } from "./coinbase-enum-schemas.js";
+import { CoinbaseOrderSchema, OrderConfigurationSchema } from "./coinbase-order-schemas.js";
 
 export const ErrorResponseSchema = z
   .object({

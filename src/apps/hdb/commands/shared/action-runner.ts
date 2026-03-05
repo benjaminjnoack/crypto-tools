@@ -1,9 +1,8 @@
 import type { ZodType } from "zod";
 import { endClient } from "../../db/client.js";
 import type { DebugOptions } from "../schemas/debug-options.js";
-import { printError } from "../../../../shared/log/error.js";
-import { getEnvConfig } from "../../../../shared/common/env.js";
-import { logger } from "../../../../shared/log/logger.js";
+import { getEnvConfig } from "../../../../shared/common/index.js";
+import { logger, printError } from "../../../../shared/log/index.js";
 
 const E = getEnvConfig();
 

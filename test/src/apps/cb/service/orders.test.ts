@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CoinbaseOrder } from "../../../../../src/shared/coinbase/schemas/orders.js";
+import type { CoinbaseOrder } from "../../../../../src/shared/coinbase/schemas/coinbase-order-schemas.js";
 import {
   makeLimitOrder,
   makeMarketOrder,
@@ -52,7 +52,7 @@ vi.mock("chalk", () => ({
   },
 }));
 
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductInfo: getProductInfoMock,
 }));
 

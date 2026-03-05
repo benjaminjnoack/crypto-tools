@@ -41,7 +41,7 @@ vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeStopLimitOrder: placeStopLimitOrderMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductId: getProductIdMock,
   getProductInfo: getProductInfoMock,
 }));

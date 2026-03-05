@@ -60,7 +60,7 @@ vi.mock("../../../../../../../src/shared/log/orders.js", () => ({
   printOrder: printOrderMock,
 }));
 
-vi.mock("../../../../../../../src/shared/coinbase/product.js", () => ({
+vi.mock("../../../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductId: getProductIdMock,
 }));
 
@@ -76,8 +76,11 @@ vi.mock("../../../../../../../src/shared/coinbase/rest.js", () => ({
   requestOrders: requestOrdersMock,
 }));
 
-vi.mock("../../../../../../../src/shared/coinbase/cache.js", () => ({
+vi.mock("../../../../../../../src/shared/coinbase/cache/coinbase-cache.js", () => ({
   coinbaseOrdersDir: "/tmp/helper-cache/coinbase/orders",
+}));
+
+vi.mock("../../../../../../../src/shared/coinbase/cache/order-cache.js", () => ({
   loadOrderFromCache: loadOrderFromCacheMock,
   saveOrderToCache: saveOrderToCacheMock,
 }));

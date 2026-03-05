@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { NumericString } from "../../schemas/primitives.js";
-import { ORDER_TYPES, OrderSideSchema, OrderStatusSchema, ProductTypeSchema } from "./enums.js";
-import { CoinbaseUtcDateTimeString } from "./primitives.js";
+import { NumericString } from "../../schemas/shared-primitives.js";
+import { ORDER_TYPES, OrderSideSchema, OrderStatusSchema, ProductTypeSchema } from "./coinbase-enum-schemas.js";
+import { CoinbaseUtcDateTimeString } from "./coinbase-primitives-schemas.js";
 
 export const LimitOrderConfigurationSchema = z
   .object({

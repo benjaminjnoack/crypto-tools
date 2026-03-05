@@ -1,7 +1,7 @@
 import * as uuid from "uuid";
 import { createOrder } from "./orders-client.js";
-import { ORDER_SIDE, type OrderSide } from "./schemas/enums.js";
-import type { OrderRequest } from "./schemas/rest.js";
+import { ORDER_SIDE, type OrderSide } from "./schemas/coinbase-enum-schemas.js";
+import type { OrderRequest } from "./schemas/coinbase-rest-schemas.js";
 import { logger } from "../log/logger.js";
 
 export async function createMarketOrder(

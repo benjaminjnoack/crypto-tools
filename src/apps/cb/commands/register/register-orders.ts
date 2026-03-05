@@ -13,7 +13,7 @@ import {
   parseOptionalProduct,
   withAction,
 } from "./register-utils.js";
-import { OrderIdSchema } from "../../../../shared/schemas/primitives.js";
+import { OrderIdSchema } from "../../../../shared/schemas/shared-primitives.js";
 
 export function registerOrderCommands(program: Command) {
   const order = program.command("order").description("Order management commands");

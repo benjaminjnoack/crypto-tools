@@ -1,4 +1,4 @@
-import type { CoinbaseOrder } from "../coinbase/schemas/orders.js";
+import type { CoinbaseOrder } from "../coinbase/schemas/coinbase-order-schemas.js";
 import { logger } from "./logger.js";
 
 const ORDER_CONFIGURATION_KEY: Record<CoinbaseOrder["order_type"], string> = {

@@ -14,12 +14,12 @@ vi.mock("jsonwebtoken", () => ({
   },
 }));
 
-vi.mock("../../../../src/shared/coinbase/credentials.js", () => ({
+vi.mock("../../../../src/shared/coinbase/credentials-service.js", () => ({
   getCredentials: getCredentialsMock,
 }));
 
 async function loadModule() {
-  return import("../../../../src/shared/coinbase/signing.js");
+  return import("../../../../src/shared/coinbase/jwt-signing-service.js");
 }
 
 describe("coinbase signing", () => {

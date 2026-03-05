@@ -1,6 +1,6 @@
 import readlineSync from "readline-sync";
 import chalk from "chalk";
-import { ORDER_SIDE } from "../../../shared/coinbase/schemas/enums.js";
+import { ORDER_SIDE } from "../../../shared/coinbase/index.js";
 
 export function confirmOrder(
   type: string,

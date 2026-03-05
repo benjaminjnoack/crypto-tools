@@ -1,6 +1,6 @@
 import pkg from "jsonwebtoken";
 const { sign } = pkg;
-import { getCredentials } from "./credentials.js";
+import { getCredentials } from "./credentials-service.js";
 
 const algorithm = "ES256";
 const url = "api.coinbase.com";
