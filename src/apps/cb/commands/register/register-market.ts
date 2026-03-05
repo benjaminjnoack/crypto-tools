@@ -3,9 +3,9 @@ import {
   BuyOptionsSchema,
   MarketOptionsSchema,
   SellOptionsSchema,
-} from "../schemas/options.js";
-import { handleBuyAction, handleMarketAction, handleSellAction } from "../market.js";
-import { OptionFlags, withValidatedProductIdOptions } from "./shared.js";
+} from "../schemas/command-options.js";
+import { handleBuyAction, handleMarketAction, handleSellAction } from "../market-handlers.js";
+import { OptionFlags, parseProductIdOptions, withAction } from "./register-utils.js";
 
 export function registerMarketCommands(program: Command) {
   program
@@ -19,7 +19,7 @@ export function registerMarketCommands(program: Command) {
       OptionFlags.value,
       "Notional USD value to buy (positive number; required unless --baseSize is provided)",
     )
-    .action(withValidatedProductIdOptions("buy", BuyOptionsSchema, handleBuyAction));
+    .action(withAction("buy", parseProductIdOptions(BuyOptionsSchema), handleBuyAction));
 
   program
     .command("market [product]")
@@ -34,7 +34,7 @@ export function registerMarketCommands(program: Command) {
       OptionFlags.value,
       "Notional USD value to buy/sell (positive number; required unless --baseSize is provided)",
     )
-    .action(withValidatedProductIdOptions("market", MarketOptionsSchema, handleMarketAction));
+    .action(withAction("market", parseProductIdOptions(MarketOptionsSchema), handleMarketAction));
 
   program
     .command("sell [product]")
@@ -47,5 +47,5 @@ export function registerMarketCommands(program: Command) {
       OptionFlags.value,
       "Notional USD value to sell (positive number; required unless --baseSize is provided)",
     )
-    .action(withValidatedProductIdOptions("sell", SellOptionsSchema, handleSellAction));
+    .action(withAction("sell", parseProductIdOptions(SellOptionsSchema), handleSellAction));
 }

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { uuidV4Mock, requestOrderCreationMock, loggerInfoMock } = vi.hoisted(() => ({
+const { uuidV4Mock, createOrderMock, loggerInfoMock } = vi.hoisted(() => ({
   uuidV4Mock: vi.fn(() => "00000000-0000-4000-8000-000000000001"),
-  requestOrderCreationMock: vi.fn(() => Promise.resolve("order-id-123")),
+  createOrderMock: vi.fn(() => Promise.resolve("order-id-123")),
   loggerInfoMock: vi.fn(),
 }));
 
@@ -10,8 +10,8 @@ vi.mock("uuid", () => ({
   v4: uuidV4Mock,
 }));
 
-vi.mock("../../../../src/shared/coinbase/rest.js", () => ({
-  requestOrderCreation: requestOrderCreationMock,
+vi.mock("../../../../src/shared/coinbase/orders-client.js", () => ({
+  createOrder: createOrderMock,
 }));
 
 vi.mock("../../../../src/shared/log/logger.js", () => ({
@@ -26,7 +26,7 @@ import {
   createLimitTpSlOrder,
   createMarketOrder,
   createStopLimitOrder,
-} from "../../../../src/shared/coinbase/order.js";
+} from "../../../../src/shared/coinbase/order-payloads.js";
 
 describe("order payload creation", () => {
   beforeEach(() => {
@@ -36,7 +36,7 @@ describe("order payload creation", () => {
   it("creates market order payload", async () => {
     await expect(createMarketOrder("BTC-USD", "BUY", "0.01")).resolves.toBe("order-id-123");
 
-    expect(requestOrderCreationMock).toHaveBeenCalledWith({
+    expect(createOrderMock).toHaveBeenCalledWith({
       client_order_id: "00000000-0000-4000-8000-000000000001",
       product_id: "BTC-USD",
       side: "BUY",
@@ -51,7 +51,7 @@ describe("order payload creation", () => {
   it("creates limit order payload with configurable post_only", async () => {
     await createLimitOrder("BTC-USD", "SELL", "0.5", "25000.00", false);
 
-    expect(requestOrderCreationMock).toHaveBeenCalledWith({
+    expect(createOrderMock).toHaveBeenCalledWith({
       client_order_id: "00000000-0000-4000-8000-000000000001",
       product_id: "BTC-USD",
       side: "SELL",
@@ -68,7 +68,7 @@ describe("order payload creation", () => {
   it("creates limit TP/SL order payload", async () => {
     await createLimitTpSlOrder("BTC-USD", "0.2", "20000.00", "19000.00", "22000.00", true);
 
-    expect(requestOrderCreationMock).toHaveBeenCalledWith({
+    expect(createOrderMock).toHaveBeenCalledWith({
       client_order_id: "00000000-0000-4000-8000-000000000001",
       product_id: "BTC-USD",
       side: "BUY",
@@ -91,7 +91,7 @@ describe("order payload creation", () => {
   it("creates bracket order payload", async () => {
     await createBracketOrder("BTC-USD", "SELL", "1.0", "21000.00", "19999.00");
 
-    expect(requestOrderCreationMock).toHaveBeenCalledWith({
+    expect(createOrderMock).toHaveBeenCalledWith({
       client_order_id: "00000000-0000-4000-8000-000000000001",
       product_id: "BTC-USD",
       side: "SELL",
@@ -108,7 +108,7 @@ describe("order payload creation", () => {
   it("creates stop-limit order payload with stop direction by side", async () => {
     await createStopLimitOrder("ETH-USD", "BUY", "2", "1800.00", "1850.00");
 
-    expect(requestOrderCreationMock).toHaveBeenCalledWith({
+    expect(createOrderMock).toHaveBeenCalledWith({
       client_order_id: "00000000-0000-4000-8000-000000000001",
       product_id: "ETH-USD",
       side: "BUY",

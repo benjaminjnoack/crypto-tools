@@ -8,7 +8,7 @@ const { placeMarketOrderMock, getProductIdMock } = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock("../../../../../src/apps/cb/service/orders.js", () => ({
+vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeMarketOrder: placeMarketOrderMock,
 }));
 
@@ -16,7 +16,7 @@ vi.mock("../../../../../src/shared/coinbase/product.js", () => ({
   getProductId: getProductIdMock,
 }));
 
-import { handleBuyAction, handleMarketAction, handleSellAction } from "../../../../../src/apps/cb/commands/market.js";
+import { handleBuyAction, handleMarketAction, handleSellAction } from "../../../../../src/apps/cb/commands/market-handlers.js";
 
 describe("market command handlers", () => {
   beforeEach(() => {

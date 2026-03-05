@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CoinbaseOrder } from "../../../../../../../src/shared/coinbase/schemas/orders.js";
+import {
+  makeLimitOrder,
+  makeStopLimitOrder,
+} from "../../../../../fixtures/coinbase-orders.js";
 
 const { getClientMock, loggerDebugMock } = vi.hoisted(() => ({
   getClientMock: vi.fn(),
@@ -17,32 +21,6 @@ vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
 }));
 
 const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
-
-function makeBaseOrder(): CoinbaseOrder {
-  return {
-    order_id: VALID_UUID,
-    product_id: "BTC-USD",
-    side: "BUY",
-    status: "OPEN",
-    completion_percentage: "0",
-    filled_size: "0",
-    average_filled_price: "0",
-    filled_value: "0",
-    total_fees: "0",
-    total_value_after_fees: "0",
-    product_type: "SPOT",
-    last_fill_time: null,
-    order_type: "LIMIT",
-    order_configuration: {
-      limit_limit_gtc: {
-        base_size: "1.0",
-        limit_price: "100.00",
-        post_only: true,
-      },
-    },
-    created_time: "2026-01-01T00:00:00.000Z",
-  };
-}
 
 async function loadRepositoryModule() {
   return import("../../../../../../../src/apps/hdb/db/coinbase/orders/repository.js");
@@ -104,7 +82,13 @@ describe("hdb coinbase order repository", () => {
     getClientMock.mockResolvedValue({ query: queryMock });
     const repo = await loadRepositoryModule();
 
-    await repo.insertCoinbaseOrder(makeBaseOrder());
+    await repo.insertCoinbaseOrder({
+      ...makeLimitOrder({
+        baseSize: "1.0",
+        limitPrice: "100.00",
+      }),
+      created_time: "2026-01-01T00:00:00.000Z",
+    } as CoinbaseOrder);
 
     expect(queryMock).toHaveBeenCalledTimes(2);
     const insertSql = queryMock.mock.calls[1]?.[0] as string;
@@ -124,7 +108,13 @@ describe("hdb coinbase order repository", () => {
     );
     getClientMock.mockResolvedValue({ query: queryMock });
     const repo = await loadRepositoryModule();
-    const badOrder = { ...makeBaseOrder() } as Record<string, unknown>;
+    const badOrder = {
+      ...makeLimitOrder({
+        baseSize: "1.0",
+        limitPrice: "100.00",
+      }),
+      created_time: "2026-01-01T00:00:00.000Z",
+    } as Record<string, unknown>;
     delete badOrder.created_time;
 
     await expect(repo.insertCoinbaseOrder(badOrder as unknown as CoinbaseOrder)).rejects.toThrow(
@@ -140,7 +130,11 @@ describe("hdb coinbase order repository", () => {
     const repo = await loadRepositoryModule();
 
     const invalidOrder = {
-      ...makeBaseOrder(),
+      ...makeLimitOrder({
+        baseSize: "1.0",
+        limitPrice: "100.00",
+      }),
+      created_time: "2026-01-01T00:00:00.000Z",
       order_type: "INVALID_TYPE",
     } as unknown as CoinbaseOrder;
 
@@ -236,16 +230,13 @@ describe("hdb coinbase order repository", () => {
     const repo = await loadRepositoryModule();
 
     const stopLimitOrder = {
-      ...makeBaseOrder(),
-      order_type: "STOP_LIMIT",
-      order_configuration: {
-        stop_limit_stop_limit_gtc: {
-          base_size: "0.5",
-          limit_price: "101.00",
-          stop_price: "99.00",
-        },
-      },
-    } as unknown as CoinbaseOrder;
+      ...makeStopLimitOrder({
+        baseSize: "0.5",
+        limitPrice: "101.00",
+        stopPrice: "99.00",
+      }),
+      created_time: "2026-01-01T00:00:00.000Z",
+    } as CoinbaseOrder;
 
     await repo.insertCoinbaseOrder(stopLimitOrder);
 

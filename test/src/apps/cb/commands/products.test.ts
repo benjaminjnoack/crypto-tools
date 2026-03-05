@@ -26,7 +26,7 @@ vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
   requestMarketTrades: requestMarketTradesMock,
 }));
 
-import { handlePriceAction, handleProductAction } from "../../../../../src/apps/cb/commands/products.js";
+import { handlePriceAction, handleProductAction } from "../../../../../src/apps/cb/commands/product-handlers.js";
 
 describe("products command handlers", () => {
   beforeEach(() => {

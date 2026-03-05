@@ -9,7 +9,7 @@ describe("createProgram", () => {
 
     expect(names.has("accounts")).toBe(true);
     expect(names.has("market")).toBe(true);
-    expect(names.has("orders")).toBe(true);
+    expect(names.has("order")).toBe(true);
     expect(names.has("product")).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
-import type { LimitTpSlOptions, PlanOptions } from "./schemas/options.js";
-import { placeLimitTpSlOrder } from "../service/orders.js";
+import type { LimitTpSlOptions, PlanOptions } from "./schemas/command-options.js";
+import { placeLimitTpSlOrder } from "../service/order-service.js";
 import { getProductId, getProductInfo } from "../../../shared/coinbase/product.js";
 import { toIncrement } from "../../../shared/common/increment.js";
 import { requestCurrencyAccount } from "../../../shared/coinbase/rest.js";

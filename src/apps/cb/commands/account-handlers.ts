@@ -1,4 +1,4 @@
-import type { AccountsOptions } from "./schemas/options.js";
+import type { AccountsOptions } from "./schemas/command-options.js";
 import { toIncrement } from "../../../shared/common/increment.js";
 import { requestAccounts, requestCurrencyAccount } from "../../../shared/coinbase/rest.js";
 import { getProductInfo } from "../../../shared/coinbase/product.js";

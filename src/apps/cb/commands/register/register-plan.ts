@@ -1,7 +1,7 @@
-import { handlePlanAction } from "../plan.js";
+import { handlePlanAction } from "../plan-handlers.js";
 import { type Command } from "commander";
-import { OptionFlags, withValidatedProductIdOptions } from "./shared.js";
-import { PlanOptionsSchema } from "../schemas/options.js";
+import { OptionFlags, parseProductIdOptions, withAction } from "./register-utils.js";
+import { PlanOptionsSchema } from "../schemas/command-options.js";
 
 const DEFAULT_RISK_PERCENT = (1 / 4).toFixed(2); // 1H Quarter Portion
 const DEFAULT_BUFFER_PERCENT = (0.1).toFixed(3); // 0.1%
@@ -42,5 +42,5 @@ export function registerPlanCommand(program: Command) {
     .description(
       "Size and review a trade plan, then place a limit entry with attached take-profit and stop-loss orders",
     )
-    .action(withValidatedProductIdOptions("plan", PlanOptionsSchema, handlePlanAction));
+    .action(withAction("plan", parseProductIdOptions(PlanOptionsSchema), handlePlanAction));
 }

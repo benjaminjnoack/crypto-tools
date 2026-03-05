@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   placeBracketOrderMock,
   placeLimitOrderMock,
-  placeModifyOrderMock,
   placeStopLimitOrderMock,
   getProductIdMock,
   getProductInfoMock,
@@ -13,7 +12,6 @@ const {
 } = vi.hoisted(() => ({
   placeBracketOrderMock: vi.fn(() => Promise.resolve(undefined)),
   placeLimitOrderMock: vi.fn(() => Promise.resolve(undefined)),
-  placeModifyOrderMock: vi.fn(() => Promise.resolve(undefined)),
   placeStopLimitOrderMock: vi.fn(() => Promise.resolve(undefined)),
   getProductIdMock: vi.fn((product: string) => {
     const upper = product.toUpperCase();
@@ -37,10 +35,9 @@ const {
   }),
 }));
 
-vi.mock("../../../../../src/apps/cb/service/orders.js", () => ({
+vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeBracketOrder: placeBracketOrderMock,
   placeLimitOrder: placeLimitOrderMock,
-  placeModifyOrder: placeModifyOrderMock,
   placeStopLimitOrder: placeStopLimitOrderMock,
 }));
 
@@ -64,9 +61,8 @@ import {
   handleBracketAction,
   handleLimitAction,
   handleMaxAction,
-  handleModifyAction,
   handleStopAction,
-} from "../../../../../src/apps/cb/commands/limit.js";
+} from "../../../../../src/apps/cb/commands/limit-handlers.js";
 
 describe("limit command handlers", () => {
   beforeEach(() => {
@@ -126,16 +122,6 @@ describe("limit command handlers", () => {
       baseSize: "1",
       limitPrice: "190",
       stopPrice: "200",
-    });
-  });
-
-  it("delegates modify handler", async () => {
-    await handleModifyAction("123e4567-e89b-42d3-a456-426614174000", {
-      limitPrice: "101.50",
-    });
-
-    expect(placeModifyOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
-      limitPrice: "101.50",
     });
   });
 

@@ -93,12 +93,12 @@ vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
 vi.mock("../../../../../src/shared/coinbase/transaction_summary.js", () => ({
   getTransactionSummary: getTransactionSummaryMock,
 }));
-vi.mock("../../../../../src/apps/cb/service/orders.js", () => ({
+vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeLimitTpSlOrder: placeLimitTpSlOrderMock,
 }));
 
-import { buildTradePlan, handlePlanAction } from "../../../../../src/apps/cb/commands/plan.js";
-import type { PlanOptions } from "../../../../../src/apps/cb/commands/schemas/options.js";
+import { buildTradePlan, handlePlanAction } from "../../../../../src/apps/cb/commands/plan-handlers.js";
+import type { PlanOptions } from "../../../../../src/apps/cb/commands/schemas/command-options.js";
 
 function baseInput(overrides: Partial<Parameters<typeof buildTradePlan>[0]> = {}) {
   return {

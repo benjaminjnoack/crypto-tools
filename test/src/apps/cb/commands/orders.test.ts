@@ -2,15 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   loggerInfoMock,
-  requestOpenOrdersMock,
-  requestOrderMock,
-  requestOrderCancellationMock,
+  getOpenOrdersMock,
+  getOrderMock,
+  cancelOrderMock,
+  placeModifyOrderMock,
   printOrderMock,
 } = vi.hoisted(() => ({
   loggerInfoMock: vi.fn(),
-  requestOpenOrdersMock: vi.fn<(productId: string | null) => Promise<Array<{ order_id: string }>>>(() => Promise.resolve([])),
-  requestOrderMock: vi.fn(() => Promise.resolve({ order_id: "order-1" })),
-  requestOrderCancellationMock: vi.fn(() => Promise.resolve(true)),
+  getOpenOrdersMock: vi.fn<(productId: string | null) => Promise<Array<{ order_id: string }>>>(() => Promise.resolve([])),
+  getOrderMock: vi.fn(() => Promise.resolve({ order_id: "order-1" })),
+  cancelOrderMock: vi.fn(() => Promise.resolve(true)),
+  placeModifyOrderMock: vi.fn(() => Promise.resolve(undefined)),
   printOrderMock: vi.fn(),
 }));
 
@@ -20,17 +22,26 @@ vi.mock("../../../../../src/shared/log/logger.js", () => ({
   },
 }));
 
-vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
-  requestOpenOrders: requestOpenOrdersMock,
-  requestOrder: requestOrderMock,
-  requestOrderCancellation: requestOrderCancellationMock,
+vi.mock("../../../../../src/shared/coinbase/orders-client.js", () => ({
+  getOpenOrders: getOpenOrdersMock,
+  getOrder: getOrderMock,
+  cancelOrder: cancelOrderMock,
 }));
 
 vi.mock("../../../../../src/shared/log/orders.js", () => ({
   printOrder: printOrderMock,
 }));
 
-import { handleCancelAction, handleOrderAction, handleOrdersAction } from "../../../../../src/apps/cb/commands/orders.js";
+vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
+  placeModifyOrder: placeModifyOrderMock,
+}));
+
+import {
+  handleCancelAction,
+  handleModifyAction,
+  handleOrderAction,
+  handleOrdersAction,
+} from "../../../../../src/apps/cb/commands/order-handlers.js";
 
 describe("orders command handlers", () => {
   beforeEach(() => {
@@ -39,31 +50,31 @@ describe("orders command handlers", () => {
 
   it("loads and prints a single order", async () => {
     const order = { order_id: "abc-123" };
-    requestOrderMock.mockResolvedValueOnce(order);
+    getOrderMock.mockResolvedValueOnce(order);
 
     await handleOrderAction("abc-123");
 
-    expect(requestOrderMock).toHaveBeenCalledWith("abc-123");
+    expect(getOrderMock).toHaveBeenCalledWith("abc-123");
     expect(printOrderMock).toHaveBeenCalledWith(order);
   });
 
   it("logs when there are no open orders", async () => {
-    requestOpenOrdersMock.mockResolvedValueOnce([]);
+    getOpenOrdersMock.mockResolvedValueOnce([]);
 
     await handleOrdersAction(null);
 
-    expect(requestOpenOrdersMock).toHaveBeenCalledWith(null);
+    expect(getOpenOrdersMock).toHaveBeenCalledWith(null);
     expect(loggerInfoMock).toHaveBeenCalledWith("No open orders found.");
     expect(printOrderMock).not.toHaveBeenCalled();
   });
 
   it("prints each open order with index separators", async () => {
     const openOrders = [{ order_id: "a" }, { order_id: "b" }];
-    requestOpenOrdersMock.mockResolvedValueOnce(openOrders);
+    getOpenOrdersMock.mockResolvedValueOnce(openOrders);
 
     await handleOrdersAction("BTC-USD");
 
-    expect(requestOpenOrdersMock).toHaveBeenCalledWith("BTC-USD");
+    expect(getOpenOrdersMock).toHaveBeenCalledWith("BTC-USD");
     expect(loggerInfoMock).toHaveBeenCalledWith("Order 1/2");
     expect(loggerInfoMock).toHaveBeenCalledWith("Order 2/2");
     expect(loggerInfoMock).toHaveBeenCalledWith("---");
@@ -75,6 +86,14 @@ describe("orders command handlers", () => {
   it("cancels the requested order id", async () => {
     await handleCancelAction("cancel-me");
 
-    expect(requestOrderCancellationMock).toHaveBeenCalledWith("cancel-me");
+    expect(cancelOrderMock).toHaveBeenCalledWith("cancel-me");
+  });
+
+  it("delegates modify action to service", async () => {
+    await handleModifyAction("123e4567-e89b-42d3-a456-426614174000", { limitPrice: "101.50" });
+
+    expect(placeModifyOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
+      limitPrice: "101.50",
+    });
   });
 });

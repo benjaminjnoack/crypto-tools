@@ -61,7 +61,7 @@ import {
   handleBalanceAction,
   handleCashAction,
   handleFeesAction,
-} from "../../../../../src/apps/cb/commands/accounts.js";
+} from "../../../../../src/apps/cb/commands/account-handlers.js";
 
 const btcAccount = {
   currency: "BTC",

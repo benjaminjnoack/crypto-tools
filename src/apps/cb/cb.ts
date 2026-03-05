@@ -1,12 +1,12 @@
 import process from "node:process";
 import { Command } from "commander";
 import { getVersion } from "../../version.js";
-import { registerAccountsCommands } from "./commands/register/accounts.js";
-import { registerLimitCommands } from "./commands/register/limit.js";
-import { registerMarketCommands } from "./commands/register/market.js";
-import { registerOrderCommands } from "./commands/register/orders.js";
-import { registerProductCommands } from "./commands/register/products.js";
-import { registerPlanCommand } from "./commands/register/plan.js";
+import { registerAccountsCommands } from "./commands/register/register-accounts.js";
+import { registerLimitCommands } from "./commands/register/register-limit.js";
+import { registerMarketCommands } from "./commands/register/register-market.js";
+import { registerOrderCommands } from "./commands/register/register-orders.js";
+import { registerProductCommands } from "./commands/register/register-products.js";
+import { registerPlanCommand } from "./commands/register/register-plan.js";
 
 export function createProgram(): Command {
   const version = getVersion();

@@ -4,9 +4,8 @@ import {
   BidOptionsSchema,
   BracketOptionsSchema,
   LimitOptionsSchema,
-  ModifyOptionsSchema,
   StopOptionsSchema,
-} from "../schemas/options.js";
+} from "../schemas/command-options.js";
 
 import {
   handleAskAction,
@@ -14,17 +13,15 @@ import {
   handleBracketAction,
   handleLimitAction,
   handleMaxAction,
-  handleModifyAction,
   handleStopAction,
-} from "../limit.js";
+} from "../limit-handlers.js";
 
 import {
   OptionFlags,
-  withValidatedArgOptions,
-  withValidatedProductId,
-  withValidatedProductIdOptions,
-} from "./shared.js";
-import { OrderIdSchema } from "../../../../shared/schemas/primitives.js";
+  parseProductId,
+  parseProductIdOptions,
+  withAction,
+} from "./register-utils.js";
 
 export function registerLimitCommands(program: Command) {
   program
@@ -42,7 +39,7 @@ export function registerLimitCommands(program: Command) {
       OptionFlags.noPostOnly,
       "Disable post-only behavior (allow taking liquidity)",
     )
-    .action(withValidatedProductIdOptions("ask", AskOptionsSchema, handleAskAction));
+    .action(withAction("ask", parseProductIdOptions(AskOptionsSchema), handleAskAction));
 
   program
     .command("bid [product]")
@@ -59,7 +56,7 @@ export function registerLimitCommands(program: Command) {
       OptionFlags.noPostOnly,
       "Disable post-only behavior (allow taking liquidity)",
     )
-    .action(withValidatedProductIdOptions("bid", BidOptionsSchema, handleBidAction));
+    .action(withAction("bid", parseProductIdOptions(BidOptionsSchema), handleBidAction));
 
   program
     .command("bracket [product]")
@@ -70,9 +67,7 @@ export function registerLimitCommands(program: Command) {
       OptionFlags.stopPrice,
       "Stop trigger price in USD (positive number; must be below --limitPrice)",
     )
-    .action(
-      withValidatedProductIdOptions("bracket", BracketOptionsSchema, handleBracketAction),
-    );
+    .action(withAction("bracket", parseProductIdOptions(BracketOptionsSchema), handleBracketAction));
 
   program
     .command("limit [product]")
@@ -92,22 +87,14 @@ export function registerLimitCommands(program: Command) {
       OptionFlags.value,
       "Notional USD value to buy/sell (positive number; required unless --baseSize is provided)",
     )
-    .action(withValidatedProductIdOptions("limit", LimitOptionsSchema, handleLimitAction));
-
-  program
-    .command("modify <order_id>")
-    .description("Modify an open limit/bracket/TP-SL order")
-    .option(OptionFlags.baseSize, "Updated base amount")
-    .option(OptionFlags.limitPrice, "Updated limit price in USD")
-    .option(OptionFlags.stopPrice, "Updated stop trigger price in USD")
-    .action(withValidatedArgOptions("modify", OrderIdSchema, ModifyOptionsSchema, handleModifyAction));
+    .action(withAction("limit", parseProductIdOptions(LimitOptionsSchema), handleLimitAction));
 
   program
     .command("max [product]")
     .description(
       "Use available USD (rounded down to $500) to place a max-size buy limit near the best bid",
     )
-    .action(withValidatedProductId("max", handleMaxAction));
+    .action(withAction("max", parseProductId(), handleMaxAction));
 
   program
     .command("stop [product]")
@@ -121,5 +108,5 @@ export function registerLimitCommands(program: Command) {
       OptionFlags.stopPrice,
       "Stop trigger price in USD (positive number; required and above --limitPrice)",
     )
-    .action(withValidatedProductIdOptions("stop", StopOptionsSchema, handleStopAction));
+    .action(withAction("stop", parseProductIdOptions(StopOptionsSchema), handleStopAction));
 }

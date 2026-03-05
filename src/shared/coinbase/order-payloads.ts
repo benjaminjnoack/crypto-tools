@@ -1,5 +1,5 @@
 import * as uuid from "uuid";
-import { requestOrderCreation } from "./rest.js";
+import { createOrder } from "./orders-client.js";
 import { ORDER_SIDE, type OrderSide } from "./schemas/enums.js";
 import type { OrderRequest } from "./schemas/rest.js";
 import { logger } from "../log/logger.js";
@@ -21,7 +21,7 @@ export async function createMarketOrder(
     },
   };
 
-  const orderId = await requestOrderCreation(order);
+  const orderId = await createOrder(order);
   logger.info(`createMarketOrder => ${orderId}`);
   return orderId;
 }
@@ -47,7 +47,7 @@ export async function createLimitOrder(
     },
   };
 
-  const orderId = await requestOrderCreation(order);
+  const orderId = await createOrder(order);
   logger.info(`createLimitOrder => ${orderId}`);
   return orderId;
 }
@@ -81,7 +81,7 @@ export async function createLimitTpSlOrder(
       },
     },
   };
-  const orderId = await requestOrderCreation(order);
+  const orderId = await createOrder(order);
   logger.info(`createLimitOrder => ${orderId}`);
   return orderId;
 }
@@ -107,7 +107,7 @@ export async function createBracketOrder(
     },
   };
 
-  const orderId = await requestOrderCreation(order);
+  const orderId = await createOrder(order);
   logger.info(`createBracketOrder => ${orderId}`);
   return orderId;
 }
@@ -134,7 +134,7 @@ export async function createStopLimitOrder(
     },
   };
 
-  const orderId = await requestOrderCreation(order);
+  const orderId = await createOrder(order);
   logger.info(`createStopLimitOrder => ${orderId}`);
   return orderId;
 }

@@ -1,4 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CoinbaseOrder } from "../../../../../src/shared/coinbase/schemas/orders.js";
+import {
+  makeLimitOrder,
+  makeMarketOrder,
+  makeTpSlOrder,
+} from "../../../fixtures/coinbase-orders.js";
 
 const {
   readlineQuestionMock,
@@ -9,8 +15,8 @@ const {
   createLimitTpSlOrderMock,
   createBracketOrderMock,
   createStopLimitOrderMock,
-  requestOrderMock,
-  requestOrderEditMock,
+  getOrderMock,
+  editOrderMock,
 } = vi.hoisted(() => ({
   readlineQuestionMock: vi.fn(() => "yes"),
   getProductInfoMock: vi.fn(() => Promise.resolve({
@@ -29,29 +35,8 @@ const {
   createLimitTpSlOrderMock: vi.fn(() => Promise.resolve("tpsl-1")),
   createBracketOrderMock: vi.fn(() => Promise.resolve("bracket-1")),
   createStopLimitOrderMock: vi.fn(() => Promise.resolve("stop-1")),
-  requestOrderMock: vi.fn<(orderId: string) => Promise<Record<string, unknown>>>(() => Promise.resolve({
-    order_id: "123e4567-e89b-42d3-a456-426614174000",
-    product_id: "BTC-USD",
-    side: "BUY",
-    status: "OPEN",
-    completion_percentage: "0",
-    filled_size: "0",
-    average_filled_price: "0",
-    filled_value: "0",
-    total_fees: "0",
-    total_value_after_fees: "0",
-    product_type: "SPOT",
-    last_fill_time: null,
-    order_type: "LIMIT",
-    order_configuration: {
-      limit_limit_gtc: {
-        base_size: "1.00",
-        limit_price: "100.00",
-        post_only: true,
-      },
-    },
-  })),
-  requestOrderEditMock: vi.fn(() => Promise.resolve(true)),
+  getOrderMock: vi.fn<(orderId: string) => Promise<CoinbaseOrder>>(() => Promise.resolve(makeLimitOrder())),
+  editOrderMock: vi.fn(() => Promise.resolve(true)),
 }));
 
 vi.mock("readline-sync", () => ({
@@ -75,7 +60,7 @@ vi.mock("../../../../../src/shared/common/increment.js", () => ({
   toIncrement: toIncrementMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/order.js", () => ({
+vi.mock("../../../../../src/shared/coinbase/order-payloads.js", () => ({
   createMarketOrder: createMarketOrderMock,
   createLimitOrder: createLimitOrderMock,
   createLimitTpSlOrder: createLimitTpSlOrderMock,
@@ -83,9 +68,9 @@ vi.mock("../../../../../src/shared/coinbase/order.js", () => ({
   createStopLimitOrder: createStopLimitOrderMock,
 }));
 
-vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
-  requestOrder: requestOrderMock,
-  requestOrderEdit: requestOrderEditMock,
+vi.mock("../../../../../src/shared/coinbase/orders-client.js", () => ({
+  getOrder: getOrderMock,
+  editOrder: editOrderMock,
 }));
 
 import {
@@ -95,7 +80,7 @@ import {
   placeMarketOrder,
   placeModifyOrder,
   placeStopLimitOrder,
-} from "../../../../../src/apps/cb/service/orders.js";
+} from "../../../../../src/apps/cb/service/order-service.js";
 
 describe("cb service orders", () => {
   beforeEach(() => {
@@ -211,8 +196,8 @@ describe("cb service orders", () => {
       stopPrice: "99.00",
     });
 
-    expect(requestOrderMock).not.toHaveBeenCalled();
-    expect(requestOrderEditMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
+    expect(getOrderMock).not.toHaveBeenCalled();
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
       price: "101.00",
       size: "1.1",
       stop_price: "99.00",
@@ -220,32 +205,11 @@ describe("cb service orders", () => {
   });
 
   it("loads missing fields from a limit order", async () => {
-    requestOrderMock.mockResolvedValueOnce({
-      order_id: "123e4567-e89b-42d3-a456-426614174000",
-      product_id: "BTC-USD",
-      side: "BUY",
-      status: "OPEN",
-      completion_percentage: "0",
-      filled_size: "0",
-      average_filled_price: "0",
-      filled_value: "0",
-      total_fees: "0",
-      total_value_after_fees: "0",
-      product_type: "SPOT",
-      last_fill_time: null,
-      order_type: "LIMIT",
-      order_configuration: {
-        limit_limit_gtc: {
-          base_size: "1.00",
-          limit_price: "100.00",
-          post_only: true,
-        },
-      },
-    });
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder());
 
     await placeModifyOrder("123e4567-e89b-42d3-a456-426614174000", { baseSize: "2.00" });
 
-    expect(requestOrderEditMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
       price: "100.00",
       size: "2.00",
       stop_price: undefined,
@@ -253,32 +217,13 @@ describe("cb service orders", () => {
   });
 
   it("loads missing fields from bracket-like orders", async () => {
-    requestOrderMock.mockResolvedValueOnce({
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
       order_id: "123e4567-e89b-42d3-a456-426614174001",
-      product_id: "BTC-USD",
-      side: "SELL",
-      status: "OPEN",
-      completion_percentage: "0",
-      filled_size: "0",
-      average_filled_price: "0",
-      filled_value: "0",
-      total_fees: "0",
-      total_value_after_fees: "0",
-      product_type: "SPOT",
-      last_fill_time: null,
-      order_type: "TAKE_PROFIT_STOP_LOSS",
-      order_configuration: {
-        trigger_bracket_gtc: {
-          base_size: "1.50",
-          limit_price: "120.00",
-          stop_trigger_price: "95.00",
-        },
-      },
-    });
+    }));
 
     await placeModifyOrder("123e4567-e89b-42d3-a456-426614174001", { limitPrice: "121.00" });
 
-    expect(requestOrderEditMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174001", {
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174001", {
       price: "121.00",
       size: "1.50",
       stop_price: "95.00",
@@ -286,26 +231,9 @@ describe("cb service orders", () => {
   });
 
   it("rejects market orders for modify", async () => {
-    requestOrderMock.mockResolvedValueOnce({
+    getOrderMock.mockResolvedValueOnce(makeMarketOrder({
       order_id: "123e4567-e89b-42d3-a456-426614174002",
-      product_id: "BTC-USD",
-      side: "BUY",
-      status: "OPEN",
-      completion_percentage: "0",
-      filled_size: "0",
-      average_filled_price: "0",
-      filled_value: "0",
-      total_fees: "0",
-      total_value_after_fees: "0",
-      product_type: "SPOT",
-      last_fill_time: null,
-      order_type: "MARKET",
-      order_configuration: {
-        market_market_ioc: {
-          base_size: "0.1",
-        },
-      },
-    });
+    }));
 
     await expect(placeModifyOrder("123e4567-e89b-42d3-a456-426614174002", {
       limitPrice: "101.00",

@@ -49,6 +49,31 @@ Never commit secrets, `.env` files, or credential material.
 - `src/apps/hdb/cli.ts`
 - `src/shared/bin/validate-env.ts` (`helper-env-check`)
 
+### cb Conventions
+
+For `src/apps/cb`, keep these boundaries:
+
+- `commands/`: command intent handlers only
+- `service/order-builders.ts`: pure, testable order sizing/validation/merge logic
+- `service/order-prompts.ts`: user interaction (`console`/prompt formatting)
+- `service/order-service.ts`: orchestration only
+- `src/shared/coinbase/orders-client.ts`: order-focused transport API
+- `src/shared/coinbase/rest.ts`: low-level HTTP/signed request primitives
+
+Command registration in `src/apps/cb/commands/register/` should use:
+
+- `withAction(commandName, parser, handler)` from `register/register-utils.ts`
+- parser helpers (`parseArg`, `parseArgOptions`, `parseProductId`, `parseProductIdOptions`, etc.)
+
+Avoid introducing additional one-off wrapper helpers when parser composition is sufficient.
+
+Order command topology is intentionally nested:
+
+- `cb order get <order_id>`
+- `cb order list [product]`
+- `cb order cancel <order_id>`
+- `cb order modify <order_id> ...`
+
 ## Commands and Scripts
 
 - `npm run dev`: run `cb` from TypeScript (`tsx src/apps/cb/cli.ts`)

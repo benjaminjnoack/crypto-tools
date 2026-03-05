@@ -1,12 +1,12 @@
 import type { Command } from "commander";
-import { type AccountsOptions, AccountsOptionsSchema } from "../schemas/options.js";
+import { AccountsOptionsSchema } from "../schemas/command-options.js";
 import {
   handleAccountsAction,
   handleBalanceAction,
   handleCashAction,
   handleFeesAction,
-} from "../accounts.js";
-import { withNoArgs, withValidatedOptions } from "./shared.js";
+} from "../account-handlers.js";
+import { parseNone, parseOptionalProductOptions, withAction } from "./register-utils.js";
 
 export function registerAccountsCommands(program: Command) {
   program
@@ -16,12 +16,10 @@ export function registerAccountsCommands(program: Command) {
     .option("--crypto", "Show only crypto accounts", false)
     .option("--cash", "Show only fiat (cash) accounts; ignored if --crypto is also set", false)
     .action(
-      withValidatedOptions(
+      withAction(
         "accounts",
-        AccountsOptionsSchema,
-        async (product, options: AccountsOptions) => {
-          await handleAccountsAction(product, options);
-        },
+        parseOptionalProductOptions(AccountsOptionsSchema),
+        handleAccountsAction,
       ),
     );
 
@@ -29,7 +27,7 @@ export function registerAccountsCommands(program: Command) {
     .command("balance")
     .alias("usd")
     .description("Show USD available, hold, and total balances")
-    .action(withNoArgs("balance", handleBalanceAction));
+    .action(withAction("balance", parseNone(), handleBalanceAction));
 
   program.command("cash").description("List non-zero fiat (cash) account balances").action(handleCashAction);
   program
