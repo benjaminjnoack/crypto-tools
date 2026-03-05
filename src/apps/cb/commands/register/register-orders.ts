@@ -52,6 +52,7 @@ export function registerOrderCommands(program: Command) {
 
   order
     .command("breakeven <order_id>")
+    .alias("break")
     .description("Move stop to fee-inclusive break-even (bracket/TP-SL orders only)")
     .requiredOption(OptionFlags.modifyBuyPrice, "Filled entry buy price in USD")
     .option(OptionFlags.limitPrice, "Updated limit price in USD")
