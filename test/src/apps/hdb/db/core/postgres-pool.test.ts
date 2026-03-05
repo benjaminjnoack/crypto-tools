@@ -30,7 +30,7 @@ vi.mock("../../../../../../src/shared/log/logger.js", () => ({
 }));
 
 async function loadPoolModule() {
-  return import("../../../../../../src/apps/hdb/db/core/pool.js");
+  return import("../../../../../../src/apps/hdb/db/core/postgres-pool.js");
 }
 
 describe("hdb db pool", () => {

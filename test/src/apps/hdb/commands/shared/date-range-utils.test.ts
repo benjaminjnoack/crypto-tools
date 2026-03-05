@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DateRange } from "../../../../../../src/apps/hdb/commands/schemas/DateRange.js";
+import { DateRange } from "../../../../../../src/apps/hdb/commands/schemas/date-range.js";
 
 const { selectCoinbaseOrderByLastFillTimeMock, loggerWarnMock, loggerDebugMock } = vi.hoisted(() => ({
   selectCoinbaseOrderByLastFillTimeMock: vi.fn<
@@ -9,7 +9,7 @@ const { selectCoinbaseOrderByLastFillTimeMock, loggerWarnMock, loggerDebugMock }
   loggerDebugMock: vi.fn(),
 }));
 
-vi.mock("../../../../../../src/apps/hdb/db/coinbase/orders/repository.js", () => ({
+vi.mock("../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js", () => ({
   selectCoinbaseOrderByLastFillTime: selectCoinbaseOrderByLastFillTimeMock,
 }));
 
@@ -25,7 +25,7 @@ import {
   getRangeDates,
   getToAndFromDates,
   parseAsUtc,
-} from "../../../../../../src/apps/hdb/commands/shared/utils.js";
+} from "../../../../../../src/apps/hdb/commands/shared/date-range-utils.js";
 
 describe("hdb shared date utils", () => {
   beforeEach(() => {

@@ -43,7 +43,7 @@ vi.mock("node:fs/promises", () => ({
   },
 }));
 
-vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/repository.js", () => ({
+vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js", () => ({
   COINBASE_ORDERS_TABLE: "coinbase_orders",
   insertCoinbaseOrder: insertCoinbaseOrderMock,
   selectCoinbaseOrder: selectCoinbaseOrderMock,
@@ -51,7 +51,7 @@ vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/repository.js", ()
   selectCoinbaseOrdersSumTotalFees: selectCoinbaseOrdersSumTotalFeesMock,
 }));
 
-vi.mock("../../../../../../../src/apps/hdb/commands/shared/utils.js", () => ({
+vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
   COINBASE_EPOCH: "2024-01-01T00:00:00.000Z",
   getToAndFromDates: getToAndFromDatesMock,
 }));
@@ -90,7 +90,7 @@ import {
   coinbaseOrdersFees,
   coinbaseOrdersInsert,
   coinbaseOrdersUpdate,
-} from "../../../../../../../src/apps/hdb/commands/coinbase/orders/handlers.js";
+} from "../../../../../../../src/apps/hdb/commands/coinbase/orders/coinbase-orders-handlers.js";
 
 describe("hdb coinbase order handlers", () => {
   beforeEach(() => {

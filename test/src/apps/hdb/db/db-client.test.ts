@@ -5,12 +5,12 @@ const { getPoolMock, endPoolMock } = vi.hoisted(() => ({
   endPoolMock: vi.fn(() => Promise.resolve(undefined)),
 }));
 
-vi.mock("../../../../../src/apps/hdb/db/core/pool.js", () => ({
+vi.mock("../../../../../src/apps/hdb/db/core/postgres-pool.js", () => ({
   getPool: getPoolMock,
   endPool: endPoolMock,
 }));
 
-import { endClient, getClient } from "../../../../../src/apps/hdb/db/client.js";
+import { endClient, getClient } from "../../../../../src/apps/hdb/db/db-client.js";
 
 describe("hdb db client", () => {
   beforeEach(() => {

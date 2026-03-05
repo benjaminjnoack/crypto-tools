@@ -9,6 +9,7 @@ export const DateRange = {
 } as const;
 
 export type DateRangeValue = (typeof DateRange)[keyof typeof DateRange];
+
 export const DateRangeValues = [
   DateRange.WEEK,
   DateRange.MONTH,
@@ -16,4 +17,11 @@ export const DateRangeValues = [
   DateRange.YEAR,
   DateRange.ALL,
 ] as const;
+
 export const DateRangeSchema = z.enum(DateRangeValues);
+
+export const DebugOptionsSchema = z.object({
+  debug: z.boolean().optional(),
+});
+
+export type DebugOptions = z.infer<typeof DebugOptionsSchema>;

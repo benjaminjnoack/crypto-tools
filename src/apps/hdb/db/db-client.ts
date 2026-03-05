@@ -1,4 +1,4 @@
-import { endPool, getPool } from "./core/pool.js";
+import { endPool, getPool } from "./core/postgres-pool.js";
 
 export function getClient() {
   return Promise.resolve(getPool());

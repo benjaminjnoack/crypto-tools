@@ -85,4 +85,19 @@ Use `hdb <command> --help` for option details.
 - `npm run build`
 - `npm run release:check`
 
+## Naming Topology
+
+To keep files easy to scan as `hdb` grows, avoid generic repeated names.
+
+- Command registration files: `register-<domain>-commands.ts`
+- Command handlers: `<domain>-handlers.ts`
+- Command option schemas: `<domain>-options.ts`
+- Shared date/time helpers: `date-range-utils.ts`
+- DB entrypoint: `db-client.ts`
+- DB pool module: `postgres-pool.ts`
+- DB repositories: `<domain>-repository.ts`
+- DB SQL modules: `<domain>-sql.ts`
+- DB mapping modules: `<domain>-mappers.ts`
+- General rule: prefer explicit, domain-scoped filenames over `register.ts`, `handlers.ts`, or `orders.ts`.
+
 Project workflow and standards are in [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).

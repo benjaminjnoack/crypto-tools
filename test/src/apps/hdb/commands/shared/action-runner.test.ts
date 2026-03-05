@@ -16,7 +16,7 @@ const { envConfig, endClientMock, printErrorMock, loggerDebugMock, getEnvConfigM
   };
 });
 
-vi.mock("../../../../../../src/apps/hdb/db/client.js", () => ({
+vi.mock("../../../../../../src/apps/hdb/db/db-client.js", () => ({
   endClient: endClientMock,
 }));
 

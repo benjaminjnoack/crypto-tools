@@ -1,5 +1,12 @@
 import process from "node:process";
 import { type ZodType } from "zod";
+import {
+  parseArg,
+  parseArgOptions,
+  parseNone,
+  type Parser,
+  withParsedAction,
+} from "#shared/cli/register-utils";
 import { getProductId } from "#shared/coinbase/index";
 import { printError } from "#shared/log/index";
 import type { ProductId } from "#shared/schemas/shared-primitives";
@@ -27,7 +34,6 @@ export function printErrorAndExit(commandName: string, e: unknown, code = 1) {
 }
 
 type AsyncVoid = Promise<void> | void;
-type Parser<TArgs extends unknown[]> = (...raw: unknown[]) => TArgs;
 const DEFAULT_PRODUCT = "btc";
 
 export function withCommandError(
@@ -48,29 +54,10 @@ export function withAction<TArgs extends unknown[]>(
   parser: Parser<TArgs>,
   handler: (...args: TArgs) => AsyncVoid,
 ) {
-  return withCommandError(commandName, async (...raw: unknown[]) => {
-    const args = parser(...raw);
-    await handler(...args);
-  });
+  return withCommandError(commandName, withParsedAction(parser, handler));
 }
 
-export function parseNone(): Parser<[]> {
-  return () => [];
-}
-
-export function parseArg<TArg>(argSchema: ZodType<TArg>): Parser<[TArg]> {
-  return (rawArg: unknown) => [argSchema.parse(rawArg)];
-}
-
-export function parseArgOptions<TArg, TOptions>(
-  argSchema: ZodType<TArg>,
-  optionsSchema: ZodType<TOptions>,
-): Parser<[TArg, TOptions]> {
-  return (rawArg: unknown, rawOptions: unknown) => [
-    argSchema.parse(rawArg),
-    optionsSchema.parse(rawOptions),
-  ];
-}
+export { parseNone, parseArg, parseArgOptions };
 
 export function parseOptionalProduct(): Parser<[ProductId | null]> {
   return (rawProduct: unknown) => {

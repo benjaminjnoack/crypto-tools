@@ -10,7 +10,7 @@ const { getClientMock, loggerDebugMock } = vi.hoisted(() => ({
   loggerDebugMock: vi.fn(),
 }));
 
-vi.mock("../../../../../../../src/apps/hdb/db/client.js", () => ({
+vi.mock("../../../../../../../src/apps/hdb/db/db-client.js", () => ({
   getClient: getClientMock,
 }));
 
@@ -23,7 +23,7 @@ vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
 const VALID_UUID = "123e4567-e89b-42d3-a456-426614174000";
 
 async function loadRepositoryModule() {
-  return import("../../../../../../../src/apps/hdb/db/coinbase/orders/repository.js");
+  return import("../../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js");
 }
 
 describe("hdb coinbase order repository", () => {

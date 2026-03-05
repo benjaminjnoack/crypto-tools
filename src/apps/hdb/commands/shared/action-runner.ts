@@ -1,5 +1,5 @@
 import type { ZodType } from "zod";
-import { endClient } from "../../db/client.js";
+import { endClient } from "../../db/db-client.js";
 import type { DebugOptions } from "../schemas/debug-options.js";
 import { getEnvConfig } from "#shared/common/index";
 import { logger, printError } from "#shared/log/index";

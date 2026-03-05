@@ -1,4 +1,4 @@
-import { getClient } from "../db/client.js";
+import { getClient } from "../db/db-client.js";
 import { z } from "zod";
 import { logger } from "#shared/log/index";
 

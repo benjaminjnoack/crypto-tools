@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DebugOptionsSchema } from "../../../schemas/debug-options.js";
-import { DateRangeSchema } from "../../../schemas/DateRange.js";
+import { DateRangeSchema } from "../../../schemas/date-range.js";
 import { OrderSideSchema } from "#shared/coinbase/schemas/coinbase-enum-schemas";
 
 export const TimeOptionsSchema = z.object({

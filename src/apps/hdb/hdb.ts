@@ -1,8 +1,8 @@
 import process from "node:process";
 import { Command } from "commander";
-import { registerSystemCommands } from "./commands/system/register.js";
-import { registerCoinbaseCommands } from "./commands/coinbase/register.js";
-import { registerCointrackerCommands } from "./commands/cointracker/register.js";
+import { registerSystemCommands } from "./commands/system/register-system-commands.js";
+import { registerCoinbaseCommands } from "./commands/coinbase/register-coinbase-commands.js";
+import { registerCointrackerCommands } from "./commands/cointracker/register-cointracker-commands.js";
 import { getVersion } from "../../version.js";
 
 export function createProgram(): Command {
