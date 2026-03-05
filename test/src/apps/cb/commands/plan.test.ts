@@ -132,6 +132,9 @@ describe("buildTradePlan", () => {
     expect(result.buyPrice).toBe("100.00");
     expect(result.stopPrice).toBe("95.00");
     expect(result.takeProfitPrice).toBe("120.00");
+    expect(result.breakEvenStopPrice).toBe("100.31");
+    expect(result.breakEvenMovePercentage).toBeCloseTo(0.31, 2);
+    expect(result.breakEvenNetPnl).toBeGreaterThanOrEqual(0);
     expect(result.maxRiskAmount).toBeCloseTo(100, 8);
     expect(result.actualRisk).toBeLessThanOrEqual(result.maxRiskAmount + 0.01);
     expect(result.orderOptions.limitPrice).toBe("100.00");
@@ -401,6 +404,20 @@ describe("handlePlanAction", () => {
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Sizing Mode:       ALL-IN"));
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Risk Percentage:   0.25% (ignored for sizing)"));
+    pauseSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("prints break-even trailing-stop guidance", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const pauseSpy = vi.spyOn(process.stdin, "pause").mockImplementation(() => process.stdin);
+
+    await handlePlanAction("btc", {
+      ...baseOptions,
+      dryRunFlag: true,
+    });
+
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Break-Even Stop:"));
     pauseSpy.mockRestore();
     logSpy.mockRestore();
   });

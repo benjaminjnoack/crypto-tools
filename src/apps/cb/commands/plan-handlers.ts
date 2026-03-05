@@ -56,6 +56,9 @@ type TradePlanBuildSuccess = {
   netStopLoss: number;
   netStopLossPnL: number;
   totalFeesWhenLoss: number;
+  breakEvenStopPrice: string;
+  breakEvenMovePercentage: number;
+  breakEvenNetPnl: number;
   totalCostWithFee: number;
   buyFee: number;
   rewardPercentage: number;
@@ -68,6 +71,16 @@ type TradePlanBuildSuccess = {
 };
 
 type TradePlanBuildResult = TradePlanBuildFailure | TradePlanBuildSuccess;
+
+function toIncrementUp(increment: string, value: number): string {
+  const floored = parseFloat(toIncrement(increment, value));
+  if (floored + 1e-12 >= value) {
+    return toIncrement(increment, floored);
+  }
+
+  const step = increment === "1" ? 1 : parseFloat(increment);
+  return toIncrement(increment, floored + step);
+}
 
 export function buildTradePlan(input: TradePlanBuildInput): TradePlanBuildResult {
   const warnings: string[] = [];
@@ -172,6 +185,15 @@ export function buildTradePlan(input: TradePlanBuildInput): TradePlanBuildResult
   const effectiveRiskPercent = (actualRisk / input.usdBalance) * 100;
   const totalFeesWhenProfit = buyFee + takeProfitFee;
   const totalFeesWhenLoss = buyFee + stopLossFee;
+  const breakEvenStopPrice = toIncrementUp(
+    input.priceIncrement,
+    totalCostWithFee / (effectivePositionSize * (1 - input.takerFeeRate)),
+  );
+  const breakEvenEffectiveStopPrice = parseFloat(breakEvenStopPrice);
+  const breakEvenStopSubtotal = effectivePositionSize * breakEvenEffectiveStopPrice;
+  const breakEvenStopFee = breakEvenStopSubtotal * input.takerFeeRate;
+  const breakEvenNetPnl = breakEvenStopSubtotal - breakEvenStopFee - totalCostWithFee;
+  const breakEvenMovePercentage = ((breakEvenEffectiveStopPrice - effectiveBuyPrice) / effectiveBuyPrice) * 100;
 
   return {
     ok: true,
@@ -200,6 +222,9 @@ export function buildTradePlan(input: TradePlanBuildInput): TradePlanBuildResult
     netStopLoss,
     netStopLossPnL,
     totalFeesWhenLoss,
+    breakEvenStopPrice,
+    breakEvenMovePercentage,
+    breakEvenNetPnl,
     totalCostWithFee,
     buyFee,
     rewardPercentage,
@@ -253,6 +278,9 @@ export function renderTradePlan(plan: TradePlanBuildSuccess): void {
   console.log(`  Net Proceeds:      ${formatUsd(plan.netStopLoss)}`);
   console.log(`  Net PnL:           ${formatSignedUsd(plan.netStopLossPnL)}`);
   console.log(`  Account ROI:       ${formatSignedPercent(plan.accountRoiOnLossPercentage)}`);
+  console.log("\nTrailing Stop Guide:");
+  console.log(`  Break-Even Stop:   $${plan.breakEvenStopPrice} (+${plan.breakEvenMovePercentage.toFixed(2)}% from entry)`);
+  console.log(`  Net PnL at Stop:   ${formatSignedUsd(plan.breakEvenNetPnl)}`);
   console.log("\nRisk/Reward:");
   console.log(`  Raw R/R:           ${plan.rawRatio.toFixed(2)}:1`);
   console.log(`  True R/R:          ${plan.trueRrRatio.toFixed(2)}:1\n`);
