@@ -14,6 +14,16 @@ import {
 } from "#shared/coinbase/index";
 import { toIncrement } from "#shared/common/index";
 
+function toIncrementUp(increment: string, value: number): string {
+  const floored = parseFloat(toIncrement(increment, value));
+  if (floored + 1e-12 >= value) {
+    return toIncrement(increment, floored);
+  }
+
+  const step = increment === "1" ? 1 : parseFloat(increment);
+  return toIncrement(increment, floored + step);
+}
+
 export function buildMarketOrderValues(
   options: MarketOptions,
   marketPrice: string,
@@ -248,4 +258,25 @@ export function buildModifyOrderValues(
     limitPrice,
     ...(stopPrice ? { stopPrice } : {}),
   };
+}
+
+export function buildBreakEvenStopPrice(
+  buyPrice: string,
+  makerFeeRate: number,
+  takerFeeRate: number,
+  priceIncrement: string,
+): string {
+  const numBuyPrice = parseFloat(buyPrice);
+  if (!Number.isFinite(numBuyPrice) || numBuyPrice <= 0) {
+    throw new Error("Invalid buy price for break-even stop calculation.");
+  }
+  if (!Number.isFinite(makerFeeRate) || makerFeeRate < 0 || makerFeeRate >= 1) {
+    throw new Error("Invalid maker fee rate for break-even stop calculation.");
+  }
+  if (!Number.isFinite(takerFeeRate) || takerFeeRate < 0 || takerFeeRate >= 1) {
+    throw new Error("Invalid taker fee rate for break-even stop calculation.");
+  }
+
+  const rawBreakEvenStop = numBuyPrice * (1 + makerFeeRate) / (1 - takerFeeRate);
+  return toIncrementUp(priceIncrement, rawBreakEvenStop);
 }

@@ -9,6 +9,7 @@ import {
 const {
   readlineQuestionMock,
   getProductInfoMock,
+  getTransactionSummaryMock,
   toIncrementMock,
   createMarketOrderMock,
   createLimitOrderMock,
@@ -23,6 +24,13 @@ const {
     base_increment: "0.00000001",
     price_increment: "0.01",
     price: "100.00",
+  })),
+  getTransactionSummaryMock: vi.fn(() => Promise.resolve({
+    fee_tier: {
+      maker_fee_rate: "0.001",
+      taker_fee_rate: "0.002",
+      pricing_tier: "tier_1",
+    },
   })),
   toIncrementMock: vi.fn((increment: string, value: number) => {
     const decimals = increment.includes(".") ? increment.split(".")[1]?.length ?? 0 : 0;
@@ -54,6 +62,9 @@ vi.mock("chalk", () => ({
 
 vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
   getProductInfo: getProductInfoMock,
+}));
+vi.mock("../../../../../src/shared/coinbase/transaction-summary-service.js", () => ({
+  getTransactionSummary: getTransactionSummaryMock,
 }));
 
 vi.mock("../../../../../src/shared/common/increment.js", () => ({
@@ -238,5 +249,26 @@ describe("cb service orders", () => {
     await expect(placeModifyOrder("123e4567-e89b-42d3-a456-426614174002", {
       limitPrice: "101.00",
     })).rejects.toThrow("Cannot modify market orders.");
+  });
+
+  it("computes stop price from break-even mode", async () => {
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174003",
+      product_id: "BTC-USD",
+    }));
+
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174003", {
+      breakEvenStop: true,
+      buyPrice: "100",
+      limitPrice: "121.00",
+    });
+
+    expect(getTransactionSummaryMock).toHaveBeenCalledTimes(1);
+    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD");
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174003", {
+      price: "121.00",
+      size: "1.50",
+      stop_price: "100.31",
+    });
   });
 });

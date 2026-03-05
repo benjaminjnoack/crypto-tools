@@ -125,6 +125,7 @@ Notes:
 - `cb order list [product]`
 - `cb order cancel <order_id>`
 - `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>]`
+- `cb order modify <order_id> --breakEvenStop --buyPrice <buyPrice> [--baseSize <baseSize>] [--limitPrice <limitPrice>]`
 
 ## Development
 

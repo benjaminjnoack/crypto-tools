@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBracketOrderValues,
+  buildBreakEvenStopPrice,
   buildLimitOrderValues,
   buildMarketOrderValues,
   buildModifyOrderValues,
@@ -61,5 +62,10 @@ describe("cb order builders", () => {
       limitPrice: "121.00",
       stopPrice: "95.00",
     });
+  });
+
+  it("calculates break-even stop price including fees", () => {
+    const stopPrice = buildBreakEvenStopPrice("100", 0.001, 0.002, "0.01");
+    expect(stopPrice).toBe("100.31");
   });
 });

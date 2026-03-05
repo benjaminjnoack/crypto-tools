@@ -15,11 +15,13 @@ import {
   editOrder,
   getOrder,
   getProductInfo,
+  getTransactionSummary,
   ORDER_SIDE,
   ORDER_TYPES,
 } from "#shared/coinbase/index";
 import {
   buildBracketOrderValues,
+  buildBreakEvenStopPrice,
   buildLimitOrderValues,
   buildLimitTpSlValues,
   buildMarketOrderValues,
@@ -175,12 +177,29 @@ export async function placeStopLimitOrder(productId: string, options: StopOption
 
 export async function placeModifyOrder(orderId: string, options: ModifyOptions): Promise<void> {
   let existing;
-  if (!options.baseSize || !options.limitPrice || !options.stopPrice) {
+  let resolvedOptions: ModifyOptions = options;
+
+  if (options.breakEvenStop || !options.baseSize || !options.limitPrice || !options.stopPrice) {
     const order = await getOrder(orderId);
     existing = getModifiableOrderValues(order);
+
+    if (options.breakEvenStop) {
+      const { price_increment } = await getProductInfo(order.product_id);
+      const { fee_tier } = await getTransactionSummary();
+      const breakEvenStopPrice = buildBreakEvenStopPrice(
+        options.buyPrice!,
+        parseFloat(fee_tier.maker_fee_rate),
+        parseFloat(fee_tier.taker_fee_rate),
+        price_increment,
+      );
+      resolvedOptions = {
+        ...options,
+        stopPrice: breakEvenStopPrice,
+      };
+    }
   }
 
-  const values = buildModifyOrderValues(options, existing);
+  const values = buildModifyOrderValues(resolvedOptions, existing);
 
   await editOrder(orderId, {
     price: values.limitPrice,
