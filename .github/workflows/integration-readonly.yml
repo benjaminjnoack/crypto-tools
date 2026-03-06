@@ -6,7 +6,7 @@ on:
       ref:
         description: "Git ref to run (branch, tag, or SHA)"
         required: false
-        default: "main"
+        default: "master"
         type: string
 
 permissions:

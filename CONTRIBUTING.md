@@ -197,7 +197,7 @@ If hooks are not active in your clone:
 
 GitHub Actions workflow: `.github/workflows/ci.yml`
 
-- Triggers on pull requests and pushes to `main`
+- Triggers on pull requests and pushes to `master`
 - Uses Node.js 20
 - Runs:
   - `npm ci`
