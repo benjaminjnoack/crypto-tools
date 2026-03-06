@@ -95,8 +95,11 @@ Order command topology is intentionally nested:
 - `npm run lint`: run ESLint
 - `npm run lint:fix`: run ESLint with autofix
 - `npm run typecheck`: run TypeScript checks without emit
-- `npm run test`: run Vitest once
-- `npm run test:watch`: run Vitest in watch mode
+- `npm run test`: run unit tests (safe default)
+- `npm run test:unit`: run unit tests
+- `npm run test:integration`: run integration tests under `test/integration/**`
+- `npm run test:integration:smoke`: run integration tests with a sanitized environment and readonly CI guard enabled
+- `npm run test:watch`: run unit tests in watch mode
 - `npm run smoke:bin`: smoke-test built `cb` CLI (`node dist/apps/cb/cli.js --help`)
 - `npm run pack:dry`: preview npm package contents
 - `npm run release:check`: lint + typecheck + test + pack dry run
@@ -122,11 +125,33 @@ Useful direct commands:
 
 ## Testing Guidelines
 
-- Put tests under `test/**/*.test.ts`.
+- Unit tests live under `test/src/**/*.test.ts` (plus `test/setup/no-network.test.ts`).
+- Integration tests live under `test/integration/**/*.test.ts`.
 - Prefer unit tests for pure logic and schema parsing.
 - Mock side effects and external service calls.
 - Outbound network access is blocked by default in tests.
 - Keep `test/setup/no-network.ts` enabled in `vitest.config.ts`.
+
+### Readonly Integration Smoke Mode
+
+`npm run test:integration:smoke` starts from an empty environment (`env -i`) and only passes:
+
+- `PATH`
+- `HOME`
+- `HELPER_ENV_FILE` (defaults to `${INTEGRATION_ENV_FILE:-$HOME/.config/helper/.env.readonly}`)
+- `HELPER_ALLOW_LIVE_EXCHANGE=true`
+- `CI_INTEGRATION_READONLY=true`
+
+This avoids inheriting a fully loaded local shell env while still allowing explicit read-only live checks.
+
+Behavior matrix for Coinbase REST calls:
+
+| `HELPER_ALLOW_LIVE_EXCHANGE` | `CI_INTEGRATION_READONLY` | `GET` requests | non-`GET` requests |
+|---|---|---|---|
+| `false` | `false` | blocked | blocked |
+| `false` | `true` | blocked | blocked |
+| `true` | `false` | allowed | allowed |
+| `true` | `true` | allowed | blocked |
 
 ## hdb Database Notes
 

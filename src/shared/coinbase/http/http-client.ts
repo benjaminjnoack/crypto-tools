@@ -13,6 +13,7 @@ import { z, type ZodType } from "zod";
 const HOST = "https://api.coinbase.com";
 const MAX_RETRIES = 5;
 const LIVE_EXCHANGE_OPT_IN = "HELPER_ALLOW_LIVE_EXCHANGE";
+const CI_INTEGRATION_READONLY = "CI_INTEGRATION_READONLY";
 
 export const http: AxiosInstance = axios.create({
   baseURL: HOST,
@@ -64,6 +65,16 @@ export async function requestWithSchema<S extends ZodType>(
   schema: S,
   maxRetries: number = MAX_RETRIES,
 ): Promise<z.output<S>> {
+  if (process.env.CI_INTEGRATION_READONLY === "true") {
+    const method = String(config.method ?? "GET").toUpperCase();
+    if (method !== "GET") {
+      throw new Error(
+        `[readonly-ci-guard] Blocked ${method} ${config.url ?? "(unknown url)"} because ` +
+          `${CI_INTEGRATION_READONLY}=true only permits GET requests.`,
+      );
+    }
+  }
+
   let lastErr: unknown;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {

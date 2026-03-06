@@ -63,9 +63,12 @@ function mockHttpSequence(sequence: Array<Error | Record<string, unknown>>) {
 }
 
 describe("coinbase rest helpers", () => {
+  const originalReadonlyEnv = process.env.CI_INTEGRATION_READONLY;
+
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
+    process.env.CI_INTEGRATION_READONLY = originalReadonlyEnv;
   });
 
   it("requestWithSchema parses successful responses", async () => {
@@ -100,6 +103,34 @@ describe("coinbase rest helpers", () => {
     expect(result.value).toBe("ok");
     expect(requestSpy).toHaveBeenCalledTimes(2);
     expect(delayMock).toHaveBeenCalledWith(1000);
+  });
+
+  it("requestWithSchema blocks non-GET in readonly integration mode", async () => {
+    process.env.CI_INTEGRATION_READONLY = "true";
+    const requestSpy = vi.spyOn(http, "request").mockResolvedValue({ data: { ok: true } });
+
+    await expect(
+      requestWithSchema(
+        { method: "POST", url: "https://api.coinbase.com/api/v3/brokerage/orders" },
+        z.object({ ok: z.boolean() }),
+      ),
+    ).rejects.toThrow("[readonly-ci-guard]");
+
+    expect(requestSpy).not.toHaveBeenCalled();
+    expect(delayMock).not.toHaveBeenCalled();
+  });
+
+  it("requestWithSchema allows GET in readonly integration mode", async () => {
+    process.env.CI_INTEGRATION_READONLY = "true";
+    const requestSpy = vi.spyOn(http, "request").mockResolvedValue({ data: { ok: true } });
+
+    const result = await requestWithSchema(
+      { method: "GET", url: "https://api.coinbase.com/api/v3/brokerage/accounts" },
+      z.object({ ok: z.boolean() }),
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(requestSpy).toHaveBeenCalledTimes(1);
   });
 
   it("requestWithSchema does not retry zod parse errors", async () => {

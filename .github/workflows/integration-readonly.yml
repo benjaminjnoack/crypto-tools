@@ -1,0 +1,52 @@
+name: Readonly Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to run (branch, tag, or SHA)"
+        required: false
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readonly-integration-${{ github.event.inputs.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  integration-readonly:
+    runs-on: ubuntu-latest
+    environment: ci-integration-readonly
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare readonly integration credentials
+        env:
+          COINBASE_CREDENTIALS_JSON: ${{ secrets.COINBASE_CREDENTIALS_JSON }}
+        run: |
+          test -n "$COINBASE_CREDENTIALS_JSON"
+          CREDENTIALS_PATH="$RUNNER_TEMP/coinbase-readonly-credentials.json"
+          printf '%s' "$COINBASE_CREDENTIALS_JSON" > "$CREDENTIALS_PATH"
+          mkdir -p "$HOME/.config/helper"
+          cat > "$HOME/.config/helper/.env.readonly" <<EOF
+          HELPER_COINBASE_CREDENTIALS_PATH=$CREDENTIALS_PATH
+          EOF
+
+      - name: Readonly integration smoke tests
+        run: npm run test:integration:smoke

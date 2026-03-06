@@ -72,6 +72,18 @@ npm run test
 npm run build
 ```
 
+Integration smoke checks (readonly mode + sanitized env):
+
+```bash
+npm run test:integration:smoke
+```
+
+Override readonly env file path when needed:
+
+```bash
+INTEGRATION_ENV_FILE=/absolute/path/to/.env.readonly npm run test:integration:smoke
+```
+
 ## License
 
 Apache-2.0
