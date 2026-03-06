@@ -74,6 +74,7 @@ export async function requestOrderEdit(
   const config = await getSignedConfig("POST", requestPath, null, data);
   const parsed = await requestWithSchema(config, EditOrderResponseSchema);
   if (parsed.success) {
+    logger.info(`Order ${order_id} updated successfully.`);
     return true;
   }
 
