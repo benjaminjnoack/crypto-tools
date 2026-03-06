@@ -211,51 +211,38 @@ To enforce merge blocking, configure branch protection on `master` to require bo
 - `checks`
 - `integration-readonly`
 
-### PR Readonly Integration Gate (How It Works)
+### PR Readonly Integration Gate (Purpose and Behavior)
 
-This repository uses a two-stage PR gate:
+This gate exists to provide real Coinbase smoke coverage on PRs without weakening security.
 
-1. `checks` runs first for normal CI validation.
-2. `integration-readonly` runs after `checks`, but pauses behind environment approval.
+What it does:
 
-The `integration-readonly` job only attempts to run when all of these are true:
+- Runs normal CI validation in `checks` for all PRs.
+- Runs a second job, `integration-readonly`, for your same-repo PRs only.
+- Requires explicit environment approval before integration tests are allowed to start.
+- Executes integration tests in readonly mode (`npm run test:integration:smoke`), including runtime GET-only enforcement.
+- Blocks merge until both `checks` and `integration-readonly` are successful.
 
-- event is `pull_request`
-- PR author is `benjaminjnoack`
-- PR head repo is this repository (not a fork)
+Why it does this:
 
-The job references environment `ci-integration-readonly`, which is where approval and secrets are controlled.
+- Keeps default CI broadly available and fast.
+- Prevents secrets from being used on untrusted PR contexts.
+- Ensures live integration calls are deliberate and human-approved.
+- Verifies real exchange-read paths before merge while maintaining defense in depth.
 
-### Required GitHub Settings
+Behavioral guarantees:
 
-1. Environment config (`Settings -> Environments -> ci-integration-readonly`)
-- Enable `Required reviewers` and select yourself.
-- Add environment secret `COINBASE_CREDENTIALS_JSON` (full readonly Coinbase credential JSON).
-- Keep deployment branch policy aligned with your workflow strategy (typically no extra restriction needed here).
+- External/fork PRs do not run the readonly integration job and cannot access integration secrets.
+- Same-repo PRs pause at environment approval before secret-backed execution.
+- Even in approved integration runs, non-`GET` Coinbase requests are blocked by runtime guardrails.
 
-2. Branch protection (`Settings -> Branches -> Branch protection rules -> master`)
-- Require a pull request before merging.
-- Require status checks to pass before merging.
-- Required checks:
+Control points (where this behavior is enforced):
+
+- Workflow logic in `.github/workflows/ci.yml` (`checks` and `integration-readonly` jobs).
+- Environment protection on `ci-integration-readonly` (required reviewer + secret storage).
+- Branch protection on `master` requiring both status checks:
   - `checks`
   - `integration-readonly`
-- Optionally require branch to be up to date before merging.
-
-### Expected PR Behavior
-
-For your same-repo PRs:
-
-1. `checks` runs automatically.
-2. `integration-readonly` enters `Waiting` for environment approval.
-3. You approve deployment for `ci-integration-readonly`.
-4. `integration-readonly` runs `npm run test:integration:smoke`.
-5. Merge stays blocked until both required checks are green.
-
-For fork/external PRs:
-
-- `integration-readonly` is skipped by job conditions.
-- No environment secrets are exposed.
-- Only normal CI checks run.
 
 ## Releases
 
