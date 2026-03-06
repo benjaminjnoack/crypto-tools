@@ -57,7 +57,7 @@ From source:
 
 ## Documentation
 
-- [`src/apps/cb/README.md`](src/apps/cb/README.md)
+- [`cb CLI README`](src/apps/cb/README.md)
 - [`src/apps/hdb/README.md`](src/apps/hdb/README.md)
 - [`src/apps/hdb/README.postgres.md`](src/apps/hdb/README.postgres.md)
 - [`src/shared/README.md`](src/shared/README.md)

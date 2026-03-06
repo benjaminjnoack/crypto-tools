@@ -91,6 +91,7 @@ Notes:
 ### Accounts
 
 - `cb accounts [product] [--crypto] [--cash]` (alias: `account`)
+  - non-zero balances by default; when `[product]` is provided, matching accounts are shown with price-based USD values
 - `cb balance` (alias: `usd`)
 - `cb cash`
 - `cb fees`
@@ -124,7 +125,7 @@ Notes:
 - `cb order get <order_id>`
 - `cb order list [product]`
 - `cb order cancel <order_id>`
-- `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>]`
+- `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>]` (supports limit, stop-limit, bracket, and TP/SL orders)
 - `cb order modify <order_id> --breakEvenStop --buyPrice <buyPrice> [--baseSize <baseSize>] [--limitPrice <limitPrice>]`
 - `cb order breakeven <order_id> --buyPrice <buyPrice> [--limitPrice <limitPrice>]`
 

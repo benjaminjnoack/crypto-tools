@@ -199,9 +199,50 @@ GitHub Actions workflow: `.github/workflows/ci.yml`
 
 - Triggers on pull requests and pushes to `master`
 - Uses Node.js 20
-- Runs:
+- `checks` job runs:
   - `npm ci`
   - `npm run release:check`
+- `integration-readonly` job runs on owner-authored same-repo pull requests only and uses environment `ci-integration-readonly`
+  - requires environment approval before secrets are exposed and tests run
+  - runs `npm run test:integration:smoke`
+
+To enforce merge blocking, configure branch protection on `master` to require both status checks:
+
+- `checks`
+- `integration-readonly`
+
+### PR Readonly Integration Gate (Purpose and Behavior)
+
+This gate exists to provide real Coinbase smoke coverage on PRs without weakening security.
+
+What it does:
+
+- Runs normal CI validation in `checks` for all PRs.
+- Runs a second job, `integration-readonly`, for your same-repo PRs only.
+- Requires explicit environment approval before integration tests are allowed to start.
+- Executes integration tests in readonly mode (`npm run test:integration:smoke`), including runtime GET-only enforcement.
+- Blocks merge until both `checks` and `integration-readonly` are successful.
+
+Why it does this:
+
+- Keeps default CI broadly available and fast.
+- Prevents secrets from being used on untrusted PR contexts.
+- Ensures live integration calls are deliberate and human-approved.
+- Verifies real exchange-read paths before merge while maintaining defense in depth.
+
+Behavioral guarantees:
+
+- External/fork PRs do not run the readonly integration job and cannot access integration secrets.
+- Same-repo PRs pause at environment approval before secret-backed execution.
+- Even in approved integration runs, non-`GET` Coinbase requests are blocked by runtime guardrails.
+
+Control points (where this behavior is enforced):
+
+- Workflow logic in `.github/workflows/ci.yml` (`checks` and `integration-readonly` jobs).
+- Environment protection on `ci-integration-readonly` (required reviewer + secret storage).
+- Branch protection on `master` requiring both status checks:
+  - `checks`
+  - `integration-readonly`
 
 ## Releases
 
