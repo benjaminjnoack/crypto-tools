@@ -199,9 +199,17 @@ GitHub Actions workflow: `.github/workflows/ci.yml`
 
 - Triggers on pull requests and pushes to `master`
 - Uses Node.js 20
-- Runs:
+- `checks` job runs:
   - `npm ci`
   - `npm run release:check`
+- `integration-readonly` job runs on owner-authored same-repo pull requests only and uses environment `ci-integration-readonly`
+  - requires environment approval before secrets are exposed and tests run
+  - runs `npm run test:integration:smoke`
+
+To enforce merge blocking, configure branch protection on `master` to require both status checks:
+
+- `checks`
+- `integration-readonly`
 
 ## Releases
 
