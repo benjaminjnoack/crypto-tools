@@ -20,6 +20,7 @@ import {
   ORDER_SIDE,
   ORDER_TYPES,
 } from "#shared/coinbase/index";
+import type { EditOrderRequest } from "#shared/coinbase/schemas/coinbase-rest-schemas";
 import {
   buildBracketOrderValues,
   buildBreakEvenStopPrice,
@@ -28,6 +29,7 @@ import {
   buildMarketOrderValues,
   buildModifyOrderValues,
   buildStopLimitOrderValues,
+  getAttachedTpSlValues,
   getModifiableOrderValues,
 } from "./order-builders.js";
 import { confirmOrder } from "./order-prompts.js";
@@ -177,36 +179,52 @@ export async function placeStopLimitOrder(productId: string, options: StopOption
 }
 
 export async function placeModifyOrder(orderId: string, options: ModifyOptions): Promise<void> {
-  let existing;
-  let resolvedOptions: ModifyOptions = options;
+  const order = await getOrder(orderId);
+  const existing = getModifiableOrderValues(order);
+  const values = buildModifyOrderValues(options, existing);
 
-  if (options.breakEvenStop || !options.baseSize || !options.limitPrice || !options.stopPrice) {
-    const order = await getOrder(orderId);
-    existing = getModifiableOrderValues(order);
+  const payload: Omit<EditOrderRequest, "order_id"> = {
+    price: values.limitPrice,
+    size: values.baseSize,
+  };
 
-    if (options.breakEvenStop) {
-      const { price_increment } = await getProductInfo(order.product_id);
-      const { fee_tier } = await getTransactionSummary();
-      const breakEvenStopPrice = buildBreakEvenStopPrice(
-        options.buyPrice!,
-        parseFloat(fee_tier.maker_fee_rate),
-        parseFloat(fee_tier.taker_fee_rate),
-        price_increment,
-      );
-      resolvedOptions = {
-        ...options,
-        stopPrice: breakEvenStopPrice,
+  if (order.order_type === ORDER_TYPES.LIMIT) {
+    const attachedTpSl = getAttachedTpSlValues(order);
+    if (options.stopPrice || options.takeProfitPrice) {
+      if (!attachedTpSl) {
+        throw new Error("This limit order has no attached TP/SL configuration to modify.");
+      }
+
+      payload.attached_order_configuration = {
+        trigger_bracket_gtc: {
+          limit_price: options.takeProfitPrice ?? attachedTpSl.takeProfitPrice,
+          stop_trigger_price: options.stopPrice ?? attachedTpSl.stopPrice,
+        },
       };
+    }
+  } else if (order.order_type === ORDER_TYPES.STOP_LIMIT) {
+    if (options.takeProfitPrice) {
+      throw new Error("--takeProfitPrice is only supported for limit orders with attached TP/SL.");
+    }
+    if (options.stopPrice) {
+      payload.stop_price = options.stopPrice;
+    }
+  } else if (
+    order.order_type === ORDER_TYPES.BRACKET
+    || order.order_type === ORDER_TYPES.TAKE_PROFIT_STOP_LOSS
+  ) {
+    if (options.limitPrice && options.takeProfitPrice && options.limitPrice !== options.takeProfitPrice) {
+      throw new Error("For bracket/TP-SL orders, pass only one of --limitPrice or --takeProfitPrice.");
+    }
+    if (options.takeProfitPrice) {
+      payload.price = options.takeProfitPrice;
+    }
+    if (options.stopPrice) {
+      payload.stop_price = options.stopPrice;
     }
   }
 
-  const values = buildModifyOrderValues(resolvedOptions, existing);
-
-  await editOrder(orderId, {
-    price: values.limitPrice,
-    size: values.baseSize,
-    stop_price: values.stopPrice,
-  });
+  await editOrder(orderId, payload);
 }
 
 export async function placeBreakEvenStopOrder(
@@ -220,8 +238,8 @@ export async function placeBreakEvenStopOrder(
   ) {
     throw new Error("Break-even stop is only supported for BRACKET and TAKE_PROFIT_STOP_LOSS orders.");
   }
-
   const existing = getModifiableOrderValues(order);
+
   const { price_increment } = await getProductInfo(order.product_id);
   const { fee_tier } = await getTransactionSummary();
   const stopPrice = buildBreakEvenStopPrice(
@@ -231,17 +249,9 @@ export async function placeBreakEvenStopOrder(
     price_increment,
   );
 
-  const values = buildModifyOrderValues(
-    {
-      limitPrice: options.limitPrice,
-      stopPrice,
-    },
-    existing,
-  );
-
   await editOrder(orderId, {
-    price: values.limitPrice,
-    size: values.baseSize,
-    stop_price: values.stopPrice,
+    price: options.limitPrice ?? existing.limitPrice,
+    size: existing.baseSize,
+    stop_price: stopPrice,
   });
 }

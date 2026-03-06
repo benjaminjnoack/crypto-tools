@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CoinbaseOrder } from "../../../../../src/shared/coinbase/schemas/coinbase-order-schemas.js";
 import {
+  makeBracketOrder,
   makeLimitOrder,
-  makeMarketOrder,
+  makeStopLimitOrder,
   makeTpSlOrder,
 } from "../../../fixtures/coinbase-orders.js";
 
@@ -202,13 +203,20 @@ describe("cb service orders", () => {
   });
 
   it("modifies directly when all fields are provided", async () => {
+    getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174000",
+      baseSize: "1.00",
+      limitPrice: "100.00",
+      stopPrice: "98.00",
+    }));
+
     await placeModifyOrder("123e4567-e89b-42d3-a456-426614174000", {
       baseSize: "1.1",
       limitPrice: "101.00",
       stopPrice: "99.00",
     });
 
-    expect(getOrderMock).not.toHaveBeenCalled();
+    expect(getOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000");
     expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
       price: "101.00",
       size: "1.1",
@@ -216,61 +224,135 @@ describe("cb service orders", () => {
     });
   });
 
-  it("loads missing fields from a limit order", async () => {
+  it("modifies only the provided base size", async () => {
     getOrderMock.mockResolvedValueOnce(makeLimitOrder());
 
     await placeModifyOrder("123e4567-e89b-42d3-a456-426614174000", { baseSize: "2.00" });
 
+    expect(getOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000");
     expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174000", {
       price: "100.00",
       size: "2.00",
-      stop_price: undefined,
     });
   });
 
-  it("loads missing fields from bracket-like orders", async () => {
+  it("modifies only the provided limit price", async () => {
     getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
       order_id: "123e4567-e89b-42d3-a456-426614174001",
     }));
 
     await placeModifyOrder("123e4567-e89b-42d3-a456-426614174001", { limitPrice: "121.00" });
 
+    expect(getOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174001");
     expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174001", {
       price: "121.00",
       size: "1.50",
+    });
+  });
+
+  it("modifies stop price for stop-limit orders", async () => {
+    getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174002",
+    }));
+
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174002", { stopPrice: "95.00" });
+
+    expect(getOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174002");
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174002", {
+      price: "101.00",
+      size: "0.5",
       stop_price: "95.00",
     });
   });
 
-  it("rejects market orders for modify", async () => {
-    getOrderMock.mockResolvedValueOnce(makeMarketOrder({
-      order_id: "123e4567-e89b-42d3-a456-426614174002",
+  it("modifies filled-buy bracket orders (base size + take-profit + stop)", async () => {
+    getOrderMock.mockResolvedValueOnce(makeBracketOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174010",
+      baseSize: "0.06571451",
+      limitPrice: "78941.6",
+      stopTriggerPrice: "64943.37",
     }));
 
-    await expect(placeModifyOrder("123e4567-e89b-42d3-a456-426614174002", {
-      limitPrice: "101.00",
-    })).rejects.toThrow("Cannot modify market orders.");
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174010", {
+      baseSize: "0.07000000",
+      takeProfitPrice: "79000.00",
+      stopPrice: "65000.00",
+    });
+
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174010", {
+      price: "79000.00",
+      size: "0.07000000",
+      stop_price: "65000.00",
+    });
   });
 
-  it("computes stop price from break-even mode", async () => {
-    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
-      order_id: "123e4567-e89b-42d3-a456-426614174003",
-      product_id: "BTC-USD",
+  it("supports takeProfitPrice alias for bracket modify", async () => {
+    getOrderMock.mockResolvedValueOnce(makeBracketOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174011",
+      baseSize: "0.06571451",
+      limitPrice: "78941.6",
+      stopTriggerPrice: "64943.37",
     }));
 
-    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174003", {
-      breakEvenStop: true,
-      buyPrice: "100",
-      limitPrice: "121.00",
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174011", {
+      takeProfitPrice: "79100.00",
     });
 
-    expect(getTransactionSummaryMock).toHaveBeenCalledTimes(1);
-    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD");
-    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174003", {
-      price: "121.00",
-      size: "1.50",
-      stop_price: "100.31",
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174011", {
+      price: "79100.00",
+      size: "0.06571451",
     });
+  });
+
+  it("rejects conflicting limit/takeProfit prices for bracket modify", async () => {
+    getOrderMock.mockResolvedValueOnce(makeBracketOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174012",
+      baseSize: "0.06571451",
+      limitPrice: "78941.6",
+      stopTriggerPrice: "64943.37",
+    }));
+
+    await expect(placeModifyOrder("123e4567-e89b-42d3-a456-426614174012", {
+      limitPrice: "79000.00",
+      takeProfitPrice: "79100.00",
+    })).rejects.toThrow("For bracket/TP-SL orders, pass only one of --limitPrice or --takeProfitPrice.");
+  });
+
+  it("modifies attached TP/SL on limit orders", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174002",
+      limitPrice: "100.00",
+      baseSize: "1.00",
+      attachedLimitPrice: "120.00",
+      attachedStopPrice: "95.00",
+    }));
+
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174002", {
+      takeProfitPrice: "123.00",
+      stopPrice: "97.00",
+    });
+
+    expect(getOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174002");
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174002", {
+      price: "100.00",
+      size: "1.00",
+      attached_order_configuration: {
+        trigger_bracket_gtc: {
+          limit_price: "123.00",
+          stop_trigger_price: "97.00",
+        },
+      },
+    });
+  });
+
+  it("rejects TP/SL updates when limit order has no attached TP/SL", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174006",
+    }));
+
+    await expect(placeModifyOrder("123e4567-e89b-42d3-a456-426614174006", {
+      takeProfitPrice: "123.00",
+    })).rejects.toThrow("This limit order has no attached TP/SL configuration to modify.");
   });
 
   it("modifies bracket-like orders via dedicated breakeven command", async () => {
@@ -286,6 +368,25 @@ describe("cb service orders", () => {
 
     expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174004", {
       price: "122.00",
+      size: "1.50",
+      stop_price: "100.31",
+    });
+  });
+
+  it("modifies bracket-like orders with breakeven stop only", async () => {
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174003",
+      product_id: "BTC-USD",
+    }));
+
+    await placeBreakEvenStopOrder("123e4567-e89b-42d3-a456-426614174003", {
+      buyPrice: "100",
+    });
+
+    expect(getTransactionSummaryMock).toHaveBeenCalledTimes(1);
+    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD");
+    expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174003", {
+      price: "120.00",
       size: "1.50",
       stop_price: "100.31",
     });

@@ -66,7 +66,10 @@ export async function requestOrderEdit(
     order_id,
     price: order.price,
     size: order.size,
-    stop_price: order.stop_price,
+    ...(order.stop_price ? { stop_price: order.stop_price } : {}),
+    ...(order.attached_order_configuration
+      ? { attached_order_configuration: order.attached_order_configuration }
+      : {}),
   };
   const config = await getSignedConfig("POST", requestPath, null, data);
   const parsed = await requestWithSchema(config, EditOrderResponseSchema);

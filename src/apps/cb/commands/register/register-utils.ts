@@ -25,7 +25,6 @@ export const OptionFlags = {
   riskPercent: "-r, --riskPercent <riskPercent>",
   allIn: "-a, --all-in",
   dryRunFlag: "-x, --dryRunFlag",
-  breakEvenStop: "--breakEvenStop",
   modifyBuyPrice: "--buyPrice <buyPrice>",
 } as const;
 

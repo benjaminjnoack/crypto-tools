@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { NumericString } from "#shared/schemas/shared-primitives";
 import { AccountType, OrderSideSchema } from "./coinbase-enum-schemas.js";
-import { CoinbaseOrderSchema, OrderConfigurationSchema } from "./coinbase-order-schemas.js";
+import {
+  CoinbaseOrderSchema,
+  OrderConfigurationSchema,
+  TpSlAttachedOrderConfigurationSchema,
+} from "./coinbase-order-schemas.js";
 
 export const ErrorResponseSchema = z
   .object({
@@ -93,6 +97,7 @@ export const EditOrderRequestSchema = z
     price: NumericString,
     size: NumericString,
     stop_price: NumericString.optional(),
+    attached_order_configuration: TpSlAttachedOrderConfigurationSchema.optional(),
   })
   .strict();
 export type EditOrderRequest = z.infer<typeof EditOrderRequestSchema>;

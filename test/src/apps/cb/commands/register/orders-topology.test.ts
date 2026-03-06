@@ -44,18 +44,14 @@ describe("order command topology", () => {
     await run(["order", "list"]);
     await run(["order", "cancel", VALID_UUID]);
     await run(["order", "modify", VALID_UUID, "--limitPrice", "101.50"]);
-    await run(["order", "modify", VALID_UUID, "--breakEvenStop", "--buyPrice", "100", "--limitPrice", "101.50"]);
+    await run(["order", "modify", VALID_UUID, "--takeProfitPrice", "121.50"]);
     await run(["order", "breakeven", VALID_UUID, "--buyPrice", "100", "--limitPrice", "101.50"]);
 
     expect(handleOrderActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleOrdersActionMock).toHaveBeenCalledWith(null);
     expect(handleCancelActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { limitPrice: "101.50" });
-    expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, {
-      breakEvenStop: true,
-      buyPrice: "100",
-      limitPrice: "101.50",
-    });
+    expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { takeProfitPrice: "121.50" });
     expect(handleBreakEvenStopActionMock).toHaveBeenCalledWith(VALID_UUID, {
       buyPrice: "100",
       limitPrice: "101.50",
@@ -68,7 +64,7 @@ describe("order command topology", () => {
     await expect(run(["open"])).rejects.toThrow();
     await expect(run(["cancel", VALID_UUID])).rejects.toThrow();
     await expect(run(["modify", VALID_UUID, "--baseSize", "1.25"])).rejects.toThrow();
-    await expect(run(["order", "modify", VALID_UUID, "--breakEvenStop"])).rejects.toThrow();
+    await expect(run(["order", "modify", VALID_UUID, "--breakEvenStop", "--buyPrice", "100"])).rejects.toThrow();
     await expect(run(["order", "breakeven", VALID_UUID])).rejects.toThrow();
 
     expect(handleOrderActionMock).not.toHaveBeenCalled();

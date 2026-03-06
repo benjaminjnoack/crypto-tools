@@ -38,10 +38,9 @@ export function registerOrderCommands(program: Command) {
     .command("modify <order_id>")
     .description("Modify an existing limit/stop-limit/bracket/TP-SL order")
     .option(OptionFlags.baseSize, "Updated base amount")
-    .option(OptionFlags.breakEvenStop, "Set stop to break-even from --buyPrice (fees included)")
-    .option(OptionFlags.modifyBuyPrice, "Filled entry buy price in USD (required with --breakEvenStop)")
     .option(OptionFlags.limitPrice, "Updated limit price in USD")
     .option(OptionFlags.stopPrice, "Updated stop trigger price in USD")
+    .option(OptionFlags.takeProfitPrice, "Updated take-profit price in USD")
     .action(
       withAction(
         "order modify",

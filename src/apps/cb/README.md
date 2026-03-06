@@ -125,9 +125,26 @@ Notes:
 - `cb order get <order_id>`
 - `cb order list [product]`
 - `cb order cancel <order_id>`
-- `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>]` (supports limit, stop-limit, bracket, and TP/SL orders)
-- `cb order modify <order_id> --breakEvenStop --buyPrice <buyPrice> [--baseSize <baseSize>] [--limitPrice <limitPrice>]`
+- `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>] [--takeProfitPrice <takeProfitPrice>]` (supports limit, stop-limit, bracket, and TP/SL orders)
 - `cb order breakeven <order_id> --buyPrice <buyPrice> [--limitPrice <limitPrice>]`
+
+`cb order modify` behavior by order type:
+
+- `LIMIT` without attached TP/SL:
+  - `--baseSize`, `--limitPrice` update the entry order
+  - `--stopPrice` / `--takeProfitPrice` are rejected
+- `LIMIT` with attached TP/SL (for example, from `cb plan` before fill):
+  - `--baseSize`, `--limitPrice` update the parent limit buy
+  - `--stopPrice`, `--takeProfitPrice` update the attached TP/SL legs
+- `BRACKET` (for example, the post-fill order created after a plan entry fills):
+  - `--baseSize` updates position size
+  - `--limitPrice` or `--takeProfitPrice` updates the take-profit leg (`price`)
+  - `--stopPrice` updates the stop leg (`stop_price`)
+- `TAKE_PROFIT_STOP_LOSS`:
+  - same semantics as `BRACKET`
+- `STOP_LIMIT`:
+  - `--baseSize`, `--limitPrice`, `--stopPrice` are supported
+  - `--takeProfitPrice` is rejected
 
 ## Development
 

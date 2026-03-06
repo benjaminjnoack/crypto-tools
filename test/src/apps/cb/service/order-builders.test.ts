@@ -60,7 +60,6 @@ describe("cb order builders", () => {
     expect(buildModifyOrderValues({ limitPrice: "121.00" }, existing)).toEqual({
       baseSize: "1.50",
       limitPrice: "121.00",
-      stopPrice: "95.00",
     });
   });
 

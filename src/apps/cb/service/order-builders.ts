@@ -202,64 +202,6 @@ export function buildStopLimitOrderValues(
   };
 }
 
-export type ModifiableOrderValues = {
-  baseSize: string;
-  limitPrice: string;
-  stopPrice?: string;
-};
-
-export function getModifiableOrderValues(order: CoinbaseOrder): ModifiableOrderValues {
-  switch (order.order_type) {
-    case ORDER_TYPES.LIMIT: {
-      const config = order.order_configuration.limit_limit_gtc;
-      const attached = order.attached_order_configuration?.trigger_bracket_gtc;
-      return {
-        baseSize: config.base_size,
-        limitPrice: config.limit_price,
-        ...(attached?.stop_trigger_price ? { stopPrice: attached.stop_trigger_price } : {}),
-      };
-    }
-    case ORDER_TYPES.BRACKET:
-    case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS: {
-      const config = order.order_configuration.trigger_bracket_gtc;
-      return {
-        baseSize: config.base_size,
-        limitPrice: config.limit_price,
-        stopPrice: config.stop_trigger_price,
-      };
-    }
-    case ORDER_TYPES.STOP_LIMIT: {
-      const config = order.order_configuration.stop_limit_stop_limit_gtc;
-      return {
-        baseSize: config.base_size,
-        limitPrice: config.limit_price,
-        stopPrice: config.stop_price,
-      };
-    }
-    case ORDER_TYPES.MARKET:
-      throw new Error("Cannot modify market orders.");
-  }
-}
-
-export function buildModifyOrderValues(
-  options: ModifyOptions,
-  existing?: ModifiableOrderValues,
-): ModifiableOrderValues {
-  const baseSize = options.baseSize ?? existing?.baseSize;
-  const limitPrice = options.limitPrice ?? existing?.limitPrice;
-  const stopPrice = options.stopPrice ?? existing?.stopPrice;
-
-  if (!baseSize || !limitPrice) {
-    throw new Error("Unable to determine base size and limit price for order modification.");
-  }
-
-  return {
-    baseSize,
-    limitPrice,
-    ...(stopPrice ? { stopPrice } : {}),
-  };
-}
-
 export function buildBreakEvenStopPrice(
   buyPrice: string,
   makerFeeRate: number,
@@ -279,4 +221,74 @@ export function buildBreakEvenStopPrice(
 
   const rawBreakEvenStop = numBuyPrice * (1 + makerFeeRate) / (1 - takerFeeRate);
   return toIncrementUp(priceIncrement, rawBreakEvenStop);
+}
+
+export type ModifiableOrderValues = {
+  baseSize: string;
+  limitPrice: string;
+};
+
+export type AttachedTpSlValues = {
+  takeProfitPrice: string;
+  stopPrice: string;
+};
+
+export function getModifiableOrderValues(order: CoinbaseOrder): ModifiableOrderValues {
+  switch (order.order_type) {
+    case ORDER_TYPES.LIMIT: {
+      const config = order.order_configuration.limit_limit_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+      };
+    }
+    case ORDER_TYPES.BRACKET:
+    case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS: {
+      const config = order.order_configuration.trigger_bracket_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+      };
+    }
+    case ORDER_TYPES.STOP_LIMIT: {
+      const config = order.order_configuration.stop_limit_stop_limit_gtc;
+      return {
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+      };
+    }
+    case ORDER_TYPES.MARKET:
+      throw new Error("Cannot modify market orders.");
+  }
+}
+
+export function getAttachedTpSlValues(order: CoinbaseOrder): AttachedTpSlValues | null {
+  if (order.order_type !== ORDER_TYPES.LIMIT) {
+    return null;
+  }
+
+  const attached = order.attached_order_configuration?.trigger_bracket_gtc;
+  if (!attached) {
+    return null;
+  }
+
+  return {
+    takeProfitPrice: attached.limit_price,
+    stopPrice: attached.stop_trigger_price,
+  };
+}
+
+export function buildModifyOrderValues(
+  options: ModifyOptions,
+  existing: ModifiableOrderValues,
+): {
+  baseSize: string;
+  limitPrice: string;
+  stopPrice?: string;
+} {
+  return {
+    baseSize: options.baseSize ?? existing.baseSize,
+    limitPrice: options.limitPrice ?? existing.limitPrice,
+    ...(options.stopPrice ? { stopPrice: options.stopPrice } : {}),
+  };
 }

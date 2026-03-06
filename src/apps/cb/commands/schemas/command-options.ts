@@ -88,23 +88,14 @@ export type MarketOptions = z.infer<typeof MarketOptionsSchema>;
 export const ModifyOptionsSchema = z
   .object({
     baseSize: PositiveNumericString.optional(),
-    breakEvenStop: z.boolean().optional(),
-    buyPrice: PositiveNumericString.optional(),
     limitPrice: PositiveNumericString.optional(),
     stopPrice: PositiveNumericString.optional(),
+    takeProfitPrice: PositiveNumericString.optional(),
   })
   .strict()
-  .refine((v) => Boolean(v.baseSize ?? v.limitPrice ?? v.stopPrice ?? v.breakEvenStop), {
-    message: "At least one of --baseSize, --limitPrice, --stopPrice, or --breakEvenStop is required.",
+  .refine((v) => Boolean(v.baseSize ?? v.limitPrice ?? v.stopPrice ?? v.takeProfitPrice), {
+    message: "At least one of --baseSize, --limitPrice, --stopPrice, or --takeProfitPrice is required.",
     path: ["baseSize"],
-  })
-  .refine((v) => !v.breakEvenStop || Boolean(v.buyPrice), {
-    message: "--buyPrice is required when using --breakEvenStop.",
-    path: ["buyPrice"],
-  })
-  .refine((v) => !(v.breakEvenStop && v.stopPrice), {
-    message: "Use either --stopPrice or --breakEvenStop, not both.",
-    path: ["stopPrice"],
   });
 export type ModifyOptions = z.infer<typeof ModifyOptionsSchema>;
 
