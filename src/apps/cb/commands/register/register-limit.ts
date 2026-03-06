@@ -71,7 +71,7 @@ export function registerLimitCommands(program: Command) {
 
   program
     .command("limit [product]")
-    .description("Place a limit order with explicit side and size/value")
+    .description("Place a limit order with explicit side, limit price, and size/value")
     .option(
       OptionFlags.baseSize,
       "Base amount to buy/sell (positive number; required unless --value is provided)",

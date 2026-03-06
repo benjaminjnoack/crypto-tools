@@ -12,7 +12,7 @@ export function registerAccountsCommands(program: Command) {
   program
     .command("accounts [product]")
     .alias("account")
-    .description("List non-zero account balances, optionally filtered by product or account type")
+    .description("List account balances (non-zero only unless [product] is provided)")
     .option("--crypto", "Show only crypto accounts", false)
     .option("--cash", "Show only fiat (cash) accounts; ignored if --crypto is also set", false)
     .action(
