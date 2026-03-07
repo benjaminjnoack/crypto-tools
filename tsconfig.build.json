@@ -10,5 +10,5 @@
     "noEmitOnError": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["test", "dist", "node_modules", "vitest.config.ts"]
+  "exclude": ["test", "dist", "node_modules", "helper", "vitest.config.ts"]
 }

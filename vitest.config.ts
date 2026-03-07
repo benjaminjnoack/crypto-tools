@@ -15,6 +15,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["test/src/**/*.test.ts", "test/setup/no-network.test.ts"],
+    exclude: ["helper/**"],
     setupFiles: ["test/setup/no-network.ts"],
     coverage: {
       provider: "v8",

@@ -73,7 +73,8 @@ Install binary in your shell:
 
 ### CoinTracker
 
-- `hdb cointracker` (placeholder command group, in progress)
+- `hdb cointracker transactions get [asset]` (alias: `g`)
+- `hdb cointracker transactions group [asset]` (alias: `grp`)
 
 Use `hdb <command> --help` for option details.
 
