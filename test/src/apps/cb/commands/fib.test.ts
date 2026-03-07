@@ -103,8 +103,8 @@ function fibOptions(overrides: Partial<FibOptions> = {}): FibOptions {
     allIn: false,
     bufferPercent: "0.1",
     dryRunFlag: false,
-    fib0: "100",
-    fib1: "200",
+    floor: "100",
+    ceiling: "200",
     postOnly: true,
     riskPercent: "1",
     ...overrides,
@@ -147,8 +147,8 @@ describe("handleFibAction", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await handleFibAction("btc", fibOptions({
-      fib0: "200",
-      fib1: "100",
+      floor: "200",
+      ceiling: "100",
     }));
 
     expect(placeLimitTpSlOrderMock).not.toHaveBeenCalled();

@@ -119,7 +119,7 @@ Notes:
 ### Plan
 
 - `cb plan [product] --buyPrice <price> --stopPrice <stopPrice> --takeProfitPrice <takeProfitPrice> [--riskPercent <riskPercent>] [--bufferPercent <bufferPercent>] [--all-in] [--dryRunFlag] [--no-postOnly]`
-- `cb fib [product] --fib0 <price> --fib1 <price> [--riskPercent <riskPercent>] [--bufferPercent <bufferPercent>] [--all-in] [--dryRunFlag] [--no-postOnly]`
+- `cb fib [product] --floor <price> --ceiling <price> [--riskPercent <riskPercent>] [--bufferPercent <bufferPercent>] [--all-in] [--dryRunFlag] [--no-postOnly]`
 
 ### Orders
 

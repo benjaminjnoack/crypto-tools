@@ -9,8 +9,8 @@ const DEFAULT_BUFFER_PERCENT = (0.1).toFixed(3); // 0.1%
 export function registerFibCommand(program: Command) {
   program
     .command("fib [product]")
-    .requiredOption(OptionFlags.fib0, "Fib 0 anchor price in USD")
-    .requiredOption(OptionFlags.fib1, "Fib 1 anchor price in USD")
+    .requiredOption(OptionFlags.floor, "Fib floor/0 anchor price in USD")
+    .requiredOption(OptionFlags.ceiling, "Fib ceiling/1 anchor price in USD")
     .option(
       OptionFlags.bufferPercent,
       "Percent to lower the stop price before sizing (0-100; default 0.100)",
@@ -36,7 +36,7 @@ export function registerFibCommand(program: Command) {
       false,
     )
     .description(
-      "Build a fib-extension spot plan from fib0/fib1 with prompted entry and take-profit levels",
+      "Build a fib-extension spot plan from floor/ceiling anchors with prompted entry and take-profit levels",
     )
     .action(withAction("fib", parseProductIdOptions(FibOptionsSchema), handleFibAction));
 }

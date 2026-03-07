@@ -61,8 +61,8 @@ function promptFibLevel(
 export async function handleFibAction(product: string, options: FibOptions): Promise<void> {
   const productInstance = await getProductInfo(product);
 
-  const fib0 = parseFloat(options.fib0);
-  const fib1 = parseFloat(options.fib1);
+  const fib0 = parseFloat(options.floor);
+  const fib1 = parseFloat(options.ceiling);
   const bufferPercent = parseFloat(options.bufferPercent);
   const riskPercent = parseFloat(options.riskPercent);
   const allIn = options.allIn;

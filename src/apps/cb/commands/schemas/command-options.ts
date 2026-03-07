@@ -126,9 +126,9 @@ export const FibOptionsSchema = z
   .object({
     allIn: z.boolean(),
     bufferPercent: Percent,
+    ceiling: PositiveNumericString,
     dryRunFlag: z.boolean(),
-    fib0: PositiveNumericString,
-    fib1: PositiveNumericString,
+    floor: PositiveNumericString,
     postOnly: z.boolean().optional(),
     riskPercent: Percent,
   })
