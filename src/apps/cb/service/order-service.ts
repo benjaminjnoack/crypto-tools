@@ -33,7 +33,7 @@ import {
   getAttachedTpSlValues,
   getModifiableOrderValues,
 } from "./order-builders.js";
-import { confirmOrder } from "./order-prompts.js";
+import { confirmBreakEvenStopUpdate, confirmOrder } from "./order-prompts.js";
 
 /**
  * Places a market order after validation and confirmation.
@@ -260,9 +260,25 @@ export async function placeBreakEvenStopOrder(
       + `must be greater than stop price (${stopPrice}).`,
     );
   }
+  const existingBracketConfig = order.order_configuration.trigger_bracket_gtc;
+  const newLimitPrice = options.limitPrice ?? existing.limitPrice;
+  if (
+    !confirmBreakEvenStopUpdate(
+      order.product_id,
+      existing.baseSize,
+      currentPrice.toFixed(8),
+      existingBracketConfig.limit_price,
+      newLimitPrice,
+      existingBracketConfig.stop_trigger_price,
+      stopPrice,
+    )
+  ) {
+    console.log("Action canceled.");
+    return;
+  }
 
   await editOrder(orderId, {
-    price: options.limitPrice ?? existing.limitPrice,
+    price: newLimitPrice,
     size: existing.baseSize,
     stop_price: stopPrice,
   });

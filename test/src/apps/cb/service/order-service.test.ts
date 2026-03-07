@@ -418,6 +418,28 @@ describe("cb service orders", () => {
     expect(editOrderMock).not.toHaveBeenCalled();
   });
 
+  it("cancels breakeven update when prompt is declined", async () => {
+    readlineQuestionMock.mockReturnValueOnce("no");
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174009",
+      product_id: "BTC-USD",
+    }));
+    requestBestBidAskMock.mockResolvedValueOnce({
+      asks: [{ price: "101.00" }],
+      bids: [{ price: "100.50" }],
+    });
+
+    await placeBreakEvenStopOrder("123e4567-e89b-42d3-a456-426614174009", {
+      buyPrice: "100",
+    });
+
+    expect(logSpy).toHaveBeenCalledWith("\nBreak-Even Update Summary:");
+    expect(logSpy).toHaveBeenCalledWith("Action canceled.");
+    expect(editOrderMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("rejects dedicated breakeven for non-bracket orders", async () => {
     getOrderMock.mockResolvedValueOnce(makeLimitOrder({
       order_id: "123e4567-e89b-42d3-a456-426614174005",

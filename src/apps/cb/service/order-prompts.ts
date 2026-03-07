@@ -27,3 +27,23 @@ export function confirmOrder(
   const confirmation = readlineSync.question("\nProceed? (yes/no): ").trim().toLowerCase();
   return confirmation.toLowerCase() === "yes" || confirmation.toLowerCase() === "y";
 }
+
+export function confirmBreakEvenStopUpdate(
+  product: string,
+  size: string,
+  currentPrice: string,
+  currentLimitPrice: string,
+  newLimitPrice: string,
+  currentStopPrice: string,
+  newStopPrice: string,
+): boolean {
+  console.log("\nBreak-Even Update Summary:");
+  console.log(`  Product: ${product}`);
+  console.log(`  Size: ${size}`);
+  console.log(`  Current Price: $${currentPrice}`);
+  console.log(`  Limit Price: $${currentLimitPrice} -> $${newLimitPrice}`);
+  console.log(`  Stop Price: $${currentStopPrice} -> $${newStopPrice}`);
+
+  const confirmation = readlineSync.question("\nProceed? (yes/no): ").trim().toLowerCase();
+  return confirmation === "yes" || confirmation === "y";
+}
