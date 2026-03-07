@@ -1,16 +1,18 @@
 import type { Command } from "commander";
 import { z } from "zod";
 import { addDebugOption, addFromOption, addRangeOption, addToOption, addYearOption } from "#shared/cli/option-builders";
-import { runActionWithArgument } from "../../shared/action-runner.js";
-import { parseArgWithOptions, withAction } from "../../register/register-utils.js";
+import { runAction, runActionWithArgument } from "../../shared/action-runner.js";
+import { parseArgWithOptions, parseOptions, withAction } from "../../register/register-utils.js";
 import { COINBASE_EPOCH } from "../../shared/date-range-utils.js";
 import {
   cointrackerTransactions,
   cointrackerTransactionsGroup,
+  cointrackerTransactionsRegenerate,
 } from "./cointracker-transactions-handlers.js";
 import {
   CointrackerTransactionsGroupOptionsSchema,
   CointrackerTransactionsQueryOptionsSchema,
+  CointrackerTransactionsRegenerateOptionsSchema,
 } from "./schemas/cointracker-transactions-options.js";
 
 const NOW = new Date().toISOString();
@@ -81,6 +83,25 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
             options,
             CointrackerTransactionsGroupOptionsSchema,
           ),
+      ),
+    );
+
+  const regenerate = transactions
+    .command("regenerate")
+    .alias("r")
+    .description("Rebuild cointracker_transactions from input CSV files");
+
+  addDebugOption(regenerate);
+
+  regenerate
+    .option("-d, --drop", "Drop table and re-create before inserting", false)
+    .option("--input-dir <dir>", "Input directory containing CoinTracker transaction CSV files")
+    .option("-y, --yes", "Confirm destructive table rebuild", false)
+    .action(
+      withAction(
+        parseOptions(),
+        async (options) =>
+          runAction(cointrackerTransactionsRegenerate, options, CointrackerTransactionsRegenerateOptionsSchema),
       ),
     );
 }

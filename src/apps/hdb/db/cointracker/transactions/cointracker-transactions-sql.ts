@@ -12,6 +12,41 @@ export type CointrackerTransactionFilters = {
   sent?: string[];
 };
 
+export const CREATE_COINTRACKER_TRANSACTIONS_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS ${COINTRACKER_TRANSACTIONS_TABLE}
+  (
+    transaction_id TEXT PRIMARY KEY,
+    date TIMESTAMPTZ NOT NULL,
+    type TEXT NOT NULL,
+    received_quantity NUMERIC,
+    received_currency TEXT,
+    received_cost_basis NUMERIC,
+    received_wallet TEXT,
+    received_address TEXT,
+    received_comment TEXT,
+    sent_quantity NUMERIC,
+    sent_currency TEXT,
+    sent_cost_basis NUMERIC,
+    sent_wallet TEXT,
+    sent_address TEXT,
+    sent_comment TEXT,
+    fee_amount NUMERIC,
+    fee_currency TEXT,
+    fee_cost_basis NUMERIC,
+    realized_return NUMERIC,
+    fee_realized_return NUMERIC,
+    transaction_hash TEXT
+  );
+`;
+
+export const DROP_COINTRACKER_TRANSACTIONS_TABLE_SQL = `DROP TABLE IF EXISTS ${COINTRACKER_TRANSACTIONS_TABLE};`;
+
+export const TRUNCATE_COINTRACKER_TRANSACTIONS_TABLE_SQL = `
+  TRUNCATE ${COINTRACKER_TRANSACTIONS_TABLE}
+  RESTART IDENTITY
+  CASCADE;
+`;
+
 export function buildFilterConditions(filters: CointrackerTransactionFilters): {
   conditions: string[];
   values: Array<Date | string[]>;

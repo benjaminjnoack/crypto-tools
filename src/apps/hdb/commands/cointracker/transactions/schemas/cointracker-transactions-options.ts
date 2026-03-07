@@ -64,5 +64,12 @@ export const CointrackerTransactionsGroupOptionsSchema =
     interval: CointrackerTransactionGroupIntervalSchema.optional(),
   });
 
+export const CointrackerTransactionsRegenerateOptionsSchema = DebugOptionsSchema.extend({
+  drop: z.boolean().optional(),
+  inputDir: z.string().trim().min(1).optional(),
+  yes: z.boolean().optional(),
+});
+
 export type CointrackerTransactionsQueryOptions = z.infer<typeof CointrackerTransactionsQueryOptionsSchema>;
 export type CointrackerTransactionsGroupOptions = z.infer<typeof CointrackerTransactionsGroupOptionsSchema>;
+export type CointrackerTransactionsRegenerateOptions = z.infer<typeof CointrackerTransactionsRegenerateOptionsSchema>;

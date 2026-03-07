@@ -1,12 +1,24 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
+  type CointrackerTransactionInsertRow,
+  createCointrackerTransactionsTable,
+  dropCointrackerTransactionsTable,
+  insertCointrackerTransactionsBatch,
   selectCointrackerTransactions,
   selectCointrackerTransactionsGroup,
+  truncateCointrackerTransactionsTable,
 } from "../../../db/cointracker/transactions/cointracker-transactions-repository.js";
+import { parseCointrackerTransactionsCsv } from "../../../db/cointracker/transactions/cointracker-transactions-mappers.js";
+import { getClient } from "../../../db/db-client.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
 import type {
   CointrackerTransactionsGroupOptions,
   CointrackerTransactionsQueryOptions,
+  CointrackerTransactionsRegenerateOptions,
 } from "./schemas/cointracker-transactions-options.js";
+import { getEnvConfig } from "#shared/common/index";
+import { logger } from "#shared/log/index";
 
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {
@@ -122,4 +134,74 @@ export async function cointrackerTransactionsGroup(
   }
 
   return rows as Array<Record<string, unknown>>;
+}
+
+function resolveCointrackerTransactionsInputDir(inputDir?: string): string {
+  if (inputDir) {
+    return path.resolve(inputDir);
+  }
+
+  const { HELPER_HDB_ROOT_DIR } = getEnvConfig() as { HELPER_HDB_ROOT_DIR?: string };
+  if (!HELPER_HDB_ROOT_DIR) {
+    throw new Error("Missing input directory. Provide --input-dir or set HELPER_HDB_ROOT_DIR.");
+  }
+
+  return path.resolve(HELPER_HDB_ROOT_DIR, "input", "cointracker-transactions");
+}
+
+export async function cointrackerTransactionsRegenerate(
+  options: CointrackerTransactionsRegenerateOptions,
+): Promise<number> {
+  const { drop, inputDir, yes } = options;
+  if (!yes) {
+    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
+  }
+
+  const resolvedInputDir = resolveCointrackerTransactionsInputDir(inputDir);
+  const fileNames = (await fs.readdir(resolvedInputDir))
+    .filter((fileName) => fileName.toLowerCase().endsWith(".csv"))
+    .sort();
+
+  if (fileNames.length === 0) {
+    logger.warn(`No CSV input files found in ${resolvedInputDir}`);
+    return 0;
+  }
+
+  logger.info(`Loading cointracker transaction CSVs from ${resolvedInputDir}`);
+  const rows: CointrackerTransactionInsertRow[] = [];
+  for (const fileName of fileNames) {
+    const filePath = path.join(resolvedInputDir, fileName);
+    const csvText = await fs.readFile(filePath, "utf8");
+    const mappedRows = parseCointrackerTransactionsCsv(csvText, filePath);
+    rows.push(...mappedRows);
+  }
+
+  if (drop) {
+    logger.warn("Dropping cointracker_transactions before regenerate");
+    await dropCointrackerTransactionsTable();
+    await createCointrackerTransactionsTable();
+  } else {
+    await createCointrackerTransactionsTable();
+    await truncateCointrackerTransactionsTable();
+  }
+
+  const BATCH_SIZE = 2000;
+  const pool = await getClient();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE);
+      await insertCointrackerTransactionsBatch(batch, client);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  logger.info(`Inserted ${rows.length} cointracker transaction rows`);
+  return rows.length;
 }
