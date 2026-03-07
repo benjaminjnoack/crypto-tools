@@ -60,6 +60,46 @@ export const CoinbaseTransactionsIdOptionsSchema = DebugOptionsSchema.extend({
   raw: z.boolean().optional(),
 });
 
+export const CoinbaseTransactionsStatementOptionsSchema = DebugOptionsSchema.extend({
+  manual: z.boolean().optional(),
+  normalize: z.boolean().optional(),
+});
+
+export const CoinbaseTransactionsRegenerateOptionsSchema = DebugOptionsSchema.extend({
+  drop: z.boolean().optional(),
+  inputDir: z.string().trim().min(1).optional(),
+  normalize: z.boolean().optional(),
+  yes: z.boolean().optional(),
+});
+
+export const CoinbaseTransactionsManualOptionsSchema = DebugOptionsSchema.extend({
+  dryRun: z.boolean().optional(),
+  fee: z.string().trim().min(1).optional(),
+  notes: z.string().trim().min(1),
+  price_currency: z.string().trim().min(1).optional(),
+  price_at_tx: z.string().trim().min(1).optional(),
+  quantity: z.string().trim().min(1),
+  rewriteExisting: z.boolean().optional(),
+  subtotal: z.string().trim().min(1).optional(),
+  timestamp: z.string().trim().min(1),
+  total: z.string().trim().min(1).optional(),
+  type: z.string().trim().min(1),
+});
+
+export const CoinbaseTransactionsNavOptionsSchema = DebugOptionsSchema.extend({
+  from: z.string().optional(),
+  quiet: z.boolean().optional(),
+  range: DateRangeSchema.optional(),
+  remote: z.boolean().optional(),
+  to: z.string().optional(),
+  year: z.string().regex(/^\\d{4}$/).optional(),
+  yes: z.boolean().optional(),
+});
+
 export type CoinbaseTransactionsQueryOptions = z.infer<typeof CoinbaseTransactionsQueryOptionsSchema>;
 export type CoinbaseTransactionsGroupOptions = z.infer<typeof CoinbaseTransactionsGroupOptionsSchema>;
 export type CoinbaseTransactionsIdOptions = z.infer<typeof CoinbaseTransactionsIdOptionsSchema>;
+export type CoinbaseTransactionsStatementOptions = z.infer<typeof CoinbaseTransactionsStatementOptionsSchema>;
+export type CoinbaseTransactionsRegenerateOptions = z.infer<typeof CoinbaseTransactionsRegenerateOptionsSchema>;
+export type CoinbaseTransactionsManualOptions = z.infer<typeof CoinbaseTransactionsManualOptionsSchema>;
+export type CoinbaseTransactionsNavOptions = z.infer<typeof CoinbaseTransactionsNavOptionsSchema>;

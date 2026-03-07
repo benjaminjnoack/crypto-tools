@@ -79,6 +79,13 @@ Install binary in your shell:
 - `hdb coinbase transactions get [asset]` (alias: `g`)
 - `hdb coinbase transactions group [asset]` (alias: `grp`)
 - `hdb coinbase transactions id [id]`
+- `hdb coinbase transactions manual <asset>` (alias: `m`)
+- `hdb coinbase transactions statement <filepath>` (alias: `st`)
+- `hdb coinbase transactions regenerate` (alias: `r`)
+  - requires `--yes`
+  - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/coinbase-transactions`
+- `hdb coinbase transactions nav`
+  - requires explicit live mode: `--remote --yes`
 
 Coinbase migration status and next slices are tracked in:
 - [`src/apps/hdb/commands/coinbase/MIGRATION.md`](./commands/coinbase/MIGRATION.md)

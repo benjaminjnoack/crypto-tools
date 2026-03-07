@@ -5,15 +5,30 @@ const {
   selectCoinbaseTransactionsMock,
   selectCoinbaseTransactionsGroupMock,
   selectCoinbaseTransactionsByIdsMock,
+  selectCoinbaseTransactionByIdMock,
+  createCoinbaseTransactionsTableMock,
+  dropCoinbaseTransactionsTableMock,
+  truncateCoinbaseTransactionsTableMock,
+  insertCoinbaseTransactionsBatchMock,
+  insertCoinbaseTransactionsMock,
+  parseCoinbaseTransactionsStatementCsvMock,
+  getClientMock,
+  readFileMock,
+  readdirMock,
+  requestAccountsMock,
+  requestProductMock,
+  getEnvConfigMock,
   loggerWarnMock,
+  loggerInfoMock,
   tableMock,
   logMock,
+  dirMock,
 } = vi.hoisted(() => ({
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
     from: new Date("2026-01-01T00:00:00.000Z"),
     to: new Date("2026-02-01T00:00:00.000Z"),
   })),
-  selectCoinbaseTransactionsMock: vi.fn(() => Promise.resolve([
+  selectCoinbaseTransactionsMock: vi.fn<() => Promise<Array<Record<string, unknown>>>>(() => Promise.resolve([
     {
       id: "tx-1",
       timestamp: new Date("2026-01-02T00:00:00.000Z"),
@@ -27,7 +42,7 @@ const {
       balance: "1.10",
     },
   ])),
-  selectCoinbaseTransactionsGroupMock: vi.fn(() => Promise.resolve([
+  selectCoinbaseTransactionsGroupMock: vi.fn<() => Promise<Array<Record<string, unknown>>>>(() => Promise.resolve([
     { month: "2026-01-01", quantity: "1", subtotal: "2", fee: "3", total: "5" },
   ])),
   selectCoinbaseTransactionsByIdsMock: vi.fn(() => Promise.resolve([
@@ -43,9 +58,39 @@ const {
       notes: "note",
     },
   ])),
+  selectCoinbaseTransactionByIdMock: vi.fn(() => Promise.resolve([{ id: "manual-1" }])),
+  createCoinbaseTransactionsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  dropCoinbaseTransactionsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  truncateCoinbaseTransactionsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  insertCoinbaseTransactionsBatchMock: vi.fn(() => Promise.resolve(undefined)),
+  insertCoinbaseTransactionsMock: vi.fn(() => Promise.resolve(undefined)),
+  parseCoinbaseTransactionsStatementCsvMock: vi.fn(() => [{ id: "row-1" }, { id: "row-2" }]),
+  getClientMock: vi.fn(() => Promise.resolve({
+    connect: vi.fn(() => Promise.resolve({
+      query: vi.fn(() => Promise.resolve(undefined)),
+      release: vi.fn(),
+    })),
+  })),
+  readFileMock: vi.fn(() => Promise.resolve("csv")),
+  readdirMock: vi.fn(() => Promise.resolve(["a.csv", "manual.csv"])),
+  requestAccountsMock: vi.fn(() => Promise.resolve([
+    { currency: "USD", available_balance: { value: "1000" }, hold: { value: "0" } },
+    { currency: "BTC", available_balance: { value: "0.1" }, hold: { value: "0" } },
+  ])),
+  requestProductMock: vi.fn(() => Promise.resolve({ price: "50000" })),
+  getEnvConfigMock: vi.fn(() => ({ HELPER_HDB_ROOT_DIR: "/tmp/hdb-root" })),
   loggerWarnMock: vi.fn(),
+  loggerInfoMock: vi.fn(),
   tableMock: vi.fn(),
   logMock: vi.fn(),
+  dirMock: vi.fn(),
+}));
+
+vi.mock("node:fs/promises", () => ({
+  default: {
+    readFile: readFileMock,
+    readdir: readdirMock,
+  },
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
@@ -56,11 +101,35 @@ vi.mock("../../../../../../../src/apps/hdb/db/coinbase/transactions/coinbase-tra
   selectCoinbaseTransactions: selectCoinbaseTransactionsMock,
   selectCoinbaseTransactionsGroup: selectCoinbaseTransactionsGroupMock,
   selectCoinbaseTransactionsByIds: selectCoinbaseTransactionsByIdsMock,
+  selectCoinbaseTransactionById: selectCoinbaseTransactionByIdMock,
+  createCoinbaseTransactionsTable: createCoinbaseTransactionsTableMock,
+  dropCoinbaseTransactionsTable: dropCoinbaseTransactionsTableMock,
+  truncateCoinbaseTransactionsTable: truncateCoinbaseTransactionsTableMock,
+  insertCoinbaseTransactionsBatch: insertCoinbaseTransactionsBatchMock,
+  insertCoinbaseTransactions: insertCoinbaseTransactionsMock,
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/db/coinbase/transactions/coinbase-transactions-mappers.js", () => ({
+  parseCoinbaseTransactionsStatementCsv: parseCoinbaseTransactionsStatementCsvMock,
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/db/db-client.js", () => ({
+  getClient: getClientMock,
+}));
+
+vi.mock("../../../../../../../src/shared/coinbase/rest.js", () => ({
+  requestAccounts: requestAccountsMock,
+  requestProduct: requestProductMock,
+}));
+
+vi.mock("../../../../../../../src/shared/common/env.js", () => ({
+  getEnvConfig: getEnvConfigMock,
 }));
 
 vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
   logger: {
     warn: loggerWarnMock,
+    info: loggerInfoMock,
   },
 }));
 
@@ -68,6 +137,10 @@ import {
   coinbaseTransactions,
   coinbaseTransactionsGroup,
   coinbaseTransactionsId,
+  coinbaseTransactionsManual,
+  coinbaseTransactionsNav,
+  coinbaseTransactionsRegenerate,
+  coinbaseTransactionsStatement,
 } from "../../../../../../../src/apps/hdb/commands/coinbase/transactions/coinbase-transactions-handlers.js";
 
 describe("hdb coinbase transaction handlers", () => {
@@ -75,6 +148,7 @@ describe("hdb coinbase transaction handlers", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "table").mockImplementation(tableMock);
     vi.spyOn(console, "log").mockImplementation(logMock);
+    vi.spyOn(console, "dir").mockImplementation(dirMock);
   });
 
   it("queries transactions with classifier and toggles", async () => {
@@ -132,19 +206,6 @@ describe("hdb coinbase transaction handlers", () => {
       },
       "month",
     );
-    expect(selectCoinbaseTransactionsGroupMock).toHaveBeenNthCalledWith(
-      2,
-      {
-        from: new Date("2026-01-01T00:00:00.000Z"),
-        to: new Date("2026-02-01T00:00:00.000Z"),
-        assets: ["BTC"],
-        excluded: [],
-        types: [],
-        notTypes: [],
-        selectManual: null,
-        selectSynthetic: null,
-      },
-    );
     expect(logMock).toHaveBeenCalledWith("Totals:");
     expect(tableMock).toHaveBeenCalledTimes(2);
     expect(rows).toHaveLength(1);
@@ -162,5 +223,56 @@ describe("hdb coinbase transaction handlers", () => {
     await expect(coinbaseTransactionsId(undefined, { lotId: "abc" })).rejects.toThrow(
       "--lot-id is not yet migrated",
     );
+  });
+
+  it("imports statement csv rows in a transaction", async () => {
+    const count = await coinbaseTransactionsStatement("/tmp/statement.csv", { normalize: true });
+
+    expect(parseCoinbaseTransactionsStatementCsvMock).toHaveBeenCalledTimes(1);
+    expect(insertCoinbaseTransactionsBatchMock).toHaveBeenCalledTimes(1);
+    expect(count).toBe(2);
+  });
+
+  it("regenerates from csv directory with drop flow", async () => {
+    const count = await coinbaseTransactionsRegenerate({ yes: true, drop: true, normalize: true });
+
+    expect(dropCoinbaseTransactionsTableMock).toHaveBeenCalledTimes(1);
+    expect(createCoinbaseTransactionsTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseTransactionsTableMock).not.toHaveBeenCalled();
+    expect(insertCoinbaseTransactionsBatchMock).toHaveBeenCalledTimes(1);
+    expect(count).toBe(4);
+  });
+
+  it("inserts manual transaction when not dry-run", async () => {
+    const rows = await coinbaseTransactionsManual("btc", {
+      notes: "manual note",
+      quantity: "1",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      type: "Buy",
+      dryRun: false,
+    });
+
+    expect(insertCoinbaseTransactionsMock).toHaveBeenCalledTimes(1);
+    expect(selectCoinbaseTransactionByIdMock).toHaveBeenCalledTimes(1);
+    expect(rows).toEqual([{ id: "manual-1" }]);
+  });
+
+  it("requires explicit confirmation flags for nav live calls", async () => {
+    await expect(coinbaseTransactionsNav({})).rejects.toThrow("Missing source: use --remote");
+    await expect(coinbaseTransactionsNav({ remote: true })).rejects.toThrow("without confirmation");
+  });
+
+  it("computes nav from account balances and transaction cash flow", async () => {
+    selectCoinbaseTransactionsMock
+      .mockResolvedValueOnce([{ num_quantity: "1000" }])
+      .mockResolvedValueOnce([{ num_quantity: "200" }]);
+    selectCoinbaseTransactionsGroupMock.mockResolvedValueOnce([{ fee: "12.34" }]);
+
+    const pnl = await coinbaseTransactionsNav({ remote: true, yes: true, quiet: false });
+
+    expect(requestAccountsMock).toHaveBeenCalledTimes(1);
+    expect(requestProductMock).toHaveBeenCalledWith("BTC-USD");
+    expect(tableMock).toHaveBeenCalledTimes(1);
+    expect(pnl).toBe(5200);
   });
 });

@@ -48,17 +48,16 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 - `transactions/get`: migrated
 - `transactions/group`: migrated
 - `transactions/id`: migrated (lot-id mode pending)
-- `transactions/manual`: pending
-- `transactions/nav`: pending
-- `transactions/statement`: pending
-- `transactions/regenerate`: pending
+- `transactions/manual`: migrated
+- `transactions/nav`: migrated (live-gated with `--remote --yes`)
+- `transactions/statement`: migrated
+- `transactions/regenerate`: migrated
 
 ## Recommended Slice Order
 
-1. `coinbase transactions regenerate/statement/manual/nav`
-2. `coinbase balances get/trace/regenerate/batch`
-3. `coinbase lots get/compare/batch/batch-compare`
-4. `coinbase orders object/regenerate`
+1. `coinbase balances get/trace/regenerate/batch`
+2. `coinbase lots get/compare/batch/batch-compare`
+3. `coinbase orders object/regenerate`
 
 ## Migration Rules (Coinbase)
 

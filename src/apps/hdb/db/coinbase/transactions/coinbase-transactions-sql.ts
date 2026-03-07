@@ -13,6 +13,47 @@ export type CoinbaseTransactionFilters = {
   selectSynthetic?: boolean | null;
 };
 
+export const CREATE_COINBASE_TRANSACTIONS_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS ${COINBASE_TRANSACTIONS_TABLE} (
+    id TEXT PRIMARY KEY,
+    timestamp TIMESTAMPTZ NOT NULL,
+    type TEXT NOT NULL,
+    asset TEXT NOT NULL,
+    price_currency TEXT NOT NULL,
+    notes TEXT DEFAULT '',
+    synthetic BOOLEAN DEFAULT FALSE,
+    manual BOOLEAN DEFAULT FALSE,
+    quantity TEXT NOT NULL,
+    price_at_tx TEXT NOT NULL,
+    subtotal TEXT NOT NULL,
+    total TEXT NOT NULL,
+    fee TEXT NOT NULL,
+    num_quantity NUMERIC NOT NULL,
+    num_price_at_tx NUMERIC NOT NULL,
+    num_subtotal NUMERIC,
+    num_total NUMERIC NOT NULL,
+    num_fee NUMERIC NOT NULL,
+    js_num_quantity DOUBLE PRECISION NOT NULL,
+    js_num_price_at_tx DOUBLE PRECISION NOT NULL,
+    js_num_subtotal DOUBLE PRECISION,
+    js_num_total DOUBLE PRECISION NOT NULL,
+    js_num_fee DOUBLE PRECISION NOT NULL,
+    int_quantity NUMERIC NOT NULL,
+    int_price_at_tx NUMERIC NOT NULL,
+    int_subtotal NUMERIC,
+    int_total NUMERIC NOT NULL,
+    int_fee NUMERIC NOT NULL
+  );
+`;
+
+export const DROP_COINBASE_TRANSACTIONS_TABLE_SQL = `DROP TABLE IF EXISTS ${COINBASE_TRANSACTIONS_TABLE};`;
+
+export const TRUNCATE_COINBASE_TRANSACTIONS_TABLE_SQL = `
+  TRUNCATE ${COINBASE_TRANSACTIONS_TABLE}
+  RESTART IDENTITY
+  CASCADE;
+`;
+
 export function buildCoinbaseTransactionsFilterConditions(filters: CoinbaseTransactionFilters): {
   conditions: string[];
   values: Array<Date | string[]>;
@@ -148,5 +189,12 @@ export const SELECT_COINBASE_TRANSACTIONS_BY_IDS_SQL = `
   SELECT *
   FROM ${COINBASE_TRANSACTIONS_TABLE}
   WHERE id = ANY($1::text[])
+  ORDER BY timestamp ASC;
+`;
+
+export const SELECT_COINBASE_TRANSACTION_BY_ID_SQL = `
+  SELECT *
+  FROM ${COINBASE_TRANSACTIONS_TABLE}
+  WHERE id = $1
   ORDER BY timestamp ASC;
 `;
