@@ -74,6 +74,12 @@ Install binary in your shell:
   - requires source selection: `--cache` or `--remote`
   - live mode requires confirmation: `--remote --yes`
 
+### Coinbase Transactions
+
+- `hdb coinbase transactions get [asset]` (alias: `g`)
+- `hdb coinbase transactions group [asset]` (alias: `grp`)
+- `hdb coinbase transactions id [id]`
+
 Coinbase migration status and next slices are tracked in:
 - [`src/apps/hdb/commands/coinbase/MIGRATION.md`](./commands/coinbase/MIGRATION.md)
 
