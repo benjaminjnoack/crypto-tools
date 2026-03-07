@@ -37,3 +37,8 @@ export const CoinbaseOrdersUpdateOptionsSchema = DebugOptionsSchema
     yes: z.boolean().optional(),
   })
 export type CoinbaseOrdersUpdateOptions = z.infer<typeof CoinbaseOrdersUpdateOptionsSchema>;
+
+export const CoinbaseOrdersRegenerateOptionsSchema = CoinbaseOrdersUpdateOptionsSchema.extend({
+  drop: z.boolean().optional(),
+});
+export type CoinbaseOrdersRegenerateOptions = z.infer<typeof CoinbaseOrdersRegenerateOptionsSchema>;

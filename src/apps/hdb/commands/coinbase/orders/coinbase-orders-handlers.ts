@@ -1,13 +1,17 @@
 import {
   COINBASE_ORDERS_TABLE,
+  createCoinbaseOrdersTable,
+  dropCoinbaseOrdersTable,
   insertCoinbaseOrder,
   selectCoinbaseOrder,
   selectCoinbaseOrderByLastFillTime,
   selectCoinbaseOrdersSumTotalFees,
+  truncateCoinbaseOrdersTable,
 } from "../../../db/coinbase/orders/coinbase-orders-repository.js";
 import type {
   CoinbaseOrdersFeesOptions,
   CoinbaseOrdersInsertOptions,
+  CoinbaseOrdersRegenerateOptions,
   CoinbaseOrdersUpdateOptions,
 } from "./schemas/coinbase-orders-options.js";
 import { COINBASE_EPOCH, getToAndFromDates } from "../../shared/date-range-utils.js";
@@ -26,6 +30,12 @@ import { logger, printOrder } from "#shared/log/index";
 export async function coinbaseOrders(orderId: string) {
   const order = await selectCoinbaseOrder(orderId);
   printOrder(order);
+}
+
+export async function coinbaseOrdersObject(orderId: string): Promise<Record<string, unknown>> {
+  const order = await selectCoinbaseOrder(orderId);
+  console.dir(order, { depth: null });
+  return order as unknown as Record<string, unknown>;
 }
 
 export async function coinbaseOrdersFees(productId: string | undefined, options: CoinbaseOrdersFeesOptions) {
@@ -141,4 +151,21 @@ export async function coinbaseOrdersUpdate(options: CoinbaseOrdersUpdateOptions)
     await insertCoinbaseOrder(order as CoinbaseOrder);
   }
   logger.info(`Inserted ${dedupedOrders.length} orders.`);
+}
+
+export async function coinbaseOrdersRegenerate(options: CoinbaseOrdersRegenerateOptions): Promise<void> {
+  const { drop, yes } = options;
+  if (!yes) {
+    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
+  }
+
+  if (drop) {
+    await dropCoinbaseOrdersTable();
+    await createCoinbaseOrdersTable();
+  } else {
+    await createCoinbaseOrdersTable();
+    await truncateCoinbaseOrdersTable();
+  }
+
+  await coinbaseOrdersUpdate(options);
 }

@@ -14,12 +14,15 @@ import {
   coinbaseOrders,
   coinbaseOrdersFees,
   coinbaseOrdersInsert,
+  coinbaseOrdersObject,
+  coinbaseOrdersRegenerate,
   coinbaseOrdersUpdate,
 } from "./coinbase-orders-handlers.js";
 import { DebugOptionsSchema } from "../../schemas/debug-options.js";
 import {
   CoinbaseOrdersFeesOptionsSchema,
   CoinbaseOrdersInsertOptionsSchema,
+  CoinbaseOrdersRegenerateOptionsSchema,
   CoinbaseOrdersUpdateOptionsSchema,
 } from "./schemas/coinbase-orders-options.js";
 import { COINBASE_EPOCH } from "../../shared/date-range-utils.js";
@@ -81,6 +84,47 @@ export function registerCoinbaseOrderCommands(coinbase: Command) {
         parseArgWithOptions(z.string()),
         async (orderId, options) =>
           runActionWithArgument(coinbaseOrdersInsert, orderId, options, CoinbaseOrdersInsertOptionsSchema),
+      ),
+    );
+
+  const object = orders
+    .command("object <orderId>")
+    .alias("o")
+    .description("Select order from the database and print the reconstructed order object");
+
+  addDebugOption(object);
+
+  object
+    .action(
+      withAction(
+        parseArgWithOptions(z.string()),
+        async (orderId, options) =>
+          runActionWithArgument(coinbaseOrdersObject, orderId, options, DebugOptionsSchema),
+      ),
+    );
+
+  const regenerate = orders
+    .command("regenerate")
+    .alias("r")
+    .description(`Drop/truncate and repopulate ${COINBASE_ORDERS_TABLE} from cache or remote`);
+
+  addDebugOption(regenerate);
+  addCacheOption(regenerate);
+  addFromOption(regenerate, COINBASE_EPOCH);
+  addToOption(regenerate, NOW);
+  addRsyncOption(
+    regenerate,
+    `Read the last filled order from ${COINBASE_ORDERS_TABLE} and request all filled orders since`,
+  );
+
+  regenerate
+    .option("-d, --drop", "Drop table and re-create before repopulating", false)
+    .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
+    .option("-y, --yes", "Confirm destructive rebuild and any live Coinbase API requests", false)
+    .action(
+      withAction(
+        parseOptions(),
+        async (options) => runAction(coinbaseOrdersRegenerate, options, CoinbaseOrdersRegenerateOptionsSchema),
       ),
     );
 

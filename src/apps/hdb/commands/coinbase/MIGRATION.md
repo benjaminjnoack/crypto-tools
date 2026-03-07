@@ -30,10 +30,27 @@ Legacy command surface (`helper/db/cli/hdb.js`):
 
 Current TS surface (`src/apps/hdb/commands/coinbase`):
 
+- `coinbase balances get <asset>`
+- `coinbase balances batch`
+- `coinbase balances trace <asset>`
+- `coinbase balances regenerate`
+- `coinbase lots get <asset>`
+- `coinbase lots batch`
+- `coinbase lots compare <asset>`
+- `coinbase lots batch-compare`
 - `coinbase orders get <orderId>`
 - `coinbase orders fees [productId]`
 - `coinbase orders insert <orderId>`
+- `coinbase orders object <orderId>`
+- `coinbase orders regenerate`
 - `coinbase orders update`
+- `coinbase transactions get [asset]`
+- `coinbase transactions group [asset]`
+- `coinbase transactions id [id]`
+- `coinbase transactions manual <asset>`
+- `coinbase transactions nav`
+- `coinbase transactions regenerate`
+- `coinbase transactions statement <filepath>`
 
 ## Status
 
@@ -41,8 +58,8 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 - `orders/fees`: migrated
 - `orders/insert`: migrated (live-gated with `--remote --yes`)
 - `orders/update`: migrated (explicit source gating: `--cache` or `--remote`)
-- `orders/object`: pending
-- `orders/regenerate`: pending
+- `orders/object`: migrated
+- `orders/regenerate`: migrated
 - `balances/get`: migrated
 - `balances/batch`: migrated
 - `balances/trace`: migrated
@@ -62,7 +79,7 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 
 ## Recommended Slice Order
 
-1. `coinbase orders object/regenerate`
+1. Complete `lots` export paths (`--csv`, `--f8949`)
 
 ## Migration Rules (Coinbase)
 

@@ -4,7 +4,10 @@ const {
   selectCoinbaseOrderMock,
   selectCoinbaseOrderByLastFillTimeMock,
   selectCoinbaseOrdersSumTotalFeesMock,
+  createCoinbaseOrdersTableMock,
+  dropCoinbaseOrdersTableMock,
   insertCoinbaseOrderMock,
+  truncateCoinbaseOrdersTableMock,
   getToAndFromDatesMock,
   printOrderMock,
   getProductIdMock,
@@ -20,7 +23,10 @@ const {
   selectCoinbaseOrderMock: vi.fn(() => Promise.resolve({ order_id: "id-1" })),
   selectCoinbaseOrderByLastFillTimeMock: vi.fn(() => Promise.resolve({ first: null, last: null })),
   selectCoinbaseOrdersSumTotalFeesMock: vi.fn(() => Promise.resolve(12.345)),
+  createCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
+  dropCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
   insertCoinbaseOrderMock: vi.fn(() => Promise.resolve(undefined)),
+  truncateCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
     from: new Date("2026-01-01T00:00:00.000Z"),
     to: new Date("2026-01-31T00:00:00.000Z"),
@@ -47,10 +53,13 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js", () => ({
   COINBASE_ORDERS_TABLE: "coinbase_orders",
+  createCoinbaseOrdersTable: createCoinbaseOrdersTableMock,
+  dropCoinbaseOrdersTable: dropCoinbaseOrdersTableMock,
   insertCoinbaseOrder: insertCoinbaseOrderMock,
   selectCoinbaseOrder: selectCoinbaseOrderMock,
   selectCoinbaseOrderByLastFillTime: selectCoinbaseOrderByLastFillTimeMock,
   selectCoinbaseOrdersSumTotalFees: selectCoinbaseOrdersSumTotalFeesMock,
+  truncateCoinbaseOrdersTable: truncateCoinbaseOrdersTableMock,
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
@@ -92,6 +101,8 @@ import {
   coinbaseOrders,
   coinbaseOrdersFees,
   coinbaseOrdersInsert,
+  coinbaseOrdersObject,
+  coinbaseOrdersRegenerate,
   coinbaseOrdersUpdate,
 } from "../../../../../../../src/apps/hdb/commands/coinbase/orders/coinbase-orders-handlers.js";
 
@@ -117,6 +128,14 @@ describe("hdb coinbase order handlers", () => {
       "BUY",
     );
     expect(loggerInfoMock).toHaveBeenCalledWith("Fees: $12.35");
+  });
+
+  it("prints reconstructed order object", async () => {
+    const dirMock = vi.spyOn(console, "dir").mockImplementation(() => undefined);
+    const value = await coinbaseOrdersObject("abc");
+    expect(selectCoinbaseOrderMock).toHaveBeenCalledWith("abc");
+    expect(dirMock).toHaveBeenCalledTimes(1);
+    expect(value).toEqual({ order_id: "id-1" });
   });
 
   it("downloads one order then inserts it", async () => {
@@ -184,6 +203,28 @@ describe("hdb coinbase order handlers", () => {
     );
     await expect(coinbaseOrdersUpdate({ remote: true })).rejects.toThrow(
       "Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.",
+    );
+  });
+
+  it("regenerates with truncate flow and delegates to update", async () => {
+    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: false });
+
+    expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(dropCoinbaseOrdersTableMock).not.toHaveBeenCalled();
+    expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(0);
+  });
+
+  it("regenerates with drop flow", async () => {
+    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: true });
+    expect(dropCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseOrdersTableMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses regenerate without --yes", async () => {
+    await expect(coinbaseOrdersRegenerate({ cache: true, yes: false })).rejects.toThrow(
+      "Refusing to regenerate without confirmation. Re-run with --yes.",
     );
   });
 

@@ -83,6 +83,11 @@ Install binary in your shell:
 - `hdb coinbase orders fees [productId]` (alias: `f`)
 - `hdb coinbase orders insert <orderId>` (alias: `i`)
   - requires explicit live mode: `--remote --yes`
+- `hdb coinbase orders object <orderId>` (alias: `o`)
+- `hdb coinbase orders regenerate` (alias: `r`)
+  - requires `--yes`
+  - source selection required: `--cache` or `--remote`
+  - live mode requires confirmation: `--remote --yes`
 - `hdb coinbase orders update` (alias: `u`)
   - requires source selection: `--cache` or `--remote`
   - live mode requires confirmation: `--remote --yes`
