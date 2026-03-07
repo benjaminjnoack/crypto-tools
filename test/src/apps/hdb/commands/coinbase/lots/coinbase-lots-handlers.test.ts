@@ -8,6 +8,8 @@ const {
   selectCoinbaseTransactionsDistinctAssetMock,
   tableMock,
   loggerInfoMock,
+  writeCoinbaseLotsCsvMock,
+  writeCoinbaseLotsF8949Mock,
 } = vi.hoisted(() => ({
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
     from: new Date("2026-01-01T00:00:00.000Z"),
@@ -44,6 +46,8 @@ const {
   selectCoinbaseTransactionsDistinctAssetMock: vi.fn(() => Promise.resolve(["BTC", "ETH2", "USDC"])),
   tableMock: vi.fn(),
   loggerInfoMock: vi.fn(),
+  writeCoinbaseLotsCsvMock: vi.fn(() => Promise.resolve(undefined)),
+  writeCoinbaseLotsF8949Mock: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
@@ -65,6 +69,17 @@ vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
   logger: {
     info: loggerInfoMock,
   },
+}));
+
+vi.mock("../../../../../../../src/shared/common/env.js", () => ({
+  getEnvConfig: vi.fn(() => ({ HELPER_HDB_ROOT_DIR: "/tmp/hdb-root" })),
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/commands/coinbase/lots/coinbase-lots-export.js", () => ({
+  buildCoinbaseLotsDateRangeFilename: vi.fn(() => "2026-01-01_2026-02-01"),
+  resolveCoinbaseLotsOutputDir: vi.fn(() => "/tmp/hdb-root/output/coinbase-lots"),
+  writeCoinbaseLotsCsv: writeCoinbaseLotsCsvMock,
+  writeCoinbaseLotsF8949: writeCoinbaseLotsF8949Mock,
 }));
 
 import {
@@ -91,9 +106,30 @@ describe("coinbase lots handlers", () => {
     expect(lots).toHaveLength(1);
   });
 
-  it("rejects unsupported export flags for now", async () => {
-    await expect(coinbaseLots("btc", { csv: true })).rejects.toThrow("--csv export is not yet migrated");
-    await expect(coinbaseLots("btc", { f8949: true })).rejects.toThrow("--f8949 export is not yet migrated");
+  it("writes csv and f8949 exports when requested", async () => {
+    await coinbaseLots("btc", { csv: true, f8949: true, pages: true, totals: true, notes: true, obfuscate: true });
+
+    expect(writeCoinbaseLotsCsvMock).toHaveBeenCalledTimes(1);
+    expect(writeCoinbaseLotsCsvMock).toHaveBeenCalledWith(
+      "/tmp/hdb-root/output/coinbase-lots",
+      "coinbase_lots_BTC_2026-01-01_2026-02-01",
+      expect.any(Array),
+      {
+        includeBalance: false,
+        includeNotes: true,
+        obfuscate: true,
+      },
+    );
+    expect(writeCoinbaseLotsF8949Mock).toHaveBeenCalledTimes(1);
+    expect(writeCoinbaseLotsF8949Mock).toHaveBeenCalledWith(
+      "/tmp/hdb-root/output/coinbase-lots",
+      "coinbase_lots_BTC_2026-01-01_2026-02-01",
+      expect.any(Array),
+      {
+        includeTotals: true,
+        includePages: true,
+      },
+    );
   });
 
   it("runs batch and compare variants", async () => {

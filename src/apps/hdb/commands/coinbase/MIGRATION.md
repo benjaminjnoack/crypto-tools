@@ -68,7 +68,6 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 - `lots/batch`: migrated
 - `lots/compare`: migrated
 - `lots/batch-compare`: migrated
-  - `--csv` / `--f8949` exports pending
 - `transactions/get`: migrated
 - `transactions/group`: migrated
 - `transactions/id`: migrated (lot-id mode pending)
@@ -79,7 +78,7 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 
 ## Recommended Slice Order
 
-1. Complete `lots` export paths (`--csv`, `--f8949`)
+1. Coinbase command migration complete for current scope; continue hardening/tests/refinement as needed
 
 ## Migration Rules (Coinbase)
 

@@ -1,4 +1,5 @@
 import { logger } from "#shared/log/index";
+import { getEnvConfig } from "#shared/common/index";
 import { DUST_THRESHOLD, getToAndFromDates } from "../../shared/date-range-utils.js";
 import { traceCoinbaseBalanceLedger } from "../../../db/coinbase/balances/coinbase-balances-repository.js";
 import {
@@ -16,6 +17,12 @@ import {
   sortLots,
   toLotTableRow,
 } from "./coinbase-lots-engine.js";
+import {
+  buildCoinbaseLotsDateRangeFilename,
+  resolveCoinbaseLotsOutputDir,
+  writeCoinbaseLotsCsv,
+  writeCoinbaseLotsF8949,
+} from "./coinbase-lots-export.js";
 import type {
   CoinbaseLotsBatchCompareOptions,
   CoinbaseLotsBatchOptions,
@@ -48,21 +55,30 @@ function resolveAccounting(accountingRaw: string | undefined): CoinbaseLotsAccou
   throw new Error(`Invalid accounting method: ${accountingRaw}`);
 }
 
-function assertNoExportFlags(options: CoinbaseLotsQueryOptions): void {
-  if (options.csv) {
-    throw new Error("--csv export is not yet migrated for coinbase lots.");
+function resolveLotsOutputDir(): string {
+  const { HELPER_HDB_ROOT_DIR } = getEnvConfig();
+  if (!HELPER_HDB_ROOT_DIR) {
+    throw new Error("Missing output directory root: set HELPER_HDB_ROOT_DIR.");
   }
-  if (options.f8949) {
-    throw new Error("--f8949 export is not yet migrated for coinbase lots.");
-  }
+  return resolveCoinbaseLotsOutputDir(HELPER_HDB_ROOT_DIR);
 }
 
 export async function coinbaseLots(
   asset: string,
   options: CoinbaseLotsQueryOptions,
 ): Promise<CoinbaseLotRow[]> {
-  const { all, balance: showBalance, buyLots, quiet, totals } = options;
-  assertNoExportFlags(options);
+  const {
+    all,
+    balance: showBalance,
+    buyLots,
+    csv,
+    f8949,
+    notes,
+    obfuscate,
+    pages,
+    quiet,
+    totals,
+  } = options;
 
   const ticker = normalizeSingleAssetArg(asset);
   const accounting = resolveAccounting(options.accounting);
@@ -118,6 +134,25 @@ export async function coinbaseLots(
     }
   }
 
+  if (csv || f8949) {
+    const filename = `coinbase_lots_${ticker}_${buildCoinbaseLotsDateRangeFilename(from, to)}`;
+    const outDir = resolveLotsOutputDir();
+
+    if (csv) {
+      await writeCoinbaseLotsCsv(outDir, filename, lots, {
+        includeBalance: Boolean(showBalance),
+        includeNotes: Boolean(notes),
+        obfuscate: Boolean(obfuscate),
+      });
+    }
+    if (f8949) {
+      await writeCoinbaseLotsF8949(outDir, filename, lots, {
+        includeTotals: Boolean(totals),
+        includePages: Boolean(pages),
+      });
+    }
+  }
+
   return lots;
 }
 
@@ -125,7 +160,6 @@ export async function coinbaseLotsBatch(
   options: CoinbaseLotsBatchOptions,
 ): Promise<CoinbaseLotRow[]> {
   const { cash, quiet, totals } = options;
-  assertNoExportFlags(options);
 
   const { from, to } = await getToAndFromDates(options);
   const assets = await selectCoinbaseTransactionsDistinctAsset(from, to);
