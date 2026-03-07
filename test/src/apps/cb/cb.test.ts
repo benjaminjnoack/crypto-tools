@@ -11,5 +11,6 @@ describe("createProgram", () => {
     expect(names.has("market")).toBe(true);
     expect(names.has("order")).toBe(true);
     expect(names.has("product")).toBe(true);
+    expect(names.has("fib")).toBe(true);
   });
 });

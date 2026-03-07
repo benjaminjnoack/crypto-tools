@@ -26,6 +26,8 @@ export const OptionFlags = {
   allIn: "-a, --all-in",
   dryRunFlag: "-x, --dryRunFlag",
   modifyBuyPrice: "--buyPrice <buyPrice>",
+  fib0: "--fib0 <price>",
+  fib1: "--fib1 <price>",
 } as const;
 
 export function printErrorAndExit(commandName: string, e: unknown, code = 1) {

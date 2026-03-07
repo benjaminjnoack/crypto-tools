@@ -7,6 +7,7 @@ import { registerMarketCommands } from "./commands/register/register-market.js";
 import { registerOrderCommands } from "./commands/register/register-orders.js";
 import { registerProductCommands } from "./commands/register/register-products.js";
 import { registerPlanCommand } from "./commands/register/register-plan.js";
+import { registerFibCommand } from "./commands/register/register-fib.js";
 
 export function createProgram(): Command {
   const version = getVersion();
@@ -27,6 +28,7 @@ export function createProgram(): Command {
   registerOrderCommands(program);
   registerProductCommands(program);
   registerPlanCommand(program);
+  registerFibCommand(program);
 
   return program;
 }
