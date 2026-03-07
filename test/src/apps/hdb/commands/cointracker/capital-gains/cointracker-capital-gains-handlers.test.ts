@@ -147,6 +147,29 @@ describe("cointracker capital gains handlers", () => {
     expect(rows).toEqual([{ group: "BTC" }]);
   });
 
+  it("passes pages option to grouped f8949 export", async () => {
+    await cointrackerCapitalGainsGroup("btc", { quiet: true, f8949: true, pages: true });
+    expect(writeCapitalGainsGroupF8949Mock).toHaveBeenCalledWith(
+      "/tmp/hdb-root/output/cointracker-capital-gains",
+      "2026-01-01_2026-02-01",
+      [{ group: "BTC" }],
+      false,
+      true,
+      undefined,
+    );
+  });
+
+  it("formats totals unless raw=true", async () => {
+    await cointrackerCapitalGains("btc", { totals: true, quiet: true, raw: false });
+    const firstTotals = tableMock.mock.calls[0]![0] as Array<Record<string, string>>;
+    expect(firstTotals[0]!.cost_basis).toBe("1.00");
+
+    tableMock.mockClear();
+    await cointrackerCapitalGains("btc", { totals: true, quiet: true, raw: true });
+    const rawTotals = tableMock.mock.calls[0]![0] as Array<Record<string, string>>;
+    expect(rawTotals[0]!.cost_basis).toBe("1");
+  });
+
   it("refuses regenerate without --yes", async () => {
     await expect(cointrackerCapitalGainsRegenerate({ yes: false })).rejects.toThrow(
       "Refusing to regenerate without confirmation. Re-run with --yes.",

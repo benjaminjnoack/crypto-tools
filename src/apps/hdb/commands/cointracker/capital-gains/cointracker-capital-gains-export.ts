@@ -86,6 +86,25 @@ function aggregateTotals(rows: CointrackerCapitalGainRow[]): CointrackerCapitalG
   };
 }
 
+function aggregateGroupTotals(rows: CointrackerCapitalGainsGroupRow[]): CointrackerCapitalGainsTotalsRow {
+  let proceeds = 0;
+  let costBasis = 0;
+  let gain = 0;
+
+  for (const row of rows) {
+    proceeds += Number(row.proceeds);
+    costBasis += Number(row.basis);
+    gain += Number(row.gains);
+  }
+
+  return {
+    trades: `${rows.length}`,
+    proceeds: `${proceeds}`,
+    cost_basis: `${costBasis}`,
+    gain: `${gain}`,
+  };
+}
+
 function totalsCsvRow(totals: CointrackerCapitalGainsTotalsRow): string {
   return serializeRow([
     "Totals:",
@@ -264,6 +283,7 @@ export async function writeCapitalGainsGroupF8949(
   filename: string,
   rows: CointrackerCapitalGainsGroupRow[],
   includeHeaders: boolean,
+  includePages: boolean,
   totals?: CointrackerCapitalGainsTotalsRow,
 ): Promise<void> {
   const header = "Description,Date Acquired,Date Sold,Proceeds,Cost Basis,Code,Adjustment,Gain";
@@ -284,4 +304,31 @@ export async function writeCapitalGainsGroupF8949(
     : totalsRow ? [...lines, totalsRow] : lines;
 
   await writeLines(path.join(outputDir, `${filename}.group.f8949.csv`), final);
+
+  if (!includePages) {
+    return;
+  }
+
+  const pages = paginate(rows, F8949_ROWS_PER_PAGE);
+  for (const [index, pageRows] of pages.entries()) {
+    const pageNum = String(index + 1).padStart(2, "0");
+    const pageLines = pageRows.map((row) =>
+      buildF8949Line(
+        `${stripTrailingZeros(row.amount)} ${row.group}`,
+        "Various",
+        "Various",
+        formatToCents(row.proceeds),
+        formatToCents(row.basis),
+        formatToCents(row.gains),
+      ),
+    );
+    const pageTotals = totalsF8949Row(aggregateGroupTotals(pageRows));
+    const finalPageLines = includeHeaders
+      ? [header, ...pageLines, pageTotals]
+      : [...pageLines, pageTotals];
+    await writeLines(
+      path.join(outputDir, `${filename}.group.pg${pageNum}.f8949.csv`),
+      finalPageLines,
+    );
+  }
 }

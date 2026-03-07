@@ -79,6 +79,55 @@ function applyFirstLastRows<T>(rows: T[], first?: string, last?: string): T[] {
   return rows;
 }
 
+function formatToCents(value: string): string {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return value;
+  }
+  return parsed.toFixed(2);
+}
+
+function stripTrailingZeros(value: string): string {
+  return value.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1");
+}
+
+function formatTotalsForDisplay(
+  totals: { trades: string; cost_basis: string; proceeds: string; gain: string },
+  raw: boolean | undefined,
+): { trades: string; cost_basis: string; proceeds: string; gain: string } {
+  if (raw) {
+    return totals;
+  }
+
+  return {
+    trades: totals.trades,
+    cost_basis: formatToCents(totals.cost_basis),
+    proceeds: formatToCents(totals.proceeds),
+    gain: formatToCents(totals.gain),
+  };
+}
+
+function formatGroupRowsForDisplay(
+  rows: Array<Record<string, string>>,
+  raw: boolean | undefined,
+): Array<Record<string, string>> {
+  if (raw) {
+    return rows;
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    amount: stripTrailingZeros(row.amount ?? ""),
+    basis: formatToCents(row.basis ?? ""),
+    proceeds: formatToCents(row.proceeds ?? ""),
+    gains: formatToCents(row.gains ?? ""),
+    avg_gain: formatToCents(row.avg_gain ?? ""),
+    max_gain: formatToCents(row.max_gain ?? ""),
+    max_loss: formatToCents(row.max_loss ?? ""),
+    roi_basis: formatToCents(row.roi_basis ?? ""),
+  }));
+}
+
 function resolveCapitalGainsInputDir(inputDir?: string): string {
   if (inputDir) {
     return path.resolve(inputDir);
@@ -105,7 +154,7 @@ export async function cointrackerCapitalGains(
   assetsArg: string | undefined,
   options: CointrackerCapitalGainsGetOptions,
 ): Promise<Array<Record<string, unknown>>> {
-  const { cash, crypto, csv, f8949, first, gains, headers, last, pages, quiet, received, sent, totals, zero } = options;
+  const { cash, crypto, csv, f8949, first, gains, headers, last, pages, quiet, raw, received, sent, totals, zero } = options;
   const { from, to } = await getToAndFromDates(options);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
@@ -137,7 +186,7 @@ export async function cointrackerCapitalGains(
 
   if (totals) {
     const totalsRow = await selectCointrackerCapitalGainsTotals({ assets, excluding, from, to });
-    console.table([totalsRow]);
+    console.table([formatTotalsForDisplay(totalsRow, raw)]);
 
     if (csv || f8949) {
       const filename = buildDateRangeFilename(from, to);
@@ -216,12 +265,16 @@ export async function cointrackerCapitalGainsGroup(
   );
 
   if (!quiet) {
-    console.table(applyFirstLastRows(rows, first, last));
+    const formattedRows = formatGroupRowsForDisplay(
+      rows as unknown as Array<Record<string, string>>,
+      raw,
+    );
+    console.table(applyFirstLastRows(formattedRows, first, last));
   }
 
   const totalsRow = totals ? await selectCointrackerCapitalGainsGroupTotals(filters) : undefined;
   if (totalsRow) {
-    console.table([totalsRow]);
+    console.table([formatTotalsForDisplay(totalsRow, raw)]);
   }
 
   if (type && (csv || f8949)) {
@@ -233,10 +286,14 @@ export async function cointrackerCapitalGainsGroup(
       await writeCapitalGainsGroupCsv(outDir, filename, rows, Boolean(headers), Boolean(raw), totalsRow);
     }
     if (f8949) {
-      await writeCapitalGainsGroupF8949(outDir, filename, rows, Boolean(headers), totalsRow);
-    }
-    if (pages) {
-      logger.warn("Grouped F8949 pagination is not implemented");
+      await writeCapitalGainsGroupF8949(
+        outDir,
+        filename,
+        rows,
+        Boolean(headers),
+        Boolean(pages),
+        totalsRow,
+      );
     }
   }
 

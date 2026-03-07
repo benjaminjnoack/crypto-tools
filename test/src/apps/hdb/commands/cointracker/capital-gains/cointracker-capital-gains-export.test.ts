@@ -86,13 +86,15 @@ describe("cointracker capital gains export", () => {
     }];
 
     await writeCapitalGainsGroupCsv(outDir, "sample", rows, true, false);
-    await writeCapitalGainsGroupF8949(outDir, "sample", rows, true);
+    await writeCapitalGainsGroupF8949(outDir, "sample", rows, true, true);
 
     const groupCsv = await fs.readFile(path.join(outDir, "sample.group.csv"), "utf8");
     const groupF8949 = await fs.readFile(path.join(outDir, "sample.group.f8949.csv"), "utf8");
+    const groupF8949Page = await fs.readFile(path.join(outDir, "sample.group.pg01.f8949.csv"), "utf8");
 
     expect(groupCsv).toContain("Asset,Amount,Trades");
     expect(groupF8949).toContain("Description,Date Acquired");
     expect(groupF8949).toContain("Various");
+    expect(groupF8949Page).toContain("Totals:");
   });
 });
