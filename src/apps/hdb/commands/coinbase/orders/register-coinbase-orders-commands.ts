@@ -19,6 +19,7 @@ import {
 import { DebugOptionsSchema } from "../../schemas/debug-options.js";
 import {
   CoinbaseOrdersFeesOptionsSchema,
+  CoinbaseOrdersInsertOptionsSchema,
   CoinbaseOrdersUpdateOptionsSchema,
 } from "./schemas/coinbase-orders-options.js";
 import { COINBASE_EPOCH } from "../../shared/date-range-utils.js";
@@ -73,10 +74,13 @@ export function registerCoinbaseOrderCommands(coinbase: Command) {
   addDebugOption(insert);
 
   insert
+    .option("--remote", "Allow live Coinbase API request for this command", false)
+    .option("-y, --yes", "Confirm live Coinbase API request", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
-        async (orderId, options) => runActionWithArgument(coinbaseOrdersInsert, orderId, options, DebugOptionsSchema),
+        async (orderId, options) =>
+          runActionWithArgument(coinbaseOrdersInsert, orderId, options, CoinbaseOrdersInsertOptionsSchema),
       ),
     );
 
@@ -95,6 +99,8 @@ export function registerCoinbaseOrderCommands(coinbase: Command) {
   );
 
   update
+    .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
+    .option("-y, --yes", "Confirm live Coinbase API requests", false)
     .action(
       withAction(
         parseOptions(),

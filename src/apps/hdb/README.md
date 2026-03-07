@@ -69,7 +69,10 @@ Install binary in your shell:
 - `hdb coinbase orders get <orderId>` (alias: `g`)
 - `hdb coinbase orders fees [productId]` (alias: `f`)
 - `hdb coinbase orders insert <orderId>` (alias: `i`)
+  - requires explicit live mode: `--remote --yes`
 - `hdb coinbase orders update` (alias: `u`)
+  - requires source selection: `--cache` or `--remote`
+  - live mode requires confirmation: `--remote --yes`
 
 ### CoinTracker
 
