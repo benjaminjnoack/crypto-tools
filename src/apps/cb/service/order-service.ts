@@ -33,7 +33,7 @@ import {
   getAttachedTpSlValues,
   getModifiableOrderValues,
 } from "./order-builders.js";
-import { confirmBreakEvenStopUpdate, confirmOrder } from "./order-prompts.js";
+import { confirmOrder, confirmOrderChange } from "./order-prompts.js";
 
 /**
  * Places a market order after validation and confirmation.
@@ -225,6 +225,44 @@ export async function placeModifyOrder(orderId: string, options: ModifyOptions):
     }
   }
 
+  const summaryLines = [
+    { label: "Order ID", value: orderId },
+    { label: "Type", value: order.order_type },
+    { label: "Product", value: order.product_id },
+    { label: "Size", value: `${existing.baseSize} -> ${payload.size}` },
+    { label: "Limit Price", value: `${existing.limitPrice} -> ${payload.price}` },
+  ];
+
+  if (order.order_type === ORDER_TYPES.STOP_LIMIT) {
+    const currentStop = order.order_configuration.stop_limit_stop_limit_gtc.stop_price;
+    summaryLines.push({ label: "Stop Price", value: `${currentStop} -> ${payload.stop_price ?? currentStop}` });
+  } else if (
+    order.order_type === ORDER_TYPES.BRACKET
+    || order.order_type === ORDER_TYPES.TAKE_PROFIT_STOP_LOSS
+  ) {
+    const currentStop = order.order_configuration.trigger_bracket_gtc.stop_trigger_price;
+    summaryLines.push({ label: "Stop Price", value: `${currentStop} -> ${payload.stop_price ?? currentStop}` });
+  } else if (payload.attached_order_configuration) {
+    const attached = payload.attached_order_configuration.trigger_bracket_gtc;
+    const currentAttached = getAttachedTpSlValues(order);
+    if (!currentAttached) {
+      throw new Error("This limit order has no attached TP/SL configuration to modify.");
+    }
+    summaryLines.push({
+      label: "TP Price",
+      value: `${currentAttached.takeProfitPrice} -> ${attached.limit_price}`,
+    });
+    summaryLines.push({
+      label: "Stop Price",
+      value: `${currentAttached.stopPrice} -> ${attached.stop_trigger_price}`,
+    });
+  }
+
+  if (!confirmOrderChange("MODIFY ORDER", summaryLines)) {
+    console.log("Action canceled.");
+    return;
+  }
+
   await editOrder(orderId, payload);
 }
 
@@ -262,17 +300,21 @@ export async function placeBreakEvenStopOrder(
   }
   const existingBracketConfig = order.order_configuration.trigger_bracket_gtc;
   const newLimitPrice = options.limitPrice ?? existing.limitPrice;
-  if (
-    !confirmBreakEvenStopUpdate(
-      order.product_id,
-      existing.baseSize,
-      currentPrice.toFixed(8),
-      existingBracketConfig.limit_price,
-      newLimitPrice,
-      existingBracketConfig.stop_trigger_price,
-      stopPrice,
-    )
-  ) {
+  if (!confirmOrderChange("MODIFY BREAK-EVEN STOP", [
+    { label: "Order ID", value: orderId },
+    { label: "Type", value: order.order_type },
+    { label: "Product", value: order.product_id },
+    { label: "Size", value: existing.baseSize },
+    { label: "Current Price", value: `$${currentPrice.toFixed(8)}` },
+    {
+      label: "Limit Price",
+      value: `${existingBracketConfig.limit_price} -> ${newLimitPrice}`,
+    },
+    {
+      label: "Stop Price",
+      value: `${existingBracketConfig.stop_trigger_price} -> ${stopPrice}`,
+    },
+  ])) {
     console.log("Action canceled.");
     return;
   }

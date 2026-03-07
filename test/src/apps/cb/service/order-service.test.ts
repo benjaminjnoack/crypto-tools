@@ -233,6 +233,28 @@ describe("cb service orders", () => {
     });
   });
 
+  it("cancels modify update when prompt is declined", async () => {
+    readlineQuestionMock.mockReturnValueOnce("no");
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174013",
+      baseSize: "1.00",
+      limitPrice: "100.00",
+      stopPrice: "98.00",
+    }));
+
+    await placeModifyOrder("123e4567-e89b-42d3-a456-426614174013", {
+      baseSize: "1.1",
+      limitPrice: "101.00",
+      stopPrice: "99.00",
+    });
+
+    expect(logSpy).toHaveBeenCalledWith("\nOrder Change Summary:");
+    expect(logSpy).toHaveBeenCalledWith("Action canceled.");
+    expect(editOrderMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("modifies only the provided base size", async () => {
     getOrderMock.mockResolvedValueOnce(makeLimitOrder());
 
@@ -434,7 +456,7 @@ describe("cb service orders", () => {
       buyPrice: "100",
     });
 
-    expect(logSpy).toHaveBeenCalledWith("\nBreak-Even Update Summary:");
+    expect(logSpy).toHaveBeenCalledWith("\nOrder Change Summary:");
     expect(logSpy).toHaveBeenCalledWith("Action canceled.");
     expect(editOrderMock).not.toHaveBeenCalled();
     logSpy.mockRestore();
