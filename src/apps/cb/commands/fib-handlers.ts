@@ -10,7 +10,7 @@ import {
 } from "#shared/coinbase/index";
 
 const ENTRY_LEVELS = [0.382, 0.295, 0.236] as const;
-const EXIT_LEVELS = [1.272, 1.414, 1.618, 2, 2.272, 2.414, 2.618] as const;
+const EXIT_LEVELS = [1.272, 1.414, 1.618, 2, 2.272, 2.414, 2.618, 3, 3.272, 3.618, 4, 4.236, 4.618, 5] as const;
 const DEFAULT_ENTRY_LEVEL = 0.382;
 const DEFAULT_EXIT_LEVEL = 1.618;
 
