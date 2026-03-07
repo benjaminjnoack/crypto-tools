@@ -9,6 +9,7 @@ const {
   selectCointrackerTransactionsMock,
   selectCointrackerTransactionsGroupMock,
   parseCointrackerTransactionsCsvMock,
+  cointrackerBalancesRegenerateMock,
   readdirMock,
   readFileMock,
   getClientMock,
@@ -52,6 +53,7 @@ const {
       transaction_hash: null,
     },
   ]),
+  cointrackerBalancesRegenerateMock: vi.fn(() => Promise.resolve(1)),
   readdirMock: vi.fn(() => Promise.resolve([] as string[])),
   readFileMock: vi.fn(() => Promise.resolve("csv")),
   getClientMock: vi.fn(() => Promise.resolve({
@@ -92,6 +94,10 @@ vi.mock("../../../../../../../src/apps/hdb/db/cointracker/transactions/cointrack
 
 vi.mock("../../../../../../../src/apps/hdb/db/db-client.js", () => ({
   getClient: getClientMock,
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/commands/cointracker/balances/cointracker-balances-handlers.js", () => ({
+  cointrackerBalancesRegenerate: cointrackerBalancesRegenerateMock,
 }));
 
 vi.mock("../../../../../../../src/shared/common/env.js", () => ({
@@ -202,6 +208,7 @@ describe("cointracker transaction handlers", () => {
     expect(truncateCointrackerTransactionsTableMock).not.toHaveBeenCalled();
     expect(parseCointrackerTransactionsCsvMock).toHaveBeenCalledTimes(2);
     expect(insertCointrackerTransactionsBatchMock).toHaveBeenCalledTimes(1);
+    expect(cointrackerBalancesRegenerateMock).toHaveBeenCalledWith({ drop: true, yes: true });
     expect(txQueryMock).toHaveBeenNthCalledWith(1, "BEGIN");
     expect(txQueryMock).toHaveBeenNthCalledWith(2, "COMMIT");
     expect(releaseMock).toHaveBeenCalledTimes(1);

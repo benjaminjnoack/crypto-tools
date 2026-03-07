@@ -73,11 +73,20 @@ Install binary in your shell:
 
 ### CoinTracker
 
+- `hdb cointracker balances get [currency]` (alias: `g`)
+- `hdb cointracker balances regenerate` (alias: `r`)
+  - requires `--yes`
+- `hdb cointracker capital-gains get [assets]` (alias: `g`)
+- `hdb cointracker capital-gains group [assets]` (alias: `grp`)
+- `hdb cointracker capital-gains regenerate` (alias: `r`)
+  - requires `--yes`
+  - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
 - `hdb cointracker transactions get [asset]` (alias: `g`)
 - `hdb cointracker transactions group [asset]` (alias: `grp`)
 - `hdb cointracker transactions regenerate` (alias: `r`)
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-transactions`
+  - also rebuilds `cointracker_balances_ledger`
 
 Use `hdb <command> --help` for option details.
 

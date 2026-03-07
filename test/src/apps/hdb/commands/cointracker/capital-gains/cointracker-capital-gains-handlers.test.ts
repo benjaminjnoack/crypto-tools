@@ -1,0 +1,141 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const {
+  getToAndFromDatesMock,
+  createCointrackerCapitalGainsTableMock,
+  dropCointrackerCapitalGainsTableMock,
+  insertCointrackerCapitalGainsBatchMock,
+  selectCointrackerCapitalGainsMock,
+  selectCointrackerCapitalGainsGroupMock,
+  selectCointrackerCapitalGainsTotalsMock,
+  truncateCointrackerCapitalGainsTableMock,
+  parseCointrackerCapitalGainsCsvMock,
+  readdirMock,
+  readFileMock,
+  getEnvConfigMock,
+  loggerWarnMock,
+  loggerInfoMock,
+  tableMock,
+} = vi.hoisted(() => ({
+  getToAndFromDatesMock: vi.fn(() => Promise.resolve({
+    from: new Date("2026-01-01T00:00:00.000Z"),
+    to: new Date("2026-02-01T00:00:00.000Z"),
+  })),
+  createCointrackerCapitalGainsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  dropCointrackerCapitalGainsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  insertCointrackerCapitalGainsBatchMock: vi.fn(() => Promise.resolve(2)),
+  selectCointrackerCapitalGainsMock: vi.fn(() => Promise.resolve([{ asset_name: "BTC" }])),
+  selectCointrackerCapitalGainsGroupMock: vi.fn(() => Promise.resolve([{ group: "BTC" }])),
+  selectCointrackerCapitalGainsTotalsMock: vi.fn(() => Promise.resolve({ trades: "1", cost_basis: "1", proceeds: "1", gain: "0" })),
+  truncateCointrackerCapitalGainsTableMock: vi.fn(() => Promise.resolve(undefined)),
+  parseCointrackerCapitalGainsCsvMock: vi.fn(() => [{
+    asset_amount: "1",
+    asset_name: "BTC",
+    received_date: new Date("2026-01-01T00:00:00.000Z"),
+    date_sold: new Date("2026-01-02T00:00:00.000Z"),
+    proceeds_usd: "100",
+    cost_basis_usd: "90",
+    gain_usd: "10",
+    type: "Short Term",
+  }]),
+  readdirMock: vi.fn(() => Promise.resolve([] as string[])),
+  readFileMock: vi.fn(() => Promise.resolve("csv")),
+  getEnvConfigMock: vi.fn(() => ({ HELPER_HDB_ROOT_DIR: "/tmp/hdb-root" })),
+  loggerWarnMock: vi.fn(),
+  loggerInfoMock: vi.fn(),
+  tableMock: vi.fn(),
+}));
+
+vi.mock("node:fs/promises", () => ({
+  default: {
+    readdir: readdirMock,
+    readFile: readFileMock,
+  },
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
+  getToAndFromDates: getToAndFromDatesMock,
+  parseAsUtc: (raw: string) => new Date(`${raw}T00:00:00.000Z`),
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-repository.js", () => ({
+  createCointrackerCapitalGainsTable: createCointrackerCapitalGainsTableMock,
+  dropCointrackerCapitalGainsTable: dropCointrackerCapitalGainsTableMock,
+  insertCointrackerCapitalGainsBatch: insertCointrackerCapitalGainsBatchMock,
+  selectCointrackerCapitalGains: selectCointrackerCapitalGainsMock,
+  selectCointrackerCapitalGainsGroup: selectCointrackerCapitalGainsGroupMock,
+  selectCointrackerCapitalGainsTotals: selectCointrackerCapitalGainsTotalsMock,
+  truncateCointrackerCapitalGainsTable: truncateCointrackerCapitalGainsTableMock,
+}));
+
+vi.mock("../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-mappers.js", () => ({
+  parseCointrackerCapitalGainsCsv: parseCointrackerCapitalGainsCsvMock,
+}));
+
+vi.mock("../../../../../../../src/shared/common/env.js", () => ({
+  getEnvConfig: getEnvConfigMock,
+}));
+
+vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
+  logger: {
+    warn: loggerWarnMock,
+    info: loggerInfoMock,
+  },
+}));
+
+import {
+  cointrackerCapitalGains,
+  cointrackerCapitalGainsGroup,
+  cointrackerCapitalGainsRegenerate,
+} from "../../../../../../../src/apps/hdb/commands/cointracker/capital-gains/cointracker-capital-gains-handlers.js";
+
+describe("cointracker capital gains handlers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, "table").mockImplementation(tableMock);
+  });
+
+  it("queries gains and totals", async () => {
+    const rows = await cointrackerCapitalGains("btc", { totals: true, quiet: false });
+
+    expect(selectCointrackerCapitalGainsMock).toHaveBeenCalledTimes(1);
+    expect(selectCointrackerCapitalGainsTotalsMock).toHaveBeenCalledTimes(1);
+    expect(tableMock).toHaveBeenCalledTimes(2);
+    expect(rows).toEqual([{ asset_name: "BTC" }]);
+  });
+
+  it("queries grouped gains", async () => {
+    const rows = await cointrackerCapitalGainsGroup("btc", { quiet: false, type: "short" });
+
+    expect(selectCointrackerCapitalGainsGroupMock).toHaveBeenCalledTimes(1);
+    expect(tableMock).toHaveBeenCalledTimes(1);
+    expect(rows).toEqual([{ group: "BTC" }]);
+  });
+
+  it("refuses regenerate without --yes", async () => {
+    await expect(cointrackerCapitalGainsRegenerate({ yes: false })).rejects.toThrow(
+      "Refusing to regenerate without confirmation. Re-run with --yes.",
+    );
+  });
+
+  it("returns zero when no csv files found", async () => {
+    readdirMock.mockResolvedValueOnce(["notes.txt"]);
+
+    const count = await cointrackerCapitalGainsRegenerate({ yes: true });
+
+    expect(count).toBe(0);
+    expect(loggerWarnMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rebuilds and inserts parsed rows", async () => {
+    readdirMock.mockResolvedValueOnce(["a.csv", "b.csv"]);
+
+    const count = await cointrackerCapitalGainsRegenerate({ yes: true, drop: true });
+
+    expect(dropCointrackerCapitalGainsTableMock).toHaveBeenCalledTimes(1);
+    expect(createCointrackerCapitalGainsTableMock).toHaveBeenCalledTimes(1);
+    expect(parseCointrackerCapitalGainsCsvMock).toHaveBeenCalledTimes(2);
+    expect(insertCointrackerCapitalGainsBatchMock).toHaveBeenCalledTimes(1);
+    expect(count).toBe(2);
+  });
+});

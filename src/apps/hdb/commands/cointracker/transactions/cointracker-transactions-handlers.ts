@@ -12,6 +12,7 @@ import {
 import { parseCointrackerTransactionsCsv } from "../../../db/cointracker/transactions/cointracker-transactions-mappers.js";
 import { getClient } from "../../../db/db-client.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
+import { cointrackerBalancesRegenerate } from "../balances/cointracker-balances-handlers.js";
 import type {
   CointrackerTransactionsGroupOptions,
   CointrackerTransactionsQueryOptions,
@@ -141,7 +142,7 @@ function resolveCointrackerTransactionsInputDir(inputDir?: string): string {
     return path.resolve(inputDir);
   }
 
-  const { HELPER_HDB_ROOT_DIR } = getEnvConfig() as { HELPER_HDB_ROOT_DIR?: string };
+  const { HELPER_HDB_ROOT_DIR } = getEnvConfig();
   if (!HELPER_HDB_ROOT_DIR) {
     throw new Error("Missing input directory. Provide --input-dir or set HELPER_HDB_ROOT_DIR.");
   }
@@ -203,5 +204,6 @@ export async function cointrackerTransactionsRegenerate(
   }
 
   logger.info(`Inserted ${rows.length} cointracker transaction rows`);
+  await cointrackerBalancesRegenerate({ drop, yes: true });
   return rows.length;
 }
