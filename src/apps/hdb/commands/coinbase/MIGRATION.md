@@ -43,7 +43,10 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 - `orders/update`: migrated (explicit source gating: `--cache` or `--remote`)
 - `orders/object`: pending
 - `orders/regenerate`: pending
-- `balances/*`: pending
+- `balances/get`: migrated
+- `balances/batch`: migrated
+- `balances/trace`: migrated
+- `balances/regenerate`: migrated
 - `lots/*`: pending
 - `transactions/get`: migrated
 - `transactions/group`: migrated
@@ -55,9 +58,8 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 
 ## Recommended Slice Order
 
-1. `coinbase balances get/trace/regenerate/batch`
-2. `coinbase lots get/compare/batch/batch-compare`
-3. `coinbase orders object/regenerate`
+1. `coinbase lots get/compare/batch/batch-compare`
+2. `coinbase orders object/regenerate`
 
 ## Migration Rules (Coinbase)
 

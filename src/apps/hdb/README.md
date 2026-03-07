@@ -64,8 +64,16 @@ Install binary in your shell:
 
 - `hdb test`
 
-### Coinbase Orders
+### Coinbase
 
+- `hdb coinbase balances get <asset>` (alias: `g`)
+  - `asset` supports colon-separated values
+  - `--current` live check requires `--remote --yes`
+- `hdb coinbase balances batch` (alias: `b`)
+  - `--current` live check requires `--remote --yes`
+- `hdb coinbase balances trace <asset>` (alias: `t`)
+- `hdb coinbase balances regenerate` (alias: `r`)
+  - requires `--yes`
 - `hdb coinbase orders get <orderId>` (alias: `g`)
 - `hdb coinbase orders fees [productId]` (alias: `f`)
 - `hdb coinbase orders insert <orderId>` (alias: `i`)
