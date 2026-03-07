@@ -122,6 +122,19 @@ export const PlanOptionsSchema = z
   .strict();
 export type PlanOptions = z.infer<typeof PlanOptionsSchema>;
 
+export const FibOptionsSchema = z
+  .object({
+    allIn: z.boolean(),
+    bufferPercent: Percent,
+    ceiling: PositiveNumericString,
+    dryRunFlag: z.boolean(),
+    floor: PositiveNumericString,
+    postOnly: z.boolean().optional(),
+    riskPercent: Percent,
+  })
+  .strict();
+export type FibOptions = z.infer<typeof FibOptionsSchema>;
+
 export const SellOptionsSchema = z
   .object({
     baseSize: PositiveNumericString.optional(),
