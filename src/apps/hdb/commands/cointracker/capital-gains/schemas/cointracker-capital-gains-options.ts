@@ -13,13 +13,18 @@ const DateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional();
 
 const BaseCapitalGainsQuerySchema = DebugOptionsSchema.extend({
   cash: z.boolean().optional(),
+  csv: z.boolean().optional(),
   crypto: z.boolean().optional(),
   exclude: ColonSeparatedAssetStringSchema,
+  f8949: z.boolean().optional(),
   first: z.string().regex(/^\d+$/).optional(),
   from: z.string().optional(),
   gains: z.boolean().optional(),
+  headers: z.boolean().optional(),
   last: z.string().regex(/^\d+$/).optional(),
+  pages: z.boolean().optional(),
   quiet: z.boolean().optional(),
+  raw: z.boolean().optional(),
   range: DateRangeSchema.optional(),
   received: DateOnlySchema,
   sent: DateOnlySchema,

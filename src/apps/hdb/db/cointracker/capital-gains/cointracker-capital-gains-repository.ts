@@ -202,6 +202,24 @@ export async function selectCointrackerCapitalGainsTotals(
   return first;
 }
 
+export async function selectCointrackerCapitalGainsGroupTotals(
+  filters: CointrackerCapitalGainsGroupFilters,
+): Promise<CointrackerCapitalGainsTotalsRow> {
+  const { conditions, values } = buildCapitalGainsConditions(filters);
+  withTypeCondition(conditions, filters.type);
+  const sql = buildSelectCointrackerCapitalGainsTotalsSql(conditions);
+
+  const client = await getClient();
+  const { rows } = await client.query<CointrackerCapitalGainsTotalsRow>(sql, values);
+  const first = rows[0] ?? {
+    trades: "0",
+    cost_basis: "0",
+    proceeds: "0",
+    gain: "0",
+  };
+  return first;
+}
+
 export async function selectCointrackerCapitalGainsUsdcBuckets(): Promise<CointrackerCapitalGainsUsdcBucketRow[]> {
   const client = await getClient();
   const { rows } = await client.query<CointrackerCapitalGainsUsdcBucketRow>(

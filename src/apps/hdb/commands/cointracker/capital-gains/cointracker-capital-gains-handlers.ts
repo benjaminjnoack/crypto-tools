@@ -7,6 +7,7 @@ import {
   insertCointrackerCapitalGainsBatch,
   selectCointrackerCapitalGains,
   selectCointrackerCapitalGainsGroup,
+  selectCointrackerCapitalGainsGroupTotals,
   selectCointrackerCapitalGainsTotals,
   selectCointrackerCapitalGainsUsdcBuckets,
   selectCointrackerCapitalGainsUsdcInterval,
@@ -25,6 +26,14 @@ import type {
   CointrackerCapitalGainsRegenerateOptions,
   CointrackerCapitalGainsUsdcOptions,
 } from "./schemas/cointracker-capital-gains-options.js";
+import {
+  buildDateRangeFilename,
+  resolveCointrackerCapitalGainsOutputDir,
+  writeCapitalGainsCsv,
+  writeCapitalGainsF8949,
+  writeCapitalGainsGroupCsv,
+  writeCapitalGainsGroupF8949,
+} from "./cointracker-capital-gains-export.js";
 import { getEnvConfig } from "#shared/common/index";
 import { logger } from "#shared/log/index";
 
@@ -83,11 +92,20 @@ function resolveCapitalGainsInputDir(inputDir?: string): string {
   return path.resolve(HELPER_HDB_ROOT_DIR, "input", "cointracker-capital-gains");
 }
 
+function resolveCapitalGainsOutputDir(): string {
+  const { HELPER_HDB_ROOT_DIR } = getEnvConfig();
+  if (!HELPER_HDB_ROOT_DIR) {
+    throw new Error("Missing output directory root: set HELPER_HDB_ROOT_DIR.");
+  }
+
+  return resolveCointrackerCapitalGainsOutputDir(HELPER_HDB_ROOT_DIR);
+}
+
 export async function cointrackerCapitalGains(
   assetsArg: string | undefined,
   options: CointrackerCapitalGainsGetOptions,
 ): Promise<Array<Record<string, unknown>>> {
-  const { cash, crypto, first, gains, last, quiet, received, sent, totals, zero } = options;
+  const { cash, crypto, csv, f8949, first, gains, headers, last, pages, quiet, received, sent, totals, zero } = options;
   const { from, to } = await getToAndFromDates(options);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
@@ -120,6 +138,26 @@ export async function cointrackerCapitalGains(
   if (totals) {
     const totalsRow = await selectCointrackerCapitalGainsTotals({ assets, excluding, from, to });
     console.table([totalsRow]);
+
+    if (csv || f8949) {
+      const filename = buildDateRangeFilename(from, to);
+      const outDir = resolveCapitalGainsOutputDir();
+      if (csv) {
+        await writeCapitalGainsCsv(outDir, filename, rows, true, totalsRow);
+      }
+      if (f8949) {
+        await writeCapitalGainsF8949(outDir, filename, rows, Boolean(headers), Boolean(pages), totalsRow);
+      }
+    }
+  } else if (csv || f8949) {
+    const filename = buildDateRangeFilename(from, to);
+    const outDir = resolveCapitalGainsOutputDir();
+    if (csv) {
+      await writeCapitalGainsCsv(outDir, filename, rows, true);
+    }
+    if (f8949) {
+      await writeCapitalGainsF8949(outDir, filename, rows, Boolean(headers), Boolean(pages));
+    }
   }
 
   return rows as Array<Record<string, unknown>>;
@@ -129,7 +167,25 @@ export async function cointrackerCapitalGainsGroup(
   assetsArg: string | undefined,
   options: CointrackerCapitalGainsGroupOptions,
 ): Promise<Array<Record<string, unknown>>> {
-  const { bleeders, cash, crypto, first, gains, last, quiet, received, sent, type, zero } = options;
+  const {
+    bleeders,
+    cash,
+    crypto,
+    csv,
+    f8949,
+    first,
+    gains,
+    headers,
+    last,
+    pages,
+    quiet,
+    raw,
+    received,
+    sent,
+    totals,
+    type,
+    zero,
+  } = options;
   const { from, to } = await getToAndFromDates(options);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
@@ -161,6 +217,27 @@ export async function cointrackerCapitalGainsGroup(
 
   if (!quiet) {
     console.table(applyFirstLastRows(rows, first, last));
+  }
+
+  const totalsRow = totals ? await selectCointrackerCapitalGainsGroupTotals(filters) : undefined;
+  if (totalsRow) {
+    console.table([totalsRow]);
+  }
+
+  if (type && (csv || f8949)) {
+    logger.warn("CSV/F8949 export with --type is not supported for grouped gains");
+  } else if (csv || f8949) {
+    const filename = buildDateRangeFilename(from, to);
+    const outDir = resolveCapitalGainsOutputDir();
+    if (csv) {
+      await writeCapitalGainsGroupCsv(outDir, filename, rows, Boolean(headers), Boolean(raw), totalsRow);
+    }
+    if (f8949) {
+      await writeCapitalGainsGroupF8949(outDir, filename, rows, Boolean(headers), totalsRow);
+    }
+    if (pages) {
+      logger.warn("Grouped F8949 pagination is not implemented");
+    }
   }
 
   return rows as Array<Record<string, unknown>>;

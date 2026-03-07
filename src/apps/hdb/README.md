@@ -77,7 +77,9 @@ Install binary in your shell:
 - `hdb cointracker balances regenerate` (alias: `r`)
   - requires `--yes`
 - `hdb cointracker capital-gains get [assets]` (alias: `g`)
+  - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
 - `hdb cointracker capital-gains group [assets]` (alias: `grp`)
+  - export flags: `--csv`, `--f8949`, `--headers`
 - `hdb cointracker capital-gains regenerate` (alias: `r`)
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
