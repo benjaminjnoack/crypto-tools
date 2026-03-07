@@ -3,6 +3,7 @@ import {
   buildCoinbaseTransactionsFilterConditions,
   buildSelectCoinbaseTransactionsGroupSql,
   buildSelectCoinbaseTransactionsSql,
+  SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL,
 } from "../../../../../../../src/apps/hdb/db/coinbase/transactions/coinbase-transactions-sql.js";
 
 describe("coinbase transactions sql", () => {
@@ -39,5 +40,11 @@ describe("coinbase transactions sql", () => {
     expect(sql).toContain("DATE(DATE_TRUNC('month', t.timestamp)) AS month");
     expect(sql).toContain("GROUP BY month");
     expect(sql).toContain("ORDER BY month ASC");
+  });
+
+  it("includes distinct asset selector sql", () => {
+    expect(SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL).toContain("SELECT DISTINCT asset");
+    expect(SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL).toContain("timestamp >= $1");
+    expect(SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL).toContain("timestamp < $2");
   });
 });

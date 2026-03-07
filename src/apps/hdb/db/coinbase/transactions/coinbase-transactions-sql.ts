@@ -198,3 +198,11 @@ export const SELECT_COINBASE_TRANSACTION_BY_ID_SQL = `
   WHERE id = $1
   ORDER BY timestamp ASC;
 `;
+
+export const SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL = `
+  SELECT DISTINCT asset
+  FROM ${COINBASE_TRANSACTIONS_TABLE}
+  WHERE timestamp >= $1
+    AND timestamp < $2
+  ORDER BY asset ASC;
+`;

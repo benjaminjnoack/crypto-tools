@@ -74,6 +74,11 @@ Install binary in your shell:
 - `hdb coinbase balances trace <asset>` (alias: `t`)
 - `hdb coinbase balances regenerate` (alias: `r`)
   - requires `--yes`
+- `hdb coinbase lots get <asset>` (alias: `g`)
+- `hdb coinbase lots batch` (alias: `b`)
+- `hdb coinbase lots compare <asset>` (alias: `c`)
+- `hdb coinbase lots batch-compare` (alias: `bc`)
+  - note: `--csv` / `--f8949` exports are not yet migrated in TS lots
 - `hdb coinbase orders get <orderId>` (alias: `g`)
 - `hdb coinbase orders fees [productId]` (alias: `f`)
 - `hdb coinbase orders insert <orderId>` (alias: `i`)

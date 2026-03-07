@@ -11,6 +11,7 @@ import {
   DROP_COINBASE_TRANSACTIONS_TABLE_SQL,
   SELECT_COINBASE_TRANSACTION_BY_ID_SQL,
   SELECT_COINBASE_TRANSACTIONS_BY_IDS_SQL,
+  SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL,
   TRUNCATE_COINBASE_TRANSACTIONS_TABLE_SQL,
 } from "./coinbase-transactions-sql.js";
 
@@ -252,4 +253,13 @@ export async function selectCoinbaseTransactionById(
   const { rows } = await client.query<CoinbaseTransactionRow>(SELECT_COINBASE_TRANSACTION_BY_ID_SQL, [id]);
   logger.debug(`Selected ${rows.length} coinbase transaction rows by id`);
   return rows;
+}
+
+export async function selectCoinbaseTransactionsDistinctAsset(
+  from: Date,
+  to: Date,
+): Promise<string[]> {
+  const client = await getClient();
+  const { rows } = await client.query<{ asset: string }>(SELECT_COINBASE_TRANSACTIONS_DISTINCT_ASSET_SQL, [from, to]);
+  return rows.map((row) => row.asset);
 }
