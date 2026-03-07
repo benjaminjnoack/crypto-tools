@@ -8,11 +8,13 @@ import {
   cointrackerCapitalGains,
   cointrackerCapitalGainsGroup,
   cointrackerCapitalGainsRegenerate,
+  cointrackerCapitalGainsUsdc,
 } from "./cointracker-capital-gains-handlers.js";
 import {
   CointrackerCapitalGainsGetOptionsSchema,
   CointrackerCapitalGainsGroupOptionsSchema,
   CointrackerCapitalGainsRegenerateOptionsSchema,
+  CointrackerCapitalGainsUsdcOptionsSchema,
 } from "./schemas/cointracker-capital-gains-options.js";
 
 const NOW = new Date().toISOString();
@@ -108,6 +110,26 @@ export function registerCointrackerCapitalGainsCommands(cointracker: Command): v
       withAction(
         parseOptions(),
         async (options) => runAction(cointrackerCapitalGainsRegenerate, options, CointrackerCapitalGainsRegenerateOptionsSchema),
+      ),
+    );
+
+  const usdc = capitalGains
+    .command("usdc")
+    .alias("u")
+    .description("Analyze USDC capital gains");
+
+  addDebugOption(usdc);
+
+  usdc
+    .option("-b, --buckets", "Analyze per-unit gain buckets", false)
+    .option(
+      "-i, --interval <interval>",
+      "Group USDC gains by interval (day, week, month, quarter, year)",
+    )
+    .action(
+      withAction(
+        parseOptions(),
+        async (options) => runAction(cointrackerCapitalGainsUsdc, options, CointrackerCapitalGainsUsdcOptionsSchema),
       ),
     );
 }

@@ -8,6 +8,8 @@ const {
   selectCointrackerCapitalGainsMock,
   selectCointrackerCapitalGainsGroupMock,
   selectCointrackerCapitalGainsTotalsMock,
+  selectCointrackerCapitalGainsUsdcBucketsMock,
+  selectCointrackerCapitalGainsUsdcIntervalMock,
   truncateCointrackerCapitalGainsTableMock,
   parseCointrackerCapitalGainsCsvMock,
   readdirMock,
@@ -27,6 +29,8 @@ const {
   selectCointrackerCapitalGainsMock: vi.fn(() => Promise.resolve([{ asset_name: "BTC" }])),
   selectCointrackerCapitalGainsGroupMock: vi.fn(() => Promise.resolve([{ group: "BTC" }])),
   selectCointrackerCapitalGainsTotalsMock: vi.fn(() => Promise.resolve({ trades: "1", cost_basis: "1", proceeds: "1", gain: "0" })),
+  selectCointrackerCapitalGainsUsdcBucketsMock: vi.fn(() => Promise.resolve([{ bucket: "1" }])),
+  selectCointrackerCapitalGainsUsdcIntervalMock: vi.fn(() => Promise.resolve([{ month: "2026-01-01" }])),
   truncateCointrackerCapitalGainsTableMock: vi.fn(() => Promise.resolve(undefined)),
   parseCointrackerCapitalGainsCsvMock: vi.fn(() => [{
     asset_amount: "1",
@@ -65,6 +69,8 @@ vi.mock("../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointrac
   selectCointrackerCapitalGains: selectCointrackerCapitalGainsMock,
   selectCointrackerCapitalGainsGroup: selectCointrackerCapitalGainsGroupMock,
   selectCointrackerCapitalGainsTotals: selectCointrackerCapitalGainsTotalsMock,
+  selectCointrackerCapitalGainsUsdcBuckets: selectCointrackerCapitalGainsUsdcBucketsMock,
+  selectCointrackerCapitalGainsUsdcInterval: selectCointrackerCapitalGainsUsdcIntervalMock,
   truncateCointrackerCapitalGainsTable: truncateCointrackerCapitalGainsTableMock,
 }));
 
@@ -87,6 +93,7 @@ import {
   cointrackerCapitalGains,
   cointrackerCapitalGainsGroup,
   cointrackerCapitalGainsRegenerate,
+  cointrackerCapitalGainsUsdc,
 } from "../../../../../../../src/apps/hdb/commands/cointracker/capital-gains/cointracker-capital-gains-handlers.js";
 
 describe("cointracker capital gains handlers", () => {
@@ -137,5 +144,24 @@ describe("cointracker capital gains handlers", () => {
     expect(parseCointrackerCapitalGainsCsvMock).toHaveBeenCalledTimes(2);
     expect(insertCointrackerCapitalGainsBatchMock).toHaveBeenCalledTimes(1);
     expect(count).toBe(2);
+  });
+
+  it("runs usdc bucket analysis", async () => {
+    const rows = await cointrackerCapitalGainsUsdc({ buckets: true });
+    expect(selectCointrackerCapitalGainsUsdcBucketsMock).toHaveBeenCalledTimes(1);
+    expect(tableMock).toHaveBeenCalledTimes(1);
+    expect(rows).toEqual([{ bucket: "1" }]);
+  });
+
+  it("runs usdc interval analysis and yearly rollup", async () => {
+    const rows = await cointrackerCapitalGainsUsdc({ interval: "month" });
+    expect(selectCointrackerCapitalGainsUsdcIntervalMock).toHaveBeenNthCalledWith(1, "month");
+    expect(selectCointrackerCapitalGainsUsdcIntervalMock).toHaveBeenNthCalledWith(2, "year");
+    expect(tableMock).toHaveBeenCalledTimes(2);
+    expect(rows).toEqual([{ month: "2026-01-01" }]);
+  });
+
+  it("throws when usdc analysis has no mode selected", async () => {
+    await expect(cointrackerCapitalGainsUsdc({})).rejects.toThrow("Missing instructions");
   });
 });

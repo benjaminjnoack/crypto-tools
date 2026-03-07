@@ -22,6 +22,8 @@ export const TRUNCATE_COINTRACKER_CAPITAL_GAINS_TABLE_SQL = `
   CASCADE;
 `;
 
+export type CointrackerUsdcInterval = "day" | "week" | "month" | "quarter" | "year";
+
 export type CointrackerCapitalGainsFilters = {
   assets?: string[];
   excluding?: string[];
@@ -133,6 +135,53 @@ export function buildSelectCointrackerCapitalGainsGroupSql(
     WHERE ${conditions.join(" AND ")}
     GROUP BY asset_name
     ${havingClause}
+    ${orderByClause};
+  `;
+}
+
+export const SELECT_COINTRACKER_CAPITAL_GAINS_USDC_BUCKETS_SQL = `
+  WITH binned AS (
+    SELECT
+      width_bucket(gain_usd / asset_amount, -0.001, 0.001, 50) AS bucket,
+      gain_usd / asset_amount AS per_unit_gain
+    FROM ${COINTRACKER_CAPITAL_GAINS_TABLE}
+    WHERE asset_name = 'USDC'
+      AND asset_amount > 1
+  )
+  SELECT
+    bucket,
+    MIN(per_unit_gain) AS bucket_min,
+    MAX(per_unit_gain) AS bucket_max,
+    AVG(per_unit_gain) AS bucket_avg,
+    MODE() WITHIN GROUP (ORDER BY per_unit_gain) AS bucket_mode,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY per_unit_gain) AS bucket_median,
+    COUNT(*) AS count
+  FROM binned
+  GROUP BY bucket
+  ORDER BY bucket;
+`;
+
+export function buildSelectCointrackerCapitalGainsUsdcIntervalSql(interval?: CointrackerUsdcInterval): string {
+  const selectionClause = interval ? `DATE(DATE_TRUNC('${interval}', date_sold)) AS ${interval},` : "";
+  const groupByClause = interval ? `GROUP BY ${interval}` : "";
+  const orderByClause = interval ? `ORDER BY ${interval} ASC` : "";
+
+  return `
+    SELECT
+      ${selectionClause}
+      COUNT(*) AS records,
+      SUM(asset_amount) AS amount,
+      SUM(cost_basis_usd) AS basis,
+      SUM(proceeds_usd) AS proceeds,
+      SUM(gain_usd) AS gain,
+      MAX(gain_usd) AS max_gain,
+      MIN(gain_usd) AS min_gain,
+      AVG(gain_usd) AS avg_gain,
+      MODE() WITHIN GROUP (ORDER BY gain_usd) AS mode,
+      PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY gain_usd) AS median
+    FROM ${COINTRACKER_CAPITAL_GAINS_TABLE}
+    WHERE asset_name = 'USDC'
+    ${groupByClause}
     ${orderByClause};
   `;
 }

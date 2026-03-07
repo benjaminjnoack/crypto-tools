@@ -8,11 +8,14 @@ import {
   selectCointrackerCapitalGains,
   selectCointrackerCapitalGainsGroup,
   selectCointrackerCapitalGainsTotals,
+  selectCointrackerCapitalGainsUsdcBuckets,
+  selectCointrackerCapitalGainsUsdcInterval,
   truncateCointrackerCapitalGainsTable,
 } from "../../../db/cointracker/capital-gains/cointracker-capital-gains-repository.js";
 import type {
   CointrackerCapitalGainsFilters,
   CointrackerCapitalGainsGroupFilters,
+  CointrackerUsdcInterval,
 } from "../../../db/cointracker/capital-gains/cointracker-capital-gains-sql.js";
 import { parseCointrackerCapitalGainsCsv } from "../../../db/cointracker/capital-gains/cointracker-capital-gains-mappers.js";
 import { getToAndFromDates, parseAsUtc } from "../../shared/date-range-utils.js";
@@ -20,6 +23,7 @@ import type {
   CointrackerCapitalGainsGetOptions,
   CointrackerCapitalGainsGroupOptions,
   CointrackerCapitalGainsRegenerateOptions,
+  CointrackerCapitalGainsUsdcOptions,
 } from "./schemas/cointracker-capital-gains-options.js";
 import { getEnvConfig } from "#shared/common/index";
 import { logger } from "#shared/log/index";
@@ -198,4 +202,27 @@ export async function cointrackerCapitalGainsRegenerate(
   const inserted = await insertCointrackerCapitalGainsBatch(rows);
   logger.info(`Inserted ${inserted} cointracker capital gains rows`);
   return inserted;
+}
+
+export async function cointrackerCapitalGainsUsdc(
+  options: CointrackerCapitalGainsUsdcOptions,
+): Promise<Array<Record<string, unknown>>> {
+  const { buckets, interval } = options;
+
+  if (buckets) {
+    const rows = await selectCointrackerCapitalGainsUsdcBuckets();
+    console.table(rows);
+    return rows as Array<Record<string, unknown>>;
+  }
+
+  if (interval) {
+    const rows = await selectCointrackerCapitalGainsUsdcInterval(interval as CointrackerUsdcInterval);
+    console.table(rows);
+
+    const yearly = await selectCointrackerCapitalGainsUsdcInterval("year");
+    console.table(yearly);
+    return rows as Array<Record<string, unknown>>;
+  }
+
+  throw new Error("Missing instructions: use --buckets or --interval");
 }

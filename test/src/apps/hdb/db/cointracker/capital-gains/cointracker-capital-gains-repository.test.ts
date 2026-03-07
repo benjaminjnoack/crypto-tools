@@ -22,6 +22,8 @@ import {
   selectCointrackerCapitalGains,
   selectCointrackerCapitalGainsGroup,
   selectCointrackerCapitalGainsTotals,
+  selectCointrackerCapitalGainsUsdcBuckets,
+  selectCointrackerCapitalGainsUsdcInterval,
   truncateCointrackerCapitalGainsTable,
 } from "../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-repository.js";
 
@@ -69,7 +71,9 @@ describe("cointracker capital gains repository", () => {
       .fn()
       .mockResolvedValueOnce({ rows: [{ asset_name: "BTC" }] })
       .mockResolvedValueOnce({ rows: [{ group: "BTC" }] })
-      .mockResolvedValueOnce({ rows: [{ trades: "1", cost_basis: "1", proceeds: "1", gain: "0" }] });
+      .mockResolvedValueOnce({ rows: [{ trades: "1", cost_basis: "1", proceeds: "1", gain: "0" }] })
+      .mockResolvedValueOnce({ rows: [{ bucket: "1" }] })
+      .mockResolvedValueOnce({ rows: [{ month: "2026-01-01" }] });
     getClientMock.mockResolvedValue({ query: queryMock });
 
     const filters = {
@@ -82,10 +86,14 @@ describe("cointracker capital gains repository", () => {
     const gains = await selectCointrackerCapitalGains(filters, false);
     const grouped = await selectCointrackerCapitalGainsGroup(filters, false);
     const totals = await selectCointrackerCapitalGainsTotals(filters);
+    const buckets = await selectCointrackerCapitalGainsUsdcBuckets();
+    const intervals = await selectCointrackerCapitalGainsUsdcInterval("month");
 
     expect(gains).toEqual([{ asset_name: "BTC" }]);
     expect(grouped).toEqual([{ group: "BTC" }]);
     expect(totals).toEqual({ trades: "1", cost_basis: "1", proceeds: "1", gain: "0" });
-    expect(loggerDebugMock).toHaveBeenCalledTimes(2);
+    expect(buckets).toEqual([{ bucket: "1" }]);
+    expect(intervals).toEqual([{ month: "2026-01-01" }]);
+    expect(loggerDebugMock).toHaveBeenCalledTimes(4);
   });
 });

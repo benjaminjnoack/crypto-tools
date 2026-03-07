@@ -81,6 +81,8 @@ Install binary in your shell:
 - `hdb cointracker capital-gains regenerate` (alias: `r`)
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
+- `hdb cointracker capital-gains usdc` (alias: `u`)
+  - use `--buckets` or `--interval <day|week|month|quarter|year>`
 - `hdb cointracker transactions get [asset]` (alias: `g`)
 - `hdb cointracker transactions group [asset]` (alias: `grp`)
 - `hdb cointracker transactions regenerate` (alias: `r`)

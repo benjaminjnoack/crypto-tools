@@ -4,8 +4,10 @@ import {
   buildSelectCointrackerCapitalGainsGroupSql,
   buildSelectCointrackerCapitalGainsSql,
   buildSelectCointrackerCapitalGainsTotalsSql,
+  buildSelectCointrackerCapitalGainsUsdcIntervalSql,
   CREATE_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
   DROP_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
+  SELECT_COINTRACKER_CAPITAL_GAINS_USDC_BUCKETS_SQL,
   TRUNCATE_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
 } from "../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-sql.js";
 
@@ -35,5 +37,7 @@ describe("cointracker capital gains sql", () => {
     expect(buildSelectCointrackerCapitalGainsSql(conditions, true)).toContain("ORDER BY gain_usd DESC");
     expect(buildSelectCointrackerCapitalGainsTotalsSql(conditions)).toContain("SUM(gain_usd) AS gain");
     expect(buildSelectCointrackerCapitalGainsGroupSql(conditions, false, true)).toContain("HAVING");
+    expect(SELECT_COINTRACKER_CAPITAL_GAINS_USDC_BUCKETS_SQL).toContain("width_bucket");
+    expect(buildSelectCointrackerCapitalGainsUsdcIntervalSql("month")).toContain("DATE_TRUNC('month', date_sold)");
   });
 });

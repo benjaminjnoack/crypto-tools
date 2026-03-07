@@ -5,11 +5,14 @@ import {
   buildSelectCointrackerCapitalGainsGroupSql,
   buildSelectCointrackerCapitalGainsSql,
   buildSelectCointrackerCapitalGainsTotalsSql,
+  buildSelectCointrackerCapitalGainsUsdcIntervalSql,
   COINTRACKER_CAPITAL_GAINS_TABLE,
   type CointrackerCapitalGainsFilters,
   type CointrackerCapitalGainsGroupFilters,
+  type CointrackerUsdcInterval,
   CREATE_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
   DROP_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
+  SELECT_COINTRACKER_CAPITAL_GAINS_USDC_BUCKETS_SQL,
   TRUNCATE_COINTRACKER_CAPITAL_GAINS_TABLE_SQL,
 } from "./cointracker-capital-gains-sql.js";
 
@@ -43,6 +46,34 @@ export type CointrackerCapitalGainsTotalsRow = {
   cost_basis: string;
   proceeds: string;
   gain: string;
+};
+
+export type CointrackerCapitalGainsUsdcBucketRow = {
+  bucket: string;
+  bucket_min: string;
+  bucket_max: string;
+  bucket_avg: string;
+  bucket_mode: string;
+  bucket_median: string;
+  count: string;
+};
+
+export type CointrackerCapitalGainsUsdcIntervalRow = {
+  day?: string;
+  week?: string;
+  month?: string;
+  quarter?: string;
+  year?: string;
+  records: string;
+  amount: string;
+  basis: string;
+  proceeds: string;
+  gain: string;
+  max_gain: string;
+  min_gain: string;
+  avg_gain: string;
+  mode: string;
+  median: string;
 };
 
 export type CointrackerCapitalGainInsertRow = {
@@ -169,4 +200,23 @@ export async function selectCointrackerCapitalGainsTotals(
     gain: "0",
   };
   return first;
+}
+
+export async function selectCointrackerCapitalGainsUsdcBuckets(): Promise<CointrackerCapitalGainsUsdcBucketRow[]> {
+  const client = await getClient();
+  const { rows } = await client.query<CointrackerCapitalGainsUsdcBucketRow>(
+    SELECT_COINTRACKER_CAPITAL_GAINS_USDC_BUCKETS_SQL,
+  );
+  logger.debug(`Selected ${rows.length} cointracker capital gains usdc bucket rows`);
+  return rows;
+}
+
+export async function selectCointrackerCapitalGainsUsdcInterval(
+  interval?: CointrackerUsdcInterval,
+): Promise<CointrackerCapitalGainsUsdcIntervalRow[]> {
+  const client = await getClient();
+  const sql = buildSelectCointrackerCapitalGainsUsdcIntervalSql(interval);
+  const { rows } = await client.query<CointrackerCapitalGainsUsdcIntervalRow>(sql);
+  logger.debug(`Selected ${rows.length} cointracker capital gains usdc interval rows`);
+  return rows;
 }

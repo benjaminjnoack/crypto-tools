@@ -42,6 +42,12 @@ export const CointrackerCapitalGainsRegenerateOptionsSchema = DebugOptionsSchema
   yes: z.boolean().optional(),
 });
 
+export const CointrackerCapitalGainsUsdcOptionsSchema = DebugOptionsSchema.extend({
+  buckets: z.boolean().optional(),
+  interval: z.enum(["day", "week", "month", "quarter", "year"]).optional(),
+});
+
 export type CointrackerCapitalGainsGetOptions = z.infer<typeof CointrackerCapitalGainsGetOptionsSchema>;
 export type CointrackerCapitalGainsGroupOptions = z.infer<typeof CointrackerCapitalGainsGroupOptionsSchema>;
 export type CointrackerCapitalGainsRegenerateOptions = z.infer<typeof CointrackerCapitalGainsRegenerateOptionsSchema>;
+export type CointrackerCapitalGainsUsdcOptions = z.infer<typeof CointrackerCapitalGainsUsdcOptionsSchema>;
