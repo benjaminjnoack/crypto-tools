@@ -74,6 +74,9 @@ Install binary in your shell:
   - requires source selection: `--cache` or `--remote`
   - live mode requires confirmation: `--remote --yes`
 
+Coinbase migration status and next slices are tracked in:
+- [`src/apps/hdb/commands/coinbase/MIGRATION.md`](./commands/coinbase/MIGRATION.md)
+
 ### CoinTracker
 
 - `hdb cointracker balances get [currency]` (alias: `g`)
