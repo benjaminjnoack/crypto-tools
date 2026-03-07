@@ -11,6 +11,7 @@ const {
   readlineQuestionMock,
   getProductInfoMock,
   getTransactionSummaryMock,
+  requestBestBidAskMock,
   toIncrementMock,
   createMarketOrderMock,
   createLimitOrderMock,
@@ -32,6 +33,10 @@ const {
       taker_fee_rate: "0.002",
       pricing_tier: "tier_1",
     },
+  })),
+  requestBestBidAskMock: vi.fn(() => Promise.resolve({
+    asks: [{ price: "101.00" }],
+    bids: [{ price: "100.50" }],
   })),
   toIncrementMock: vi.fn((increment: string, value: number) => {
     const decimals = increment.includes(".") ? increment.split(".")[1]?.length ?? 0 : 0;
@@ -66,6 +71,10 @@ vi.mock("../../../../../src/shared/coinbase/product-service.js", () => ({
 }));
 vi.mock("../../../../../src/shared/coinbase/transaction-summary-service.js", () => ({
   getTransactionSummary: getTransactionSummaryMock,
+}));
+vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
+  requestBestBidAsk: requestBestBidAskMock,
+  requestMarketTrades: vi.fn(),
 }));
 
 vi.mock("../../../../../src/shared/common/increment.js", () => ({
@@ -385,11 +394,28 @@ describe("cb service orders", () => {
 
     expect(getTransactionSummaryMock).toHaveBeenCalledTimes(1);
     expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD");
+    expect(requestBestBidAskMock).toHaveBeenCalledWith("BTC-USD");
     expect(editOrderMock).toHaveBeenCalledWith("123e4567-e89b-42d3-a456-426614174003", {
       price: "120.00",
       size: "1.50",
       stop_price: "100.31",
     });
+  });
+
+  it("rejects breakeven update when current price is at or below computed stop", async () => {
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: "123e4567-e89b-42d3-a456-426614174008",
+      product_id: "BTC-USD",
+    }));
+    requestBestBidAskMock.mockResolvedValueOnce({
+      asks: [{ price: "100.31" }],
+      bids: [{ price: "100.30" }],
+    });
+
+    await expect(placeBreakEvenStopOrder("123e4567-e89b-42d3-a456-426614174008", {
+      buyPrice: "100",
+    })).rejects.toThrow("Cannot set break-even stop: current price");
+    expect(editOrderMock).not.toHaveBeenCalled();
   });
 
   it("rejects dedicated breakeven for non-bracket orders", async () => {

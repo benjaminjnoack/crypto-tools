@@ -19,6 +19,7 @@ import {
   getTransactionSummary,
   ORDER_SIDE,
   ORDER_TYPES,
+  requestBestBidAsk,
 } from "#shared/coinbase/index";
 import type { EditOrderRequest } from "#shared/coinbase/schemas/coinbase-rest-schemas";
 import {
@@ -248,6 +249,17 @@ export async function placeBreakEvenStopOrder(
     parseFloat(fee_tier.taker_fee_rate),
     price_increment,
   );
+  const { bids, asks } = await requestBestBidAsk(order.product_id);
+  const currentPrice = parseFloat(bids[0]?.price ?? asks[0]?.price ?? "");
+  if (!Number.isFinite(currentPrice)) {
+    throw new Error(`No current market price found for ${order.product_id}.`);
+  }
+  if (currentPrice <= parseFloat(stopPrice)) {
+    throw new Error(
+      `Cannot set break-even stop: current price (${currentPrice.toFixed(8)}) `
+      + `must be greater than stop price (${stopPrice}).`,
+    );
+  }
 
   await editOrder(orderId, {
     price: options.limitPrice ?? existing.limitPrice,
