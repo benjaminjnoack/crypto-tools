@@ -11,8 +11,11 @@
 
 - Implement changes as idiomatically as possible for the language/runtime/tooling in use.
 - Default to established best practices for readability, maintainability, correctness, and testability.
-- Treat this repository as both production tooling and interview/demo material: code should be clean, coherent, and easy to reason about at a glance.
+- Treat this repository as production tooling that is actively used to manage non-trivial real funds; code should also remain interview/demo quality (clean, coherent, and easy to reason about at a glance).
 - Prefer simple, explicit designs over clever shortcuts, and leave code in a better state after each change.
+- Prioritize regression prevention, especially in numerical calculations and order/price logic.
+- Maintain or increase test coverage for affected behavior whenever practical, and never reduce confidence in critical paths.
+- Keep current behavior documented accurately; update docs in the same change when behavior changes.
 
 ## Required Validation Workflow
 
