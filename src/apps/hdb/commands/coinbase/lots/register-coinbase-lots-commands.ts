@@ -20,30 +20,29 @@ import {
 const NOW = new Date().toISOString();
 
 export function registerCoinbaseLotsCommands(coinbase: Command): void {
-  const lots = coinbase.command("lots").description("Coinbase lot accounting operations");
+  const lots = coinbase.command("lots").description("Coinbase lot accounting");
 
-  const get = lots
-    .command("get <asset>")
-    .alias("g")
-    .description("Match buy and sell lots for <asset>");
+  const analyze = lots
+    .command("analyze <asset>")
+    .description("Run lot matching for one asset");
 
-  addDebugOption(get);
-  addFromOption(get, COINBASE_EPOCH);
-  addRangeOption(get);
-  addToOption(get, NOW);
-  addYearOption(get, "Calculate lots for the specified year");
+  addDebugOption(analyze);
+  addFromOption(analyze, COINBASE_EPOCH);
+  addRangeOption(analyze);
+  addToOption(analyze, NOW);
+  addYearOption(analyze, "Calculate lots for the specified year");
 
-  get
-    .option("-a, --accounting <accounting>", "Cost basis accounting method (FIFO, HIFO, LIFO)", "FIFO")
+  analyze
+    .option("--accounting <accounting>", "Cost basis accounting method (FIFO, HIFO, LIFO)", "FIFO")
     .option("--all", "Include all transactions used in lot accounting", false)
-    .option("-b, --balance", "Print account balance after lot accounting", false)
-    .option("-B, --buy-lots", "Include buy lots", false)
-    .option("-e, --csv", "Export to CSV", false)
+    .option("--balance", "Print account balance after lot accounting", false)
+    .option("--buy-lots", "Include buy lots", false)
+    .option("--csv", "Export to CSV", false)
     .option("--f8949", "Generate IRS Form 8949", false)
     .option("--notes", "Include generated notes with CSV", false)
-    .option("--obfuscate", "Obfuscate Lot IDs in CSV (overrides notes)", false)
+    .option("--obfuscate", "Obfuscate lot IDs in CSV (overrides notes)", false)
     .option("--pages", "Paginate f8949 output", false)
-    .option("-q, --quiet", "Suppress console output", false)
+    .option("--quiet", "Suppress console output", false)
     .option("--totals", "Print lot totals", false)
     .action(
       withAction(
@@ -53,28 +52,27 @@ export function registerCoinbaseLotsCommands(coinbase: Command): void {
       ),
     );
 
-  const batch = lots
-    .command("batch")
-    .alias("b")
-    .description("Run lot accounting across assets");
+  const analyzeAll = lots
+    .command("analyze-all")
+    .description("Run lot matching across all assets");
 
-  addDebugOption(batch);
-  addFromOption(batch, COINBASE_EPOCH);
-  addRangeOption(batch);
-  addToOption(batch, NOW);
-  addYearOption(batch, "Calculate lots for the specified year");
+  addDebugOption(analyzeAll);
+  addFromOption(analyzeAll, COINBASE_EPOCH);
+  addRangeOption(analyzeAll);
+  addToOption(analyzeAll, NOW);
+  addYearOption(analyzeAll, "Calculate lots for the specified year");
 
-  batch
-    .option("-a, --accounting <accounting>", "Cost basis accounting method (FIFO, HIFO, LIFO)", "FIFO")
-    .option("-b, --balance", "Print account balance after lot accounting", false)
-    .option("-B, --buy-lots", "Include buy lots", false)
-    .option("-c, --cash", "Calculate lots for cash (USD/USDC)", false)
-    .option("-e, --csv", "Export to CSV", false)
+  analyzeAll
+    .option("--accounting <accounting>", "Cost basis accounting method (FIFO, HIFO, LIFO)", "FIFO")
+    .option("--balance", "Print account balance after lot accounting", false)
+    .option("--buy-lots", "Include buy lots", false)
+    .option("--cash", "Calculate lots for cash assets (USD/USDC)", false)
+    .option("--csv", "Export to CSV", false)
     .option("--f8949", "Generate IRS Form 8949", false)
     .option("--notes", "Include generated notes with CSV", false)
-    .option("--obfuscate", "Obfuscate Lot IDs in CSV (overrides notes)", false)
+    .option("--obfuscate", "Obfuscate lot IDs in CSV (overrides notes)", false)
     .option("--pages", "Paginate f8949 output", false)
-    .option("-q, --quiet", "Suppress console output", false)
+    .option("--quiet", "Suppress console output", false)
     .option("--totals", "Print lot totals", false)
     .action(
       withAction(
@@ -85,8 +83,7 @@ export function registerCoinbaseLotsCommands(coinbase: Command): void {
 
   const compare = lots
     .command("compare <asset>")
-    .alias("c")
-    .description("Compare FIFO/LIFO/HIFO totals for a single asset");
+    .description("Compare FIFO/LIFO/HIFO totals for one asset");
 
   addDebugOption(compare);
   addFromOption(compare, COINBASE_EPOCH);
@@ -95,7 +92,7 @@ export function registerCoinbaseLotsCommands(coinbase: Command): void {
   addYearOption(compare, "Compare lots for the specified year");
 
   compare
-    .option("-q, --quiet", "Suppress console output", false)
+    .option("--quiet", "Suppress console output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -104,20 +101,19 @@ export function registerCoinbaseLotsCommands(coinbase: Command): void {
       ),
     );
 
-  const batchCompare = lots
-    .command("batch-compare")
-    .alias("bc")
+  const compareAll = lots
+    .command("compare-all")
     .description("Compare FIFO/LIFO/HIFO totals across all assets");
 
-  addDebugOption(batchCompare);
-  addFromOption(batchCompare, COINBASE_EPOCH);
-  addRangeOption(batchCompare);
-  addToOption(batchCompare, NOW);
-  addYearOption(batchCompare, "Compare lots for the specified year");
+  addDebugOption(compareAll);
+  addFromOption(compareAll, COINBASE_EPOCH);
+  addRangeOption(compareAll);
+  addToOption(compareAll, NOW);
+  addYearOption(compareAll, "Compare lots for the specified year");
 
-  batchCompare
-    .option("-b, --balance", "Print account balance after lot accounting", false)
-    .option("-q, --quiet", "Suppress console output", false)
+  compareAll
+    .option("--balance", "Print account balance after lot accounting", false)
+    .option("--quiet", "Suppress console output", false)
     .action(
       withAction(
         parseOptions(),

@@ -16,21 +16,20 @@ import {
 const NOW = new Date().toISOString();
 
 export function registerCointrackerBalancesCommands(cointracker: Command): void {
-  const balances = cointracker.command("balances").description("CoinTracker balance operations");
+  const balances = cointracker.command("balances").description("CoinTracker balance ledger");
 
-  const get = balances
-    .command("get [currency]")
-    .alias("g")
-    .description("Select records from cointracker_balances_ledger");
+  const list = balances
+    .command("list [currency]")
+    .description("List records from cointracker_balances_ledger");
 
-  addDebugOption(get);
-  addFromOption(get, COINBASE_EPOCH);
-  addRangeOption(get);
-  addToOption(get, NOW);
-  addYearOption(get, "Read balances for the specified year");
+  addDebugOption(list);
+  addFromOption(list, COINBASE_EPOCH);
+  addRangeOption(list);
+  addToOption(list, NOW);
+  addYearOption(list, "Read balances for the specified year");
 
-  get
-    .option("-T, --include-type", "Select transaction type from cointracker_transactions")
+  list
+    .option("--include-type", "Include transaction type from cointracker_transactions")
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -39,16 +38,15 @@ export function registerCointrackerBalancesCommands(cointracker: Command): void 
       ),
     );
 
-  const regenerate = balances
-    .command("regenerate")
-    .alias("r")
+  const rebuild = balances
+    .command("rebuild")
     .description("Rebuild cointracker_balances_ledger from cointracker_transactions");
 
-  addDebugOption(regenerate);
+  addDebugOption(rebuild);
 
-  regenerate
-    .option("-d, --drop", "Drop table and re-create before rebuilding", false)
-    .option("-y, --yes", "Confirm destructive table rebuild", false)
+  rebuild
+    .option("--drop", "Drop table and re-create before rebuilding", false)
+    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

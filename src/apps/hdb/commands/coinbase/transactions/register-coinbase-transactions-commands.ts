@@ -26,36 +26,35 @@ import {
 const NOW = new Date().toISOString();
 
 export function registerCoinbaseTransactionCommands(coinbase: Command): void {
-  const transactions = coinbase.command("transactions").description("Coinbase transaction operations");
+  const transactions = coinbase.command("transactions").description("Coinbase transactions");
 
-  const get = transactions
-    .command("get [asset]")
-    .alias("g")
-    .description("Select transaction rows from coinbase_transactions");
+  const list = transactions
+    .command("list [asset]")
+    .description("List transaction rows from coinbase_transactions");
 
-  addDebugOption(get);
-  addFromOption(get, COINBASE_EPOCH);
-  addRangeOption(get);
-  addToOption(get, NOW);
-  addYearOption(get, "Read transactions for the specified year");
+  addDebugOption(list);
+  addFromOption(list, COINBASE_EPOCH);
+  addRangeOption(list);
+  addToOption(list, NOW);
+  addYearOption(list, "Read transactions for the specified year");
 
-  get
-    .option("-b, --balance", "Include balances from coinbase_balance_ledger", false)
-    .option("-c, --classifier <classifier>", "Filter by classifier")
-    .option("-m, --manual", "Select manual transactions", false)
-    .option("-M, --exclude-manual", "Exclude manual transactions", false)
-    .option("-N, --not-classifier <classifier>", "Exclude classifier")
-    .option("-p, --paired", "Include paired synthetic records", false)
-    .option("-s, --synthetic", "Select synthetic transactions", false)
-    .option("-S, --exclude-synthetic", "Exclude synthetic transactions", false)
-    .option("-T, --type <type>", "Filter by type (colon-separated values)")
-    .option("-x, --exclude <assets>", "Exclude assets (colon-separated values)")
-    .option("-C, --classify", "Show classifier columns", false)
-    .option("-F, --first <first>", "Show only first N rows")
-    .option("-L, --last <last>", "Show only last N rows")
-    .option("-n, --notes", "Show abbreviated type + notes", false)
-    .option("-R, --raw", "Reserved compatibility flag", false)
-    .option("-q, --quiet", "Suppress console output", false)
+  list
+    .option("--balance", "Include balances from coinbase_balance_ledger", false)
+    .option("--classifier <classifier>", "Filter by classifier")
+    .option("--manual", "Select manual transactions", false)
+    .option("--exclude-manual", "Exclude manual transactions", false)
+    .option("--not-classifier <classifier>", "Exclude classifier")
+    .option("--paired", "Include paired synthetic records", false)
+    .option("--synthetic", "Select synthetic transactions", false)
+    .option("--exclude-synthetic", "Exclude synthetic transactions", false)
+    .option("--type <type>", "Filter by type (colon-separated values)")
+    .option("--exclude <assets>", "Exclude assets (colon-separated values)")
+    .option("--classify", "Show classifier columns", false)
+    .option("--first <first>", "Show only first N rows")
+    .option("--last <last>", "Show only last N rows")
+    .option("--notes", "Show abbreviated type + notes", false)
+    .option("--raw", "Reserved compatibility flag", false)
+    .option("--quiet", "Suppress console output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -69,31 +68,27 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
       ),
     );
 
-  const group = transactions
-    .command("group [asset]")
-    .alias("grp")
-    .description("Group transaction sums from coinbase_transactions");
+  const summary = transactions
+    .command("summary [asset]")
+    .description("Summarize transaction totals from coinbase_transactions");
 
-  addDebugOption(group);
-  addFromOption(group, COINBASE_EPOCH);
-  addRangeOption(group);
-  addToOption(group, NOW);
-  addYearOption(group, "Read grouped transactions for the specified year");
+  addDebugOption(summary);
+  addFromOption(summary, COINBASE_EPOCH);
+  addRangeOption(summary);
+  addToOption(summary, NOW);
+  addYearOption(summary, "Read grouped transactions for the specified year");
 
-  group
-    .option("-c, --classifier <classifier>", "Filter by classifier")
-    .option(
-      "-i, --interval <interval>",
-      "Group by interval (day, week, month, quarter, year)",
-    )
-    .option("-m, --manual", "Select manual transactions", false)
-    .option("-M, --exclude-manual", "Exclude manual transactions", false)
-    .option("-s, --synthetic", "Select synthetic transactions", false)
-    .option("-S, --exclude-synthetic", "Exclude synthetic transactions", false)
-    .option("-T, --type <type>", "Filter by type (colon-separated values)")
-    .option("-x, --exclude <assets>", "Exclude assets (colon-separated values)")
-    .option("-R, --raw", "Reserved compatibility flag", false)
-    .option("-q, --quiet", "Suppress console output", false)
+  summary
+    .option("--classifier <classifier>", "Filter by classifier")
+    .option("--interval <interval>", "Group by interval (day, week, month, quarter, year)")
+    .option("--manual", "Select manual transactions", false)
+    .option("--exclude-manual", "Exclude manual transactions", false)
+    .option("--synthetic", "Select synthetic transactions", false)
+    .option("--exclude-synthetic", "Exclude synthetic transactions", false)
+    .option("--type <type>", "Filter by type (colon-separated values)")
+    .option("--exclude <assets>", "Exclude assets (colon-separated values)")
+    .option("--raw", "Reserved compatibility flag", false)
+    .option("--quiet", "Suppress console output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -107,19 +102,19 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
       ),
     );
 
-  const id = transactions
-    .command("id [id]")
-    .description("Select transaction rows by ID (colon-separated values supported)");
+  const show = transactions
+    .command("show [id]")
+    .description("Show transaction rows by ID (colon-separated values supported)");
 
-  addDebugOption(id);
+  addDebugOption(show);
 
-  id
-    .option("-b, --balance", "Include balances from coinbase_balance_ledger", false)
-    .option("-l, --lot-id <lotId>", "Legacy lot-id selector (not yet migrated)")
-    .option("-C, --classify", "Show classifier columns", false)
-    .option("-n, --notes", "Show abbreviated type + notes", false)
-    .option("-R, --raw", "Reserved compatibility flag", false)
-    .option("-q, --quiet", "Suppress console output", false)
+  show
+    .option("--balance", "Include balances from coinbase_balance_ledger", false)
+    .option("--lot-id <lotId>", "Legacy lot-id selector (not yet migrated)")
+    .option("--classify", "Show classifier columns", false)
+    .option("--notes", "Show abbreviated type + notes", false)
+    .option("--raw", "Reserved compatibility flag", false)
+    .option("--quiet", "Suppress console output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -133,14 +128,13 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
       ),
     );
 
-  const manual = transactions
-    .command("manual <asset>")
-    .alias("m")
+  const addManual = transactions
+    .command("add-manual <asset>")
     .description("Insert a manual transaction row into coinbase_transactions");
 
-  addDebugOption(manual);
+  addDebugOption(addManual);
 
-  manual
+  addManual
     .option("--dry-run", "Validate and preview row without inserting", false)
     .option("--fee <fee>", "Transaction fee", "0")
     .requiredOption("--notes <notes>", "Evidence or notes for the manual transaction")
@@ -165,16 +159,15 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
       ),
     );
 
-  const statement = transactions
-    .command("statement <filepath>")
-    .alias("st")
+  const importStatement = transactions
+    .command("import-statement <filepath>")
     .description("Import Coinbase statement CSV into coinbase_transactions");
 
-  addDebugOption(statement);
+  addDebugOption(importStatement);
 
-  statement
-    .option("-m, --manual", "Treat imported rows as manual transactions", false)
-    .option("-n, --normalize", "Normalize trade rows into synthetic pairs", true)
+  importStatement
+    .option("--manual", "Treat imported rows as manual transactions", false)
+    .option("--normalize", "Normalize trade rows into synthetic pairs", true)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -188,18 +181,17 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
       ),
     );
 
-  const regenerate = transactions
-    .command("regenerate")
-    .alias("r")
+  const rebuild = transactions
+    .command("rebuild")
     .description("Rebuild coinbase_transactions from statement CSV input files");
 
-  addDebugOption(regenerate);
+  addDebugOption(rebuild);
 
-  regenerate
-    .option("-d, --drop", "Drop table and re-create before repopulating", false)
+  rebuild
+    .option("--drop", "Drop table and re-create before repopulating", false)
     .option("--input-dir <dir>", "Input directory containing statement CSV files")
-    .option("-n, --normalize", "Normalize trade rows into synthetic pairs", true)
-    .option("-y, --yes", "Confirm destructive table rebuild", false)
+    .option("--normalize", "Normalize trade rows into synthetic pairs", true)
+    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),
@@ -209,7 +201,7 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
     );
 
   const nav = transactions
-    .command("nav")
+    .command("analyze-nav")
     .description("Compute account NAV and cash-flow PnL");
 
   addDebugOption(nav);
@@ -219,7 +211,7 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
   addYearOption(nav, "Calculate NAV over the specified year");
 
   nav
-    .option("-q, --quiet", "Suppress console output", false)
+    .option("--quiet", "Suppress console output", false)
     .option("--remote", "Allow live Coinbase account and price requests", false)
     .option("--yes", "Confirm live Coinbase requests", false)
     .action(

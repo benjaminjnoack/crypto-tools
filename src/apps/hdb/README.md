@@ -1,6 +1,6 @@
 # hdb
 
-`hdb` is the helper database CLI in this monorepo.
+`hdb` is the crypto accounting database CLI in this monorepo.
 
 Source location: `src/apps/hdb`
 
@@ -46,7 +46,7 @@ Local PostgreSQL setup details are in [`README.postgres.md`](./README.postgres.m
 Run from TypeScript source:
 
 - `tsx src/apps/hdb/cli.ts --help`
-- `tsx src/apps/hdb/cli.ts test`
+- `tsx src/apps/hdb/cli.ts health`
 
 Run built CLI:
 
@@ -62,47 +62,47 @@ Install binary in your shell:
 
 ### System
 
-- `hdb test`
+- `hdb health`
 
 ### Coinbase
 
-- `hdb coinbase balances get <asset>` (alias: `g`)
+- `hdb coinbase balances list <asset>`
   - `asset` supports colon-separated values
   - `--current` live check requires `--remote --yes`
-- `hdb coinbase balances batch` (alias: `b`)
+- `hdb coinbase balances snapshot`
   - `--current` live check requires `--remote --yes`
-- `hdb coinbase balances trace <asset>` (alias: `t`)
-- `hdb coinbase balances regenerate` (alias: `r`)
+- `hdb coinbase balances trace <asset>`
+- `hdb coinbase balances rebuild`
   - requires `--yes`
-- `hdb coinbase lots get <asset>` (alias: `g`)
-- `hdb coinbase lots batch` (alias: `b`)
-- `hdb coinbase lots compare <asset>` (alias: `c`)
-- `hdb coinbase lots batch-compare` (alias: `bc`)
+- `hdb coinbase lots analyze <asset>`
+- `hdb coinbase lots analyze-all`
+- `hdb coinbase lots compare <asset>`
+- `hdb coinbase lots compare-all`
   - supports `--csv` and `--f8949` exports
-- `hdb coinbase orders get <orderId>` (alias: `g`)
-- `hdb coinbase orders fees [productId]` (alias: `f`)
-- `hdb coinbase orders insert <orderId>` (alias: `i`)
+- `hdb coinbase orders show <orderId>`
+- `hdb coinbase orders inspect <orderId>`
+- `hdb coinbase orders fees [productId]`
+- `hdb coinbase orders import-one <orderId>`
   - requires explicit live mode: `--remote --yes`
-- `hdb coinbase orders object <orderId>` (alias: `o`)
-- `hdb coinbase orders regenerate` (alias: `r`)
+- `hdb coinbase orders rebuild`
   - requires `--yes`
   - source selection required: `--cache` or `--remote`
   - live mode requires confirmation: `--remote --yes`
-- `hdb coinbase orders update` (alias: `u`)
+- `hdb coinbase orders sync`
   - requires source selection: `--cache` or `--remote`
   - live mode requires confirmation: `--remote --yes`
 
 ### Coinbase Transactions
 
-- `hdb coinbase transactions get [asset]` (alias: `g`)
-- `hdb coinbase transactions group [asset]` (alias: `grp`)
-- `hdb coinbase transactions id [id]`
-- `hdb coinbase transactions manual <asset>` (alias: `m`)
-- `hdb coinbase transactions statement <filepath>` (alias: `st`)
-- `hdb coinbase transactions regenerate` (alias: `r`)
+- `hdb coinbase transactions list [asset]`
+- `hdb coinbase transactions summary [asset]`
+- `hdb coinbase transactions show [id]`
+- `hdb coinbase transactions add-manual <asset>`
+- `hdb coinbase transactions import-statement <filepath>`
+- `hdb coinbase transactions rebuild`
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/coinbase-transactions`
-- `hdb coinbase transactions nav`
+- `hdb coinbase transactions analyze-nav`
   - requires explicit live mode: `--remote --yes`
 
 Coinbase migration status and next slices are tracked in:
@@ -110,28 +110,28 @@ Coinbase migration status and next slices are tracked in:
 
 ### CoinTracker
 
-- `hdb cointracker balances get [currency]` (alias: `g`)
-- `hdb cointracker balances regenerate` (alias: `r`)
+- `hdb cointracker balances list [currency]`
+- `hdb cointracker balances rebuild`
   - requires `--yes`
-- `hdb cointracker capital-gains get [assets]` (alias: `g`)
-  - export flags: `--csv`, `--f8949`, `-H|--headers`, `--pages`
+- `hdb cointracker gains list [assets]`
+  - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`
-- `hdb cointracker capital-gains group [assets]` (alias: `grp`)
-  - export flags: `--csv`, `--f8949`, `-H|--headers`, `--pages`
+- `hdb cointracker gains summary [assets]`
+  - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`
-- `hdb cointracker capital-gains regenerate` (alias: `r`)
+- `hdb cointracker gains rebuild`
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
-- `hdb cointracker capital-gains usdc` (alias: `u`)
+- `hdb cointracker gains analyze-usdc`
   - use `--buckets` or `--interval <day|week|month|quarter|year>`
-- `hdb cointracker transactions get [asset]` (alias: `g`)
-- `hdb cointracker transactions group [asset]` (alias: `grp`)
-- `hdb cointracker transactions regenerate` (alias: `r`)
+- `hdb cointracker transactions list [asset]`
+- `hdb cointracker transactions summary [asset]`
+- `hdb cointracker transactions rebuild`
   - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-transactions`
   - also rebuilds `cointracker_balances_ledger`
 
-Use `hdb <command> --help` for option details.
+Use `hdb <command path> --help` for option details.
 
 ## Development
 

@@ -18,27 +18,26 @@ import {
 const NOW = new Date().toISOString();
 
 export function registerCointrackerTransactionCommands(cointracker: Command): void {
-  const transactions = cointracker.command("transactions").description("CoinTracker transaction operations");
+  const transactions = cointracker.command("transactions").description("CoinTracker transactions");
 
-  const get = transactions
-    .command("get [asset]")
-    .alias("g")
-    .description("Select transactions from cointracker_transactions");
+  const list = transactions
+    .command("list [asset]")
+    .description("List transactions from cointracker_transactions");
 
-  addDebugOption(get);
-  addFromOption(get, COINBASE_EPOCH);
-  addRangeOption(get);
-  addToOption(get, NOW);
-  addYearOption(get, "Read transactions for the specified year");
+  addDebugOption(list);
+  addFromOption(list, COINBASE_EPOCH);
+  addRangeOption(list);
+  addToOption(list, NOW);
+  addYearOption(list, "Read transactions for the specified year");
 
-  get
-    .option("-b, --include-balances", "Include balances from cointracker_balances_ledger", false)
-    .option("-q, --quiet", "Do not print anything to the console", false)
+  list
+    .option("--include-balances", "Include balances from cointracker_balances_ledger", false)
+    .option("--quiet", "Do not print anything to the console", false)
     .option("--raw", "Print values raw from the DB", false)
-    .option("-R, --received <asset>", "Select records where received_currency is <asset>")
-    .option("-S, --sent <asset>", "Select records where sent_currency is <asset>")
-    .option("-T, --type <type>", "Filter transactions by <type> (colon-separated values)")
-    .option("-x, --exclude <assets>", "Exclude <assets> from the result set")
+    .option("--received <asset>", "Select records where received_currency is <asset>")
+    .option("--sent <asset>", "Select records where sent_currency is <asset>")
+    .option("--type <type>", "Filter transactions by <type> (colon-separated values)")
+    .option("--exclude <assets>", "Exclude <assets> from the result set")
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -52,27 +51,23 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
       ),
     );
 
-  const group = transactions
-    .command("group [asset]")
-    .alias("grp")
-    .description("Calculate grouped totals from cointracker_transactions");
+  const summary = transactions
+    .command("summary [asset]")
+    .description("Summarize grouped totals from cointracker_transactions");
 
-  addDebugOption(group);
-  addFromOption(group, COINBASE_EPOCH);
-  addRangeOption(group);
-  addToOption(group, NOW);
-  addYearOption(group, "Read transactions for the specified year");
+  addDebugOption(summary);
+  addFromOption(summary, COINBASE_EPOCH);
+  addRangeOption(summary);
+  addToOption(summary, NOW);
+  addYearOption(summary, "Read transactions for the specified year");
 
-  group
-    .option(
-      "-i, --interval <interval>",
-      "Group transactions by <interval> (day, week, month, quarter, or year)",
-    )
-    .option("-q, --quiet", "Do not print anything to the console", false)
-    .option("-R, --received <asset>", "Select records where received_currency is <asset>")
-    .option("-S, --sent <asset>", "Select records where sent_currency is <asset>")
-    .option("-T, --type <type>", "Filter transactions by <type> (colon-separated values)")
-    .option("-x, --exclude <assets>", "Exclude <assets> from the result set")
+  summary
+    .option("--interval <interval>", "Group by interval (day, week, month, quarter, year)")
+    .option("--quiet", "Do not print anything to the console", false)
+    .option("--received <asset>", "Select records where received_currency is <asset>")
+    .option("--sent <asset>", "Select records where sent_currency is <asset>")
+    .option("--type <type>", "Filter transactions by <type> (colon-separated values)")
+    .option("--exclude <assets>", "Exclude <assets> from the result set")
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),
@@ -86,17 +81,16 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
       ),
     );
 
-  const regenerate = transactions
-    .command("regenerate")
-    .alias("r")
+  const rebuild = transactions
+    .command("rebuild")
     .description("Rebuild cointracker_transactions from input CSV files");
 
-  addDebugOption(regenerate);
+  addDebugOption(rebuild);
 
-  regenerate
-    .option("-d, --drop", "Drop table and re-create before inserting", false)
+  rebuild
+    .option("--drop", "Drop table and re-create before inserting", false)
     .option("--input-dir <dir>", "Input directory containing CoinTracker transaction CSV files")
-    .option("-y, --yes", "Confirm destructive table rebuild", false)
+    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

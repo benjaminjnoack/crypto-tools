@@ -20,25 +20,24 @@ import {
 const NOW = new Date().toISOString();
 
 export function registerCoinbaseBalancesCommands(coinbase: Command): void {
-  const balances = coinbase.command("balances").description("Coinbase balance ledger operations");
+  const balances = coinbase.command("balances").description("Coinbase balance ledger");
 
-  const get = balances
-    .command("get <asset>")
-    .alias("g")
-    .description("Read ledger balances for <asset> (colon-separated values supported)");
+  const list = balances
+    .command("list <asset>")
+    .description("List ledger balance entries for one or more assets (colon-separated)");
 
-  addDebugOption(get);
-  addFromOption(get, COINBASE_EPOCH);
-  addRangeOption(get);
-  addToOption(get, NOW);
-  addYearOption(get, "Read balances for the specified year");
+  addDebugOption(list);
+  addFromOption(list, COINBASE_EPOCH);
+  addRangeOption(list);
+  addToOption(list, NOW);
+  addYearOption(list, "Read balances for the specified year");
 
-  get
-    .option("-c, --current", "Include current account balance check from Coinbase", false)
+  list
+    .option("--current", "Include current account balance check from Coinbase", false)
     .option("--first <first>", "Show only first N rows")
     .option("--last <last>", "Show only last N rows")
-    .option("-q, --quiet", "Suppress console output", false)
-    .option("-R, --raw", "Display raw balance values", false)
+    .option("--quiet", "Suppress console output", false)
+    .option("--raw", "Display raw balance values", false)
     .option("--remote", "Allow live Coinbase account requests", false)
     .option("--yes", "Confirm live Coinbase requests", false)
     .action(
@@ -54,21 +53,20 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
       ),
     );
 
-  const batch = balances
-    .command("batch")
-    .alias("b")
-    .description("Show latest ledger balance for each asset");
+  const snapshot = balances
+    .command("snapshot")
+    .description("Show latest ledger balance snapshot for all assets");
 
-  addDebugOption(batch);
-  addFromOption(batch, COINBASE_EPOCH);
-  addRangeOption(batch);
-  addToOption(batch, NOW);
-  addYearOption(batch, "Read balances snapshot for the specified year");
+  addDebugOption(snapshot);
+  addFromOption(snapshot, COINBASE_EPOCH);
+  addRangeOption(snapshot);
+  addToOption(snapshot, NOW);
+  addYearOption(snapshot, "Read balances snapshot for the specified year");
 
-  batch
-    .option("-c, --current", "Include current account balance check from Coinbase", false)
-    .option("-q, --quiet", "Suppress console output", false)
-    .option("-R, --raw", "Display raw balance values", false)
+  snapshot
+    .option("--current", "Include current account balance check from Coinbase", false)
+    .option("--quiet", "Suppress console output", false)
+    .option("--raw", "Display raw balance values", false)
     .option("--remote", "Allow live Coinbase account requests", false)
     .option("--yes", "Confirm live Coinbase requests", false)
     .action(
@@ -80,16 +78,15 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
 
   const trace = balances
     .command("trace <asset>")
-    .alias("t")
-    .description("Trace balance entries for <asset> back to last dust/zero point");
+    .description("Trace balance entries for an asset to last dust/zero point");
 
   addDebugOption(trace);
   addToOption(trace, NOW);
   addYearOption(trace, "Trace balances up to the end of the specified year");
 
   trace
-    .option("-q, --quiet", "Suppress console output", false)
-    .option("-R, --raw", "Display raw balance values", false)
+    .option("--quiet", "Suppress console output", false)
+    .option("--raw", "Display raw balance values", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -103,16 +100,15 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
       ),
     );
 
-  const regenerate = balances
-    .command("regenerate")
-    .alias("r")
+  const rebuild = balances
+    .command("rebuild")
     .description("Rebuild coinbase_balance_ledger from coinbase_transactions");
 
-  addDebugOption(regenerate);
+  addDebugOption(rebuild);
 
-  regenerate
-    .option("-d, --drop", "Drop table and re-create before rebuilding", false)
-    .option("-y, --yes", "Confirm destructive table rebuild", false)
+  rebuild
+    .option("--drop", "Drop table and re-create before rebuilding", false)
+    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

@@ -9,11 +9,11 @@ export function createProgram(): Command {
   const version = getVersion();
   const program = new Command();
 
-  program.name("hdb").description("Helper database command line tool").version(version);
+  program.name("hdb").description("Crypto accounting database CLI").version(version);
 
   program.on("--help", () => {
     console.log("\nFor more information about a specific command, use:");
-    console.log("  hdb <command> --help");
+    console.log("  hdb <command path> --help");
   });
 
   registerSystemCommands(program);

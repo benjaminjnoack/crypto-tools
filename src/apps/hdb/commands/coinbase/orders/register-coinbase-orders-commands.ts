@@ -29,17 +29,18 @@ import { COINBASE_EPOCH } from "../../shared/date-range-utils.js";
 import { COINBASE_ORDERS_TABLE } from "../../../db/coinbase/orders/coinbase-orders-repository.js";
 import { parseArgWithOptions, parseOptions, withAction } from "../../register/register-utils.js";
 
-export function registerCoinbaseOrderCommands(coinbase: Command) {
-  const orders = coinbase.command("orders").description("Coinbase order operations");
+const NOW = new Date().toISOString();
 
-  const get = orders
-    .command("get <orderId>")
-    .alias("g")
-    .description("Select order from the database by orderId and print the order record to the console");
+export function registerCoinbaseOrderCommands(coinbase: Command): void {
+  const orders = coinbase.command("orders").description("Coinbase orders");
 
-  addDebugOption(get);
+  const show = orders
+    .command("show <orderId>")
+    .description("Show a normalized order record from the database");
 
-  get
+  addDebugOption(show);
+
+  show
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -47,54 +48,13 @@ export function registerCoinbaseOrderCommands(coinbase: Command) {
       ),
     );
 
-  const NOW = new Date().toISOString(); // TODO move somewhere common
-  const fees = orders
-    .command("fees [productId]")
-    .alias("f")
-    .description("Show total fees paid on orders");
+  const inspect = orders
+    .command("inspect <orderId>")
+    .description("Show the reconstructed order object as full JSON");
 
-  addDebugOption(fees);
-  addFromOption(fees, COINBASE_EPOCH);
-  addRangeOption(fees);
-  addToOption(fees, NOW);
-  addYearOption(fees, "Calculate fees for the specified year");
+  addDebugOption(inspect);
 
-  fees
-    .option("-s, --side <side>", "Order side (BUY || SELL)")
-    .action(
-      withAction(
-        parseArgWithOptions(z.string().optional()),
-        async (productId, options) =>
-          runActionWithArgument(coinbaseOrdersFees, productId, options, CoinbaseOrdersFeesOptionsSchema),
-      ),
-    );
-
-  const insert = orders
-    .command("insert <orderId>")
-    .alias("i")
-    .description("Download an order from the exchange and insert into the database");
-
-  addDebugOption(insert);
-
-  insert
-    .option("--remote", "Allow live Coinbase API request for this command", false)
-    .option("-y, --yes", "Confirm live Coinbase API request", false)
-    .action(
-      withAction(
-        parseArgWithOptions(z.string()),
-        async (orderId, options) =>
-          runActionWithArgument(coinbaseOrdersInsert, orderId, options, CoinbaseOrdersInsertOptionsSchema),
-      ),
-    );
-
-  const object = orders
-    .command("object <orderId>")
-    .alias("o")
-    .description("Select order from the database and print the reconstructed order object");
-
-  addDebugOption(object);
-
-  object
+  inspect
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -103,52 +63,87 @@ export function registerCoinbaseOrderCommands(coinbase: Command) {
       ),
     );
 
-  const regenerate = orders
-    .command("regenerate")
-    .alias("r")
-    .description(`Drop/truncate and repopulate ${COINBASE_ORDERS_TABLE} from cache or remote`);
+  const fees = orders
+    .command("fees [productId]")
+    .description("Show total order fees over a time range");
 
-  addDebugOption(regenerate);
-  addCacheOption(regenerate);
-  addFromOption(regenerate, COINBASE_EPOCH);
-  addToOption(regenerate, NOW);
-  addRsyncOption(
-    regenerate,
-    `Read the last filled order from ${COINBASE_ORDERS_TABLE} and request all filled orders since`,
-  );
+  addDebugOption(fees);
+  addFromOption(fees, COINBASE_EPOCH);
+  addRangeOption(fees);
+  addToOption(fees, NOW);
+  addYearOption(fees, "Calculate fees for the specified year");
 
-  regenerate
-    .option("-d, --drop", "Drop table and re-create before repopulating", false)
-    .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
-    .option("-y, --yes", "Confirm destructive rebuild and any live Coinbase API requests", false)
+  fees
+    .option("--side <side>", "Order side (BUY or SELL)")
     .action(
       withAction(
-        parseOptions(),
-        async (options) => runAction(coinbaseOrdersRegenerate, options, CoinbaseOrdersRegenerateOptionsSchema),
+        parseArgWithOptions(z.string().optional()),
+        async (productId, options) =>
+          runActionWithArgument(coinbaseOrdersFees, productId, options, CoinbaseOrdersFeesOptionsSchema),
       ),
     );
 
-  const update = orders
-    .command("update")
-    .alias("u")
-    .description(`Update ${COINBASE_ORDERS_TABLE} from cache or remote`);
+  const importOne = orders
+    .command("import-one <orderId>")
+    .description("Fetch one order from Coinbase and insert it");
 
-  addCacheOption(update);
-  addDebugOption(update);
-  addFromOption(update, COINBASE_EPOCH);
-  addToOption(update, NOW);
+  addDebugOption(importOne);
+
+  importOne
+    .option("--remote", "Allow live Coinbase API request for this command", false)
+    .option("--yes", "Confirm live Coinbase API request", false)
+    .action(
+      withAction(
+        parseArgWithOptions(z.string()),
+        async (orderId, options) =>
+          runActionWithArgument(coinbaseOrdersInsert, orderId, options, CoinbaseOrdersInsertOptionsSchema),
+      ),
+    );
+
+  const sync = orders
+    .command("sync")
+    .description(`Sync ${COINBASE_ORDERS_TABLE} from cache or remote`);
+
+  addCacheOption(sync);
+  addDebugOption(sync);
+  addFromOption(sync, COINBASE_EPOCH);
+  addToOption(sync, NOW);
   addRsyncOption(
-    update,
+    sync,
     `Read the last filled order from ${COINBASE_ORDERS_TABLE} and request all filled orders since`,
   );
 
-  update
+  sync
     .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
-    .option("-y, --yes", "Confirm live Coinbase API requests", false)
+    .option("--yes", "Confirm live Coinbase API requests", false)
     .action(
       withAction(
         parseOptions(),
         async (options) => runAction(coinbaseOrdersUpdate, options, CoinbaseOrdersUpdateOptionsSchema),
+      ),
+    );
+
+  const rebuild = orders
+    .command("rebuild")
+    .description(`Drop/truncate and repopulate ${COINBASE_ORDERS_TABLE} from cache or remote`);
+
+  addDebugOption(rebuild);
+  addCacheOption(rebuild);
+  addFromOption(rebuild, COINBASE_EPOCH);
+  addToOption(rebuild, NOW);
+  addRsyncOption(
+    rebuild,
+    `Read the last filled order from ${COINBASE_ORDERS_TABLE} and request all filled orders since`,
+  );
+
+  rebuild
+    .option("--drop", "Drop table and re-create before repopulating", false)
+    .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
+    .option("--yes", "Confirm destructive rebuild and any live Coinbase API requests", false)
+    .action(
+      withAction(
+        parseOptions(),
+        async (options) => runAction(coinbaseOrdersRegenerate, options, CoinbaseOrdersRegenerateOptionsSchema),
       ),
     );
 }

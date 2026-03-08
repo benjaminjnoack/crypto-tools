@@ -7,7 +7,7 @@ describe("createProgram", () => {
   it("creates a CLI program with expected core metadata", () => {
     const program = createProgram();
     expect(program.name()).toBe("hdb");
-    expect(program.description()).toContain("Helper database");
+    expect(program.description()).toContain("Crypto accounting");
   });
 
   it("prints help output", async () => {

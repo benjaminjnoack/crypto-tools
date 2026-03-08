@@ -6,13 +6,13 @@ import { type DebugOptions, DebugOptionsSchema } from "../schemas/debug-options.
 import { parseOptions, withAction } from "../register/register-utils.js";
 
 export function registerSystemCommands(program: Command) {
-  const test = program
-    .command("test")
-    .description("Test connection to the database");
+  const health = program
+    .command("health")
+    .description("Check database connectivity");
 
-  addDebugOption(test);
+  addDebugOption(health);
 
-  test
+  health
     .action(
       withAction(
         parseOptions(),
