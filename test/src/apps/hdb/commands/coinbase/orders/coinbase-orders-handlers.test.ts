@@ -4,7 +4,10 @@ const {
   selectCoinbaseOrderMock,
   selectCoinbaseOrderByLastFillTimeMock,
   selectCoinbaseOrdersSumTotalFeesMock,
+  createCoinbaseOrdersTableMock,
+  dropCoinbaseOrdersTableMock,
   insertCoinbaseOrderMock,
+  truncateCoinbaseOrdersTableMock,
   getToAndFromDatesMock,
   printOrderMock,
   getProductIdMock,
@@ -15,11 +18,15 @@ const {
   saveOrderToCacheMock,
   loggerInfoMock,
   loggerErrorMock,
+  loggerWarnMock,
 } = vi.hoisted(() => ({
   selectCoinbaseOrderMock: vi.fn(() => Promise.resolve({ order_id: "id-1" })),
   selectCoinbaseOrderByLastFillTimeMock: vi.fn(() => Promise.resolve({ first: null, last: null })),
   selectCoinbaseOrdersSumTotalFeesMock: vi.fn(() => Promise.resolve(12.345)),
+  createCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
+  dropCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
   insertCoinbaseOrderMock: vi.fn(() => Promise.resolve(undefined)),
+  truncateCoinbaseOrdersTableMock: vi.fn(() => Promise.resolve(undefined)),
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
     from: new Date("2026-01-01T00:00:00.000Z"),
     to: new Date("2026-01-31T00:00:00.000Z"),
@@ -35,6 +42,7 @@ const {
   saveOrderToCacheMock: vi.fn(),
   loggerInfoMock: vi.fn(),
   loggerErrorMock: vi.fn(),
+  loggerWarnMock: vi.fn(),
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -45,10 +53,13 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js", () => ({
   COINBASE_ORDERS_TABLE: "coinbase_orders",
+  createCoinbaseOrdersTable: createCoinbaseOrdersTableMock,
+  dropCoinbaseOrdersTable: dropCoinbaseOrdersTableMock,
   insertCoinbaseOrder: insertCoinbaseOrderMock,
   selectCoinbaseOrder: selectCoinbaseOrderMock,
   selectCoinbaseOrderByLastFillTime: selectCoinbaseOrderByLastFillTimeMock,
   selectCoinbaseOrdersSumTotalFees: selectCoinbaseOrdersSumTotalFeesMock,
+  truncateCoinbaseOrdersTable: truncateCoinbaseOrdersTableMock,
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
@@ -68,6 +79,7 @@ vi.mock("../../../../../../../src/shared/log/logger.js", () => ({
   logger: {
     info: loggerInfoMock,
     error: loggerErrorMock,
+    warn: loggerWarnMock,
   },
 }));
 
@@ -89,6 +101,8 @@ import {
   coinbaseOrders,
   coinbaseOrdersFees,
   coinbaseOrdersInsert,
+  coinbaseOrdersObject,
+  coinbaseOrdersRegenerate,
   coinbaseOrdersUpdate,
 } from "../../../../../../../src/apps/hdb/commands/coinbase/orders/coinbase-orders-handlers.js";
 
@@ -116,10 +130,27 @@ describe("hdb coinbase order handlers", () => {
     expect(loggerInfoMock).toHaveBeenCalledWith("Fees: $12.35");
   });
 
+  it("prints reconstructed order object", async () => {
+    const dirMock = vi.spyOn(console, "dir").mockImplementation(() => undefined);
+    const value = await coinbaseOrdersObject("abc");
+    expect(selectCoinbaseOrderMock).toHaveBeenCalledWith("abc");
+    expect(dirMock).toHaveBeenCalledTimes(1);
+    expect(value).toEqual({ order_id: "id-1" });
+  });
+
   it("downloads one order then inserts it", async () => {
-    await coinbaseOrdersInsert("remote-id");
+    await coinbaseOrdersInsert("remote-id", { remote: true, yes: true });
     expect(requestOrderMock).toHaveBeenCalledWith("remote-id");
     expect(insertCoinbaseOrderMock).toHaveBeenCalledWith({ order_id: "remote-order" });
+  });
+
+  it("refuses live insert without --remote --yes", async () => {
+    await expect(coinbaseOrdersInsert("remote-id", {})).rejects.toThrow(
+      "Missing source: use --remote for live Coinbase requests.",
+    );
+    await expect(coinbaseOrdersInsert("remote-id", { remote: true })).rejects.toThrow(
+      "Refusing live Coinbase request without confirmation. Re-run with --remote --yes.",
+    );
   });
 
   it("updates from cache source and inserts loaded orders", async () => {
@@ -130,7 +161,7 @@ describe("hdb coinbase order handlers", () => {
         throw new Error("bad cache");
       });
 
-    await coinbaseOrdersUpdate({ cache: true } as { cache?: boolean; rsync?: boolean });
+    await coinbaseOrdersUpdate({ cache: true } as { cache?: boolean; remote?: boolean; rsync?: boolean });
 
     expect(loggerInfoMock).toHaveBeenCalledWith("Loading the orders from cache...");
     expect(loadOrderFromCacheMock).toHaveBeenCalledWith("a");
@@ -141,11 +172,11 @@ describe("hdb coinbase order handlers", () => {
   });
 
   it("updates from exchange source, caches, then inserts", async () => {
-    await coinbaseOrdersUpdate({ cache: false, rsync: false } as { cache?: boolean; rsync?: boolean });
+    await coinbaseOrdersUpdate({ remote: true, yes: true, rsync: false } as { cache?: boolean; remote?: boolean; yes?: boolean; rsync?: boolean });
 
     expect(requestOrdersMock).toHaveBeenCalledTimes(3);
     expect(saveOrderToCacheMock).toHaveBeenCalledTimes(6);
-    expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(6);
+    expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(2);
     expect(loggerInfoMock).toHaveBeenCalledWith("Downloading orders from the exchange...");
     expect(loggerInfoMock).toHaveBeenCalledWith("Caching the orders on disk...");
   });
@@ -155,11 +186,58 @@ describe("hdb coinbase order handlers", () => {
     vi.setSystemTime(new Date("2026-03-01T12:00:00.000Z"));
     selectCoinbaseOrderByLastFillTimeMock.mockResolvedValueOnce({ first: null, last: null });
 
-    await coinbaseOrdersUpdate({ cache: false, rsync: true } as { cache?: boolean; rsync?: boolean });
+    await coinbaseOrdersUpdate({ remote: true, yes: true, rsync: true } as { cache?: boolean; remote?: boolean; yes?: boolean; rsync?: boolean });
 
     const firstCall = requestOrdersMock.mock.calls[0];
     expect(firstCall?.[3]).toBe("2024-01-01T00:00:00.000Z");
     expect(firstCall?.[4]).toBe("2026-03-01T12:00:00.000Z");
     vi.useRealTimers();
+  });
+
+  it("requires explicit source for update and confirms remote mode", async () => {
+    await expect(coinbaseOrdersUpdate({})).rejects.toThrow(
+      "Missing source: select either --cache or --remote.",
+    );
+    await expect(coinbaseOrdersUpdate({ cache: true, remote: true })).rejects.toThrow(
+      "Invalid source: use either --cache or --remote, not both.",
+    );
+    await expect(coinbaseOrdersUpdate({ remote: true })).rejects.toThrow(
+      "Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.",
+    );
+  });
+
+  it("regenerates with truncate flow and delegates to update", async () => {
+    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: false });
+
+    expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(dropCoinbaseOrdersTableMock).not.toHaveBeenCalled();
+    expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(0);
+  });
+
+  it("regenerates with drop flow", async () => {
+    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: true });
+    expect(dropCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseOrdersTableMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses regenerate without --yes", async () => {
+    await expect(coinbaseOrdersRegenerate({ cache: true, yes: false })).rejects.toThrow(
+      "Refusing to regenerate without confirmation. Re-run with --yes.",
+    );
+  });
+
+  it("deduplicates orders by order_id before insert", async () => {
+    requestOrdersMock.mockResolvedValueOnce([{ order_id: "o1" }, { order_id: "o1" }, { order_id: "o2" }]);
+    requestOrdersMock.mockResolvedValueOnce([{ order_id: "o2" }]);
+    requestOrdersMock.mockResolvedValueOnce([{ order_id: "o3" }]);
+
+    await coinbaseOrdersUpdate({ remote: true, yes: true } as { remote?: boolean; yes?: boolean });
+
+    expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(3);
+    expect(insertCoinbaseOrderMock).toHaveBeenNthCalledWith(1, { order_id: "o1" });
+    expect(insertCoinbaseOrderMock).toHaveBeenNthCalledWith(2, { order_id: "o2" });
+    expect(insertCoinbaseOrderMock).toHaveBeenNthCalledWith(3, { order_id: "o3" });
   });
 });

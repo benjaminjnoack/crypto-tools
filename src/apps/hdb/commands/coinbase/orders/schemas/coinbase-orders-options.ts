@@ -22,11 +22,23 @@ export const CoinbaseOrdersFeesOptionsSchema = DebugOptionsSchema
   });
 export type CoinbaseOrdersFeesOptions = z.infer<typeof CoinbaseOrdersFeesOptionsSchema>;
 
+export const CoinbaseOrdersInsertOptionsSchema = DebugOptionsSchema.extend({
+  remote: z.boolean().optional(),
+  yes: z.boolean().optional(),
+});
+export type CoinbaseOrdersInsertOptions = z.infer<typeof CoinbaseOrdersInsertOptionsSchema>;
+
 export const CoinbaseOrdersUpdateOptionsSchema = DebugOptionsSchema
+  .extend(TimeOptionsSchema.shape)
   .extend({
     cache: z.boolean().optional(),
+    remote: z.boolean().optional(),
     rsync: z.boolean().optional(),
-    from: z.string().optional(),
-    to: z.string().optional(),
+    yes: z.boolean().optional(),
   })
 export type CoinbaseOrdersUpdateOptions = z.infer<typeof CoinbaseOrdersUpdateOptionsSchema>;
+
+export const CoinbaseOrdersRegenerateOptionsSchema = CoinbaseOrdersUpdateOptionsSchema.extend({
+  drop: z.boolean().optional(),
+});
+export type CoinbaseOrdersRegenerateOptions = z.infer<typeof CoinbaseOrdersRegenerateOptionsSchema>;

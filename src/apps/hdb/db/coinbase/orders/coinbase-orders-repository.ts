@@ -17,6 +17,7 @@ import {
   type LastFillTimeRow,
   SELECT_COINBASE_ORDER_SQL,
   type TotalFeesRow,
+  TRUNCATE_COINBASE_ORDERS_TABLE_SQL,
   UPSERT_COINBASE_ORDER_SQL,
 } from "./coinbase-orders-sql.js";
 
@@ -47,6 +48,11 @@ export async function dropCoinbaseOrdersTable() {
   const client = await getClient();
   coinbaseOrdersTableReady = null;
   return client.query(DROP_COINBASE_ORDERS_TABLE_SQL);
+}
+
+export async function truncateCoinbaseOrdersTable() {
+  const client = await getClient();
+  return client.query(TRUNCATE_COINBASE_ORDERS_TABLE_SQL);
 }
 
 export async function insertCoinbaseOrder(order: CoinbaseOrder): Promise<void> {

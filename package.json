@@ -1,6 +1,6 @@
 {
   "name": "crypto-tools",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "author": "Ben Noack",
   "description": "Coinbase CLI tools and shared TypeScript library utilities",
   "license": "Apache-2.0",
@@ -91,7 +91,10 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,mjs,cjs}": [
+    "{src,test,scripts}/**/*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix"
+    ],
+    "{eslint.config.mjs,vitest.config.ts,vitest.integration.config.ts}": [
       "eslint --fix"
     ]
   },

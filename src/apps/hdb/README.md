@@ -64,16 +64,72 @@ Install binary in your shell:
 
 - `hdb test`
 
-### Coinbase Orders
+### Coinbase
 
+- `hdb coinbase balances get <asset>` (alias: `g`)
+  - `asset` supports colon-separated values
+  - `--current` live check requires `--remote --yes`
+- `hdb coinbase balances batch` (alias: `b`)
+  - `--current` live check requires `--remote --yes`
+- `hdb coinbase balances trace <asset>` (alias: `t`)
+- `hdb coinbase balances regenerate` (alias: `r`)
+  - requires `--yes`
+- `hdb coinbase lots get <asset>` (alias: `g`)
+- `hdb coinbase lots batch` (alias: `b`)
+- `hdb coinbase lots compare <asset>` (alias: `c`)
+- `hdb coinbase lots batch-compare` (alias: `bc`)
+  - supports `--csv` and `--f8949` exports
 - `hdb coinbase orders get <orderId>` (alias: `g`)
 - `hdb coinbase orders fees [productId]` (alias: `f`)
 - `hdb coinbase orders insert <orderId>` (alias: `i`)
+  - requires explicit live mode: `--remote --yes`
+- `hdb coinbase orders object <orderId>` (alias: `o`)
+- `hdb coinbase orders regenerate` (alias: `r`)
+  - requires `--yes`
+  - source selection required: `--cache` or `--remote`
+  - live mode requires confirmation: `--remote --yes`
 - `hdb coinbase orders update` (alias: `u`)
+  - requires source selection: `--cache` or `--remote`
+  - live mode requires confirmation: `--remote --yes`
+
+### Coinbase Transactions
+
+- `hdb coinbase transactions get [asset]` (alias: `g`)
+- `hdb coinbase transactions group [asset]` (alias: `grp`)
+- `hdb coinbase transactions id [id]`
+- `hdb coinbase transactions manual <asset>` (alias: `m`)
+- `hdb coinbase transactions statement <filepath>` (alias: `st`)
+- `hdb coinbase transactions regenerate` (alias: `r`)
+  - requires `--yes`
+  - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/coinbase-transactions`
+- `hdb coinbase transactions nav`
+  - requires explicit live mode: `--remote --yes`
+
+Coinbase migration status and next slices are tracked in:
+- [`src/apps/hdb/commands/coinbase/MIGRATION.md`](./commands/coinbase/MIGRATION.md)
 
 ### CoinTracker
 
-- `hdb cointracker` (placeholder command group, in progress)
+- `hdb cointracker balances get [currency]` (alias: `g`)
+- `hdb cointracker balances regenerate` (alias: `r`)
+  - requires `--yes`
+- `hdb cointracker capital-gains get [assets]` (alias: `g`)
+  - export flags: `--csv`, `--f8949`, `-H|--headers`, `--pages`
+  - totals/format: `--totals`, `--raw`
+- `hdb cointracker capital-gains group [assets]` (alias: `grp`)
+  - export flags: `--csv`, `--f8949`, `-H|--headers`, `--pages`
+  - totals/format: `--totals`, `--raw`
+- `hdb cointracker capital-gains regenerate` (alias: `r`)
+  - requires `--yes`
+  - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
+- `hdb cointracker capital-gains usdc` (alias: `u`)
+  - use `--buckets` or `--interval <day|week|month|quarter|year>`
+- `hdb cointracker transactions get [asset]` (alias: `g`)
+- `hdb cointracker transactions group [asset]` (alias: `grp`)
+- `hdb cointracker transactions regenerate` (alias: `r`)
+  - requires `--yes`
+  - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-transactions`
+  - also rebuilds `cointracker_balances_ledger`
 
 Use `hdb <command> --help` for option details.
 
