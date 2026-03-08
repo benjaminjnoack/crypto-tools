@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { CoinbaseLotRow } from "./coinbase-lots-engine.js";
+import { serializeCsvRow } from "../../shared/csv-utils.js";
 
 const F8949_ROWS_PER_PAGE = 14;
 
@@ -18,17 +19,6 @@ function formatDateUs(value: Date): string {
 
 function formatToCents(value: number): string {
   return value.toFixed(2);
-}
-
-function csvEscape(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
-
-function serializeRow(values: Array<string | number | null | undefined>): string {
-  return values.map((value) => csvEscape(String(value ?? ""))).join(",");
 }
 
 function obfuscateLotId(lot: CoinbaseLotRow): string {
@@ -121,7 +111,7 @@ export async function writeCoinbaseLotsCsv(
       row.push(lotNotes(lot));
     }
 
-    lines.push(serializeRow(row));
+    lines.push(serializeCsvRow(row));
   }
 
   await writeLines(path.join(outputDir, `${filename}.csv`), lines);
@@ -140,7 +130,7 @@ export async function writeCoinbaseLotsF8949(
 
   const body = lots
     .filter((lot) => lot.kind === "sell")
-    .map((lot) => serializeRow([
+    .map((lot) => serializeCsvRow([
       `${lot.size} ${lot.asset}`,
       formatDateUs(lot.acquired),
       lot.sold ? formatDateUs(lot.sold) : "",
@@ -161,7 +151,7 @@ export async function writeCoinbaseLotsF8949(
 
   const lines = [header, ...body];
   if (options.includeTotals) {
-    lines.push(serializeRow([
+    lines.push(serializeCsvRow([
       "Totals",
       "",
       "",
@@ -195,7 +185,7 @@ export async function writeCoinbaseLotsF8949(
 
     const pageLines = [header, ...page];
     if (options.includeTotals) {
-      pageLines.push(serializeRow([
+      pageLines.push(serializeCsvRow([
         "Totals",
         "",
         "",

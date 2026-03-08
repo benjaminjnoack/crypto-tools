@@ -5,6 +5,7 @@ import type {
   CointrackerCapitalGainsGroupRow,
   CointrackerCapitalGainsTotalsRow,
 } from "../../../db/cointracker/capital-gains/cointracker-capital-gains-repository.js";
+import { serializeCsvRow } from "../../shared/csv-utils.js";
 
 const F8949_ROWS_PER_PAGE = 14;
 
@@ -37,17 +38,6 @@ function stripTrailingZeros(value: string): string {
   return value.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1");
 }
 
-function csvEscape(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
-
-function serializeRow(values: Array<string | number | null | undefined>): string {
-  return values.map((value) => csvEscape(String(value ?? ""))).join(",");
-}
-
 function buildF8949Line(
   description: string,
   acquired: string,
@@ -56,7 +46,7 @@ function buildF8949Line(
   basis: string,
   gain: string,
 ): string {
-  return serializeRow([description, acquired, sold, proceeds, basis, "", "", gain]);
+  return serializeCsvRow([description, acquired, sold, proceeds, basis, "", "", gain]);
 }
 
 function paginate<T>(items: T[], size: number): T[][] {
@@ -106,7 +96,7 @@ function aggregateGroupTotals(rows: CointrackerCapitalGainsGroupRow[]): Cointrac
 }
 
 function totalsCsvRow(totals: CointrackerCapitalGainsTotalsRow): string {
-  return serializeRow([
+  return serializeCsvRow([
     "Totals:",
     "",
     "",
@@ -119,7 +109,7 @@ function totalsCsvRow(totals: CointrackerCapitalGainsTotalsRow): string {
 }
 
 function totalsF8949Row(totals: CointrackerCapitalGainsTotalsRow): string {
-  return serializeRow([
+  return serializeCsvRow([
     "Totals:",
     "",
     "",
@@ -158,7 +148,7 @@ export async function writeCapitalGainsCsv(
 
   for (const row of rows) {
     lines.push(
-      serializeRow([
+      serializeCsvRow([
         stripTrailingZeros(row.asset_amount),
         row.asset_name,
         formatDateUs(row.received_date),
@@ -256,7 +246,7 @@ export async function writeCapitalGainsGroupCsv(
 
   for (const row of rows) {
     lines.push(
-      serializeRow([
+      serializeCsvRow([
         row.group,
         raw ? row.amount : stripTrailingZeros(row.amount),
         row.trades,
