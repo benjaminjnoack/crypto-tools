@@ -27,7 +27,7 @@ import type {
   CointrackerCapitalGainsUsdcOptions,
 } from "./schemas/cointracker-capital-gains-options.js";
 import {
-  buildDateRangeFilename,
+  buildCointrackerCapitalGainsDateRangeFilename,
   resolveCointrackerCapitalGainsOutputDir,
   writeCapitalGainsCsv,
   writeCapitalGainsF8949,
@@ -189,7 +189,7 @@ export async function cointrackerCapitalGains(
     console.table([formatTotalsForDisplay(totalsRow, raw)]);
 
     if (csv || f8949) {
-      const filename = buildDateRangeFilename(from, to);
+      const filename = buildCointrackerCapitalGainsDateRangeFilename(from, to);
       const outDir = resolveCapitalGainsOutputDir();
       if (csv) {
         await writeCapitalGainsCsv(outDir, filename, rows, true, totalsRow);
@@ -199,7 +199,7 @@ export async function cointrackerCapitalGains(
       }
     }
   } else if (csv || f8949) {
-    const filename = buildDateRangeFilename(from, to);
+    const filename = buildCointrackerCapitalGainsDateRangeFilename(from, to);
     const outDir = resolveCapitalGainsOutputDir();
     if (csv) {
       await writeCapitalGainsCsv(outDir, filename, rows, true);
@@ -280,7 +280,7 @@ export async function cointrackerCapitalGainsGroup(
   if (type && (csv || f8949)) {
     logger.warn("CSV/F8949 export with --type is not supported for grouped gains");
   } else if (csv || f8949) {
-    const filename = buildDateRangeFilename(from, to);
+    const filename = buildCointrackerCapitalGainsDateRangeFilename(from, to);
     const outDir = resolveCapitalGainsOutputDir();
     if (csv) {
       await writeCapitalGainsGroupCsv(outDir, filename, rows, Boolean(headers), Boolean(raw), totalsRow);

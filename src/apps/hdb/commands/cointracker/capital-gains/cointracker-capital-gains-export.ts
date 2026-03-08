@@ -1,4 +1,3 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import type {
   CointrackerCapitalGainRow,
@@ -6,25 +5,9 @@ import type {
   CointrackerCapitalGainsTotalsRow,
 } from "../../../db/cointracker/capital-gains/cointracker-capital-gains-repository.js";
 import { serializeCsvRow } from "../../shared/csv-utils.js";
+import { formatDateIsoUtc, formatDateUsUtc, paginate, writeLines } from "../../shared/export-utils.js";
 
 const F8949_ROWS_PER_PAGE = 14;
-
-function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
-}
-
-function formatDateIso(value: Date | string): string {
-  const date = toDate(value);
-  return date.toISOString().slice(0, 10);
-}
-
-function formatDateUs(value: Date | string): string {
-  const date = toDate(value);
-  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getUTCDate()}`.padStart(2, "0");
-  const year = `${date.getUTCFullYear()}`;
-  return `${month}/${day}/${year}`;
-}
 
 function formatToCents(value: string): string {
   const num = Number(value);
@@ -47,14 +30,6 @@ function buildF8949Line(
   gain: string,
 ): string {
   return serializeCsvRow([description, acquired, sold, proceeds, basis, "", "", gain]);
-}
-
-function paginate<T>(items: T[], size: number): T[][] {
-  const pages: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    pages.push(items.slice(i, i + size));
-  }
-  return pages;
 }
 
 function aggregateTotals(rows: CointrackerCapitalGainRow[]): CointrackerCapitalGainsTotalsRow {
@@ -121,14 +96,11 @@ function totalsF8949Row(totals: CointrackerCapitalGainsTotalsRow): string {
   ]);
 }
 
-async function writeLines(filePath: string, lines: string[]): Promise<void> {
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, `${lines.join("\n")}\n`, "utf8");
+export function buildCointrackerCapitalGainsDateRangeFilename(from: Date, to: Date): string {
+  return `${formatDateIsoUtc(from)}_${formatDateIsoUtc(to)}`;
 }
 
-export function buildDateRangeFilename(from: Date, to: Date): string {
-  return `${formatDateIso(from)}_${formatDateIso(to)}`;
-}
+export const buildDateRangeFilename = buildCointrackerCapitalGainsDateRangeFilename;
 
 export function resolveCointrackerCapitalGainsOutputDir(rootDir: string): string {
   return path.resolve(rootDir, "output", "cointracker-capital-gains");
@@ -151,8 +123,8 @@ export async function writeCapitalGainsCsv(
       serializeCsvRow([
         stripTrailingZeros(row.asset_amount),
         row.asset_name,
-        formatDateUs(row.received_date),
-        formatDateUs(row.date_sold),
+        formatDateUsUtc(row.received_date),
+        formatDateUsUtc(row.date_sold),
         formatToCents(row.proceeds_usd),
         formatToCents(row.cost_basis_usd),
         formatToCents(row.gain_usd),
@@ -196,8 +168,8 @@ export async function writeCapitalGainsF8949(
     const bodyLines = group.rows.map((row) =>
       buildF8949Line(
         `${stripTrailingZeros(row.asset_amount)} ${row.asset_name}`,
-        formatDateUs(row.received_date),
-        formatDateUs(row.date_sold),
+        formatDateUsUtc(row.received_date),
+        formatDateUsUtc(row.date_sold),
         formatToCents(row.proceeds_usd),
         formatToCents(row.cost_basis_usd),
         formatToCents(row.gain_usd),
@@ -216,8 +188,8 @@ export async function writeCapitalGainsF8949(
         const pageLines = pageRows.map((row) =>
           buildF8949Line(
             `${stripTrailingZeros(row.asset_amount)} ${row.asset_name}`,
-            formatDateUs(row.received_date),
-            formatDateUs(row.date_sold),
+            formatDateUsUtc(row.received_date),
+            formatDateUsUtc(row.date_sold),
             formatToCents(row.proceeds_usd),
             formatToCents(row.cost_basis_usd),
             formatToCents(row.gain_usd),

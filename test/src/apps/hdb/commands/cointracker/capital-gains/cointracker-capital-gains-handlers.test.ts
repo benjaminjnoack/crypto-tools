@@ -95,6 +95,7 @@ vi.mock("../../../../../../../src/apps/hdb/db/cointracker/capital-gains/cointrac
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/cointracker/capital-gains/cointracker-capital-gains-export.js", () => ({
+  buildCointrackerCapitalGainsDateRangeFilename: buildDateRangeFilenameMock,
   buildDateRangeFilename: buildDateRangeFilenameMock,
   resolveCointrackerCapitalGainsOutputDir: resolveCointrackerCapitalGainsOutputDirMock,
   writeCapitalGainsCsv: writeCapitalGainsCsvMock,

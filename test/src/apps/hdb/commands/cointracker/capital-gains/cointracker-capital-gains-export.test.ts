@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import {
+  buildCointrackerCapitalGainsDateRangeFilename,
   buildDateRangeFilename,
   resolveCointrackerCapitalGainsOutputDir,
   writeCapitalGainsCsv,
@@ -14,11 +15,20 @@ import {
 
 describe("cointracker capital gains export", () => {
   it("builds deterministic range filename", () => {
-    const name = buildDateRangeFilename(
-      dateUtc({ year: 2026, month: 1, day: 1 }),
-      dateUtc({ year: 2026, month: 2, day: 1 }),
-    );
-    expect(name).toBe("2026-01-01_2026-02-01");
+    const from = dateUtc({ year: 2026, month: 1, day: 1 });
+    const to = dateUtc({ year: 2026, month: 2, day: 1 });
+    const legacyName = buildDateRangeFilename(from, to);
+    const explicitName = buildCointrackerCapitalGainsDateRangeFilename(from, to);
+
+    expect(legacyName).toBe("2026-01-01_2026-02-01");
+    expect(explicitName).toBe("2026-01-01_2026-02-01");
+  });
+
+  it("keeps legacy and explicit filename helpers equivalent", () => {
+    const from = dateUtc({ year: 2026, month: 3, day: 1 });
+    const to = dateUtc({ year: 2026, month: 3, day: 31 });
+    const name = buildDateRangeFilename(from, to);
+    expect(name).toBe(buildCointrackerCapitalGainsDateRangeFilename(from, to));
   });
 
   it("writes csv and f8949 exports", async () => {

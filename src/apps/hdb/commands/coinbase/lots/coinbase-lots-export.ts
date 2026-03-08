@@ -1,21 +1,10 @@
 import crypto from "node:crypto";
-import fs from "node:fs/promises";
 import path from "node:path";
 import type { CoinbaseLotRow } from "./coinbase-lots-engine.js";
 import { serializeCsvRow } from "../../shared/csv-utils.js";
+import { formatDateIsoUtc, formatDateUsUtc, paginate, writeLines } from "../../shared/export-utils.js";
 
 const F8949_ROWS_PER_PAGE = 14;
-
-function formatDateIso(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
-
-function formatDateUs(value: Date): string {
-  const month = `${value.getUTCMonth() + 1}`.padStart(2, "0");
-  const day = `${value.getUTCDate()}`.padStart(2, "0");
-  const year = `${value.getUTCFullYear()}`;
-  return `${month}/${day}/${year}`;
-}
 
 function formatToCents(value: number): string {
   return value.toFixed(2);
@@ -35,21 +24,8 @@ function lotNotes(lot: CoinbaseLotRow): string {
   return `${bought} (${lot.buy_tx_id}).`;
 }
 
-function paginate<T>(items: T[], size: number): T[][] {
-  const pages: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    pages.push(items.slice(i, i + size));
-  }
-  return pages;
-}
-
-async function writeLines(filePath: string, lines: string[]): Promise<void> {
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, `${lines.join("\n")}\n`, "utf8");
-}
-
 export function buildCoinbaseLotsDateRangeFilename(from: Date, to: Date): string {
-  return `${formatDateIso(from)}_${formatDateIso(to)}`;
+  return `${formatDateIsoUtc(from)}_${formatDateIsoUtc(to)}`;
 }
 
 export function resolveCoinbaseLotsOutputDir(rootDir: string): string {
@@ -132,8 +108,8 @@ export async function writeCoinbaseLotsF8949(
     .filter((lot) => lot.kind === "sell")
     .map((lot) => serializeCsvRow([
       `${lot.size} ${lot.asset}`,
-      formatDateUs(lot.acquired),
-      lot.sold ? formatDateUs(lot.sold) : "",
+      formatDateUsUtc(lot.acquired),
+      lot.sold ? formatDateUsUtc(lot.sold) : "",
       formatToCents(lot.proceeds),
       formatToCents(lot.basis),
       "",
