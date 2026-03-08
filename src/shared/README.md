@@ -56,6 +56,7 @@ helper-env-check --env-file /absolute/path/to/.env
 ## Coinbase Credentials Format
 
 Use Coinbase App API credentials created in CDP with `ECDSA`/`ES256`.
+When creating the key in CDP, be sure to select the `ECDSA` signature algorithm.
 
 Expected JSON structure:
 

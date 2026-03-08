@@ -33,6 +33,10 @@ This document describes setup, architecture, tooling, and contributor workflow f
 5. Optional env override:
    - `HELPER_ENV_FILE=/absolute/path/to/.env`
 
+Coinbase API key setup reference:
+- https://docs.cdp.coinbase.com/coinbase-app/authentication-authorization/api-key-authentication
+- In CDP key creation, select the `ECDSA` signature algorithm (`ES256`).
+
 Never commit secrets, `.env` files, or credential material.
 
 ## Repository Organization

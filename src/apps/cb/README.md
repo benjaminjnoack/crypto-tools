@@ -58,6 +58,11 @@ HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
 HELPER_ALLOW_LIVE_EXCHANGE=true
 ```
 
+Create credentials using Coinbase's API key authentication guide:
+https://docs.cdp.coinbase.com/coinbase-app/authentication-authorization/api-key-authentication
+
+When creating the key, be sure to select the `ECDSA` signature algorithm (`ES256`).
+
 Optional override:
 
 ```bash
