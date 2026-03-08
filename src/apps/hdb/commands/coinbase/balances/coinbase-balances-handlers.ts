@@ -24,6 +24,8 @@ import type {
   CoinbaseBalancesTraceOptions,
 } from "./schemas/coinbase-balances-options.js";
 
+type BalanceTableRow = Record<string, unknown>;
+
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {
     return [];
@@ -81,6 +83,14 @@ function toConsoleRow(row: CoinbaseBalanceRow, raw: boolean | undefined, current
   return tableRow;
 }
 
+function buildConsoleRows(
+  rows: CoinbaseBalanceRow[],
+  raw: boolean | undefined,
+  currentBalanceMap?: Map<string, string>,
+): BalanceTableRow[] {
+  return rows.map((row) => toConsoleRow(row, raw, currentBalanceMap?.get(row.asset)));
+}
+
 async function getCurrentBalanceMap(remote: boolean | undefined, yes: boolean | undefined): Promise<Map<string, string>> {
   if (!remote) {
     throw new Error("Missing source: use --remote for live Coinbase balance checks.");
@@ -104,6 +114,18 @@ async function getCurrentBalanceMap(remote: boolean | undefined, yes: boolean | 
   }
 
   return balances;
+}
+
+async function resolveCurrentBalanceMap(
+  current: boolean | undefined,
+  remote: boolean | undefined,
+  yes: boolean | undefined,
+): Promise<Map<string, string> | undefined> {
+  if (!current) {
+    return undefined;
+  }
+
+  return getCurrentBalanceMap(remote, yes);
 }
 
 function getSignedDelta(row: CoinbaseTransactionRow): { asset: string; delta: number } {
@@ -137,7 +159,7 @@ function getSignedDelta(row: CoinbaseTransactionRow): { asset: string; delta: nu
 export async function coinbaseBalances(
   asset: string,
   options: CoinbaseBalancesQueryOptions,
-): Promise<Array<Record<string, unknown>>> {
+): Promise<CoinbaseBalanceRow[]> {
   const { current, first, last, quiet, raw, remote, yes } = options;
   const assets = normalizeColonSeparatedUppercase(asset);
   const { from, to } = current
@@ -147,48 +169,48 @@ export async function coinbaseBalances(
   const rows = await selectCoinbaseBalanceLedger({ assets, from, to });
 
   if (quiet) {
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
   if (rows.length === 0) {
     logger.warn(`No balances found for ${assets.join(", ")} from ${from.toISOString()} to ${to.toISOString()}`);
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
-  const currentBalanceMap = current ? await getCurrentBalanceMap(remote, yes) : new Map<string, string>();
-  const tableRows = rows.map((row) => toConsoleRow(row, raw, currentBalanceMap.get(row.asset)));
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote, yes);
+  const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(applyFirstLastRows(tableRows, first, last));
 
-  return rows as Array<Record<string, unknown>>;
+  return rows;
 }
 
 export async function coinbaseBalancesBatch(
   options: CoinbaseBalancesBatchOptions,
-): Promise<Array<Record<string, unknown>>> {
+): Promise<CoinbaseBalanceRow[]> {
   const { current, quiet, raw, remote, yes } = options;
   const { to } = current ? { to: new Date() } : await getToAndFromDates(options);
   const rows = await selectCoinbaseBalancesAtTime(to);
 
   if (quiet) {
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
   if (rows.length === 0) {
     logger.warn(`No balances found to ${to.toISOString()}`);
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
-  const currentBalanceMap = current ? await getCurrentBalanceMap(remote, yes) : new Map<string, string>();
-  const tableRows = rows.map((row) => toConsoleRow(row, raw, currentBalanceMap.get(row.asset)));
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote, yes);
+  const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(tableRows);
 
-  return rows as Array<Record<string, unknown>>;
+  return rows;
 }
 
 export async function coinbaseBalancesTrace(
   asset: string,
   options: CoinbaseBalancesTraceOptions,
-): Promise<Array<Record<string, unknown>>> {
+): Promise<CoinbaseBalanceRow[]> {
   const { quiet, raw } = options;
   const ticker = normalizeLedgerAsset(asset);
   const { to } = await getToAndFromDates(options);
@@ -196,16 +218,16 @@ export async function coinbaseBalancesTrace(
   const rows = await traceCoinbaseBalanceLedger(ticker, to);
 
   if (quiet) {
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
   if (rows.length === 0) {
     logger.warn(`No balances found for ${ticker} to ${to.toISOString()}`);
-    return rows as Array<Record<string, unknown>>;
+    return rows;
   }
 
-  console.table(rows.map((row) => toConsoleRow(row, raw)));
-  return rows as Array<Record<string, unknown>>;
+  console.table(buildConsoleRows(rows, raw));
+  return rows;
 }
 
 export async function coinbaseBalancesRegenerate(

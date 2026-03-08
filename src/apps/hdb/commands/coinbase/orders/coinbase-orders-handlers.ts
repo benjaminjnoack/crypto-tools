@@ -27,15 +27,101 @@ import { ORDER_STATUS, OrderPlacementValues } from "#shared/coinbase/schemas/coi
 import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
 import { logger, printOrder } from "#shared/log/index";
 
-export async function coinbaseOrders(orderId: string) {
-  const order = await selectCoinbaseOrder(orderId);
-  printOrder(order);
+function assertUpdateSource(cache?: boolean, remote?: boolean, yes?: boolean): void {
+  if (cache && remote) {
+    throw new Error("Invalid source: use either --cache or --remote, not both.");
+  }
+  if (!cache && !remote) {
+    throw new Error("Missing source: select either --cache or --remote.");
+  }
+  if (remote && !yes) {
+    throw new Error("Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.");
+  }
 }
 
-export async function coinbaseOrdersObject(orderId: string): Promise<Record<string, unknown>> {
+function dedupeOrdersById(orders: CoinbaseOrder[]): CoinbaseOrder[] {
+  const deduped: CoinbaseOrder[] = [];
+  const seenOrderIds = new Set<string>();
+
+  for (const order of orders) {
+    const orderId = order.order_id;
+    if (seenOrderIds.has(orderId)) {
+      continue;
+    }
+    seenOrderIds.add(orderId);
+    deduped.push(order);
+  }
+
+  return deduped;
+}
+
+async function loadOrdersFromCache(): Promise<CoinbaseOrder[]> {
+  logger.info("Loading the orders from cache...");
+  const files = await fs.readdir(coinbaseOrdersDir);
+  const orders: CoinbaseOrder[] = [];
+
+  for (const file of files) {
+    if (!file.endsWith(".json")) {
+      continue;
+    }
+
+    const orderId = path.basename(file, ".json");
+    try {
+      orders.push(loadOrderFromCache(orderId));
+    } catch (err) {
+      logger.error(err);
+    }
+  }
+
+  logger.info(`Loaded ${orders.length} orders from cache.`);
+  return orders;
+}
+
+async function resolveRemoteDateRange(options: CoinbaseOrdersUpdateOptions): Promise<{ from: Date; to: Date }> {
+  if (options.rsync) {
+    let { last } = await selectCoinbaseOrderByLastFillTime(false, true);
+    if (!last) {
+      last = new Date(COINBASE_EPOCH);
+    }
+    return { from: last, to: new Date() };
+  }
+
+  return getToAndFromDates(options, true, true);
+}
+
+async function loadOrdersFromRemote(options: CoinbaseOrdersUpdateOptions): Promise<CoinbaseOrder[]> {
+  const { from, to } = await resolveRemoteDateRange(options);
+  const start = from.toISOString();
+  const end = to.toISOString();
+  const orders: CoinbaseOrder[] = [];
+
+  logger.info("Downloading orders from the exchange...");
+  for (const source of OrderPlacementValues.values()) {
+    logger.info(`Requesting orders from ${source}...`);
+    const data = await requestOrders(ORDER_STATUS.FILLED, source, null, start, end);
+    logger.info(`Retrieved ${data.length} orders.`);
+    orders.push(...data);
+  }
+
+  logger.info("Caching the orders on disk...");
+  for (const order of orders) {
+    saveOrderToCache(order.order_id, order);
+  }
+  logger.info(`Cached ${orders.length} orders.`);
+
+  return orders;
+}
+
+export async function coinbaseOrders(orderId: string): Promise<CoinbaseOrder> {
+  const order = await selectCoinbaseOrder(orderId);
+  printOrder(order);
+  return order;
+}
+
+export async function coinbaseOrdersObject(orderId: string): Promise<CoinbaseOrder> {
   const order = await selectCoinbaseOrder(orderId);
   console.dir(order, { depth: null });
-  return order as unknown as Record<string, unknown>;
+  return order;
 }
 
 export async function coinbaseOrdersFees(productId: string | undefined, options: CoinbaseOrdersFeesOptions) {
@@ -66,89 +152,16 @@ export async function coinbaseOrdersInsert(orderId: string, options: CoinbaseOrd
 
 export async function coinbaseOrdersUpdate(options: CoinbaseOrdersUpdateOptions) {
   const { cache, remote, rsync, yes } = options;
-  if (cache && remote) {
-    throw new Error("Invalid source: use either --cache or --remote, not both.");
-  }
-  if (!cache && !remote) {
-    throw new Error("Missing source: select either --cache or --remote.");
-  }
-  if (remote && !yes) {
-    throw new Error("Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.");
-  }
+  assertUpdateSource(cache, remote, yes);
 
-  const orders: Array<Record<string, unknown>> = [];
-
-  if (cache) {
-    logger.info("Loading the orders from cache...");
-    const files = await fs.readdir(coinbaseOrdersDir);
-    for (const file of files) {
-      if (!file.endsWith(".json")) {continue;}
-
-      const orderId = path.basename(file, ".json");
-      try {
-        const order = loadOrderFromCache(orderId) as Record<string, unknown>;
-        orders.push(order);
-      } catch (err) {
-        logger.error(err);
-      }
-    }
-    logger.info(`Loaded ${orders.length} orders from cache.`);
-  } else if (remote) {
-    let from: Date;
-    let to: Date;
-    if (rsync) {
-      let { last } = await selectCoinbaseOrderByLastFillTime(false, true);
-      if (!last) {
-        last = new Date(COINBASE_EPOCH);
-      }
-      from = last;
-      to = new Date();
-    } else {
-      ({ from, to } = await getToAndFromDates(options, true, true));
-    }
-    const start = from.toISOString();
-    const end = to.toISOString();
-
-    const sources = OrderPlacementValues;
-
-    logger.info("Downloading orders from the exchange...");
-    for (const source of sources.values()) {
-      logger.info(`Requesting orders from ${source}...`);
-      const data = await requestOrders(ORDER_STATUS.FILLED, source, null, start, end);
-      logger.info(`Retrieved ${data.length} orders.`);
-      orders.push(...(data as Array<Record<string, unknown>>));
-    }
-
-    logger.info("Caching the orders on disk...");
-    for (const order of orders) {
-      const orderId = typeof order.order_id === "string" ? order.order_id : null;
-      if (!orderId) {
-        logger.warn("Skipping cache write for order without order_id");
-        continue;
-      }
-      saveOrderToCache(orderId, order as CoinbaseOrder);
-    }
-    logger.info(`Cached ${orders.length} orders.`);
-  }
-
-  const dedupedOrders: Array<Record<string, unknown>> = [];
-  const seenOrderIds = new Set<string>();
-  for (const order of orders) {
-    const orderId = typeof order.order_id === "string" ? order.order_id : null;
-    if (!orderId) {
-      logger.warn("Skipping insert for order without order_id");
-      continue;
-    }
-    if (seenOrderIds.has(orderId)) {
-      continue;
-    }
-    seenOrderIds.add(orderId);
-    dedupedOrders.push(order);
-  }
+  const orders = cache
+    ? await loadOrdersFromCache()
+    : await loadOrdersFromRemote({ ...options, rsync });
+  const dedupedOrders = dedupeOrdersById(orders);
 
   logger.info(`Inserting order into ${COINBASE_ORDERS_TABLE}...`);
   for (const order of dedupedOrders) {
-    await insertCoinbaseOrder(order as CoinbaseOrder);
+    await insertCoinbaseOrder(order);
   }
   logger.info(`Inserted ${dedupedOrders.length} orders.`);
 }
