@@ -1,0 +1,114 @@
+import { getSigningKeys, hasSigningKeys, signUrl } from "#shared/coinbase/jwt-signing-service";
+import axios, {
+  type AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type Method,
+} from "axios";
+import { delay } from "#shared/common/delay";
+import { primeEnv } from "#shared/common/env";
+import { logger } from "#shared/log/logger";
+import { z, type ZodType } from "zod";
+
+const HOST = "https://api.coinbase.com";
+const MAX_RETRIES = 5;
+const LIVE_EXCHANGE_OPT_IN = "HELPER_ALLOW_LIVE_EXCHANGE";
+const CI_INTEGRATION_READONLY = "CI_INTEGRATION_READONLY";
+
+export const http: AxiosInstance = axios.create({
+  baseURL: HOST,
+  maxBodyLength: Infinity,
+  headers: { "Content-Type": "application/json" },
+});
+
+function assertLiveExchangeEnabled(): void {
+  primeEnv();
+  if (process.env.HELPER_ALLOW_LIVE_EXCHANGE === "true") {
+    return;
+  }
+  throw new Error(
+    `Live exchange calls are disabled by default. Set ${LIVE_EXCHANGE_OPT_IN}=true in your env file to enable Coinbase API requests.`,
+  );
+}
+
+export async function getSignedConfig(
+  method: Method,
+  requestPath: string,
+  queryString: string | null = null,
+  data: unknown = null,
+): Promise<AxiosRequestConfig> {
+  assertLiveExchangeEnabled();
+
+  if (!hasSigningKeys()) {
+    await getSigningKeys();
+  }
+
+  const config: AxiosRequestConfig = {
+    method,
+    maxBodyLength: Infinity,
+    url: HOST + (queryString ? requestPath + queryString : requestPath),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${signUrl(method, requestPath)}`,
+    },
+  };
+
+  if (data) {
+    config.data = JSON.stringify(data);
+  }
+
+  return config;
+}
+
+export async function requestWithSchema<S extends ZodType>(
+  config: AxiosRequestConfig,
+  schema: S,
+  maxRetries: number = MAX_RETRIES,
+): Promise<z.output<S>> {
+  if (process.env.CI_INTEGRATION_READONLY === "true") {
+    const method = String(config.method ?? "GET").toUpperCase();
+    if (method !== "GET") {
+      throw new Error(
+        `[readonly-ci-guard] Blocked ${method} ${config.url ?? "(unknown url)"} because ` +
+          `${CI_INTEGRATION_READONLY}=true only permits GET requests.`,
+      );
+    }
+  }
+
+  let lastErr: unknown;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await http.request(config);
+      return schema.parse(res.data);
+    } catch (e) {
+      lastErr = e;
+
+      if ((e as AxiosError).isAxiosError) {
+        const ax = e as AxiosError;
+        const status = ax.response?.status;
+        const data = ax.response?.data;
+        logger.error(
+          `[HTTP] ${config.method} ${config.url} -> ${status ?? "ERR"} ${
+            typeof data === "string" ? data : JSON.stringify(data)
+          }`,
+        );
+      } else if (e instanceof z.ZodError) {
+        logger.error("[HTTP] Response validation failed:", e.message);
+        throw e;
+      } else {
+        logger.error(`[HTTP] ${config.method} ${config.url} failed:`, String(e));
+      }
+
+      if (attempt < maxRetries) {
+        await delay(1000 * attempt);
+      }
+    }
+  }
+
+  throw new Error(
+    `${config.method} ${config.url} failed after ${maxRetries} attempts: ${
+      lastErr instanceof Error ? lastErr.message : String(lastErr)
+    }`,
+  );
+}

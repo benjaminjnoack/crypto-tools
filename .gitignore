@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+helper/
+src/apps/hdb/old.js
+*.log
+.env
+.DS_Store

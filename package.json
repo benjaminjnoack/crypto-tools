@@ -1,0 +1,114 @@
+{
+  "name": "crypto-tools",
+  "version": "0.0.23",
+  "author": "Ben Noack",
+  "description": "Coinbase CLI tools and shared TypeScript library utilities",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benjaminjnoack/crypto-tools.git"
+  },
+  "homepage": "https://github.com/benjaminjnoack/crypto-tools#readme",
+  "bugs": {
+    "url": "https://github.com/benjaminjnoack/crypto-tools/issues"
+  },
+  "type": "module",
+  "imports": {
+    "#shared/*": {
+      "types": "./src/shared/*.ts",
+      "default": "./dist/shared/*.js"
+    },
+    "#cb/*": {
+      "types": "./src/apps/cb/*.ts",
+      "default": "./dist/apps/cb/*.js"
+    },
+    "#hdb/*": {
+      "types": "./src/apps/hdb/*.ts",
+      "default": "./dist/apps/hdb/*.js"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "cb": "./dist/apps/cb/cli.js",
+    "hdb": "./dist/apps/hdb/cli.js",
+    "helper-env-check": "./dist/shared/bin/validate-env.js"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
+    "clean": "rm -rf dist",
+    "coverage": "npm run test:unit -- --coverage",
+    "dev": "tsx src/apps/cb/cli.ts",
+    "dev:hdb": "tsx src/apps/hdb/cli.ts",
+    "lint": "eslint src test eslint.config.mjs vitest.config.ts vitest.integration.config.ts",
+    "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts vitest.integration.config.ts --fix",
+    "major": "npm run release:check && npm version major && git push && git push --tags",
+    "minor": "npm run release:check && npm version minor && git push && git push --tags",
+    "pack:dry": "npm pack --dry-run",
+    "patch": "npm run release:check && npm version patch && git push && git push --tags",
+    "prepare": "npm run build",
+    "release:check": "npm run lint && npm run typecheck && npm run test && npm run pack:dry",
+    "smoke:bin": "node dist/apps/cb/cli.js --help",
+    "smoke:hdb": "node dist/apps/hdb/cli.js --help",
+    "test": "npm run test:unit",
+    "test:integration": "vitest run --config vitest.integration.config.ts --passWithNoTests",
+    "test:integration:preflight": "node scripts/check-integration-env.mjs",
+    "test:integration:smoke": "env -i PATH=\"$PATH\" HOME=\"$HOME\" HELPER_ENV_FILE=\"${INTEGRATION_ENV_FILE:-$HOME/.config/helper/.env.readonly}\" HELPER_ALLOW_LIVE_EXCHANGE=true CI_INTEGRATION_READONLY=true sh -c 'npm run test:integration:preflight && npm run test:integration'",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "Coinbase",
+    "coinbase-advanced-trade",
+    "cli",
+    "command-line",
+    "trading",
+    "crypto",
+    "typescript"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^25.2.3",
+    "@types/pg": "^8.18.0",
+    "@types/readline-sync": "^1.4.8",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "{src,test,scripts}/**/*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix"
+    ],
+    "{eslint.config.mjs,vitest.config.ts,vitest.integration.config.ts}": [
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "dotenv": "^17.3.1",
+    "env-paths": "^4.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "luxon": "^3.7.2",
+    "pg": "^8.19.0",
+    "readline-sync": "^1.4.10",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
+  }
+}
