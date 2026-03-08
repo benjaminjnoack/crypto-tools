@@ -30,7 +30,7 @@ export const OptionFlags = {
   ceiling: "-c, --ceiling <price>",
   fibEntry: "-e, --entry <extension>",
   fibTakeProfit: "-t, --take-profit <extension>",
-  fibRound: "-r, --round",
+  fibRound: "-R, --round",
 } as const;
 
 export function printErrorAndExit(commandName: string, e: unknown, code = 1) {

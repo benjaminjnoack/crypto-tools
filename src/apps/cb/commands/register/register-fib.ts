@@ -30,7 +30,7 @@ export function registerFibCommand(program: Command) {
       DEFAULT_BUFFER_PERCENT,
     )
     .option(
-      "--riskPercent <riskPercent>",
+      OptionFlags.riskPercent,
       "Max account risk used for sizing (0-100; default 0.25)",
       DEFAULT_RISK_PERCENT,
     )
