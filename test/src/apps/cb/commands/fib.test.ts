@@ -103,10 +103,13 @@ function fibOptions(overrides: Partial<FibOptions> = {}): FibOptions {
     allIn: false,
     bufferPercent: "0.1",
     dryRunFlag: false,
+    entry: undefined,
     floor: "100",
     ceiling: "200",
     postOnly: true,
+    round: false,
     riskPercent: "1",
+    takeProfit: undefined,
     ...overrides,
   };
 }
@@ -156,5 +159,129 @@ describe("handleFibAction", () => {
       "handleFibAction => fib1 (100) must be greater than fib0 (200) for spot long planning.",
     );
     errorSpy.mockRestore();
+  });
+
+  it("accepts decimal and shorthand extensions from options", async () => {
+    await handleFibAction("btc", fibOptions({
+      entry: "382",
+      takeProfit: "618",
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("BTC-USD", expect.objectContaining({
+      limitPrice: "138.20",
+      takeProfitPrice: "261.80",
+    }));
+    expect(readlineQuestionMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-configured entry extensions from options", async () => {
+    await expect(handleFibAction("btc", fibOptions({
+      entry: "386",
+    }))).rejects.toThrow('Invalid entry extension "386". Use one of the configured extensions (decimal or shorthand).');
+
+    expect(placeLimitTpSlOrderMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-configured take-profit extensions from options", async () => {
+    await expect(handleFibAction("btc", fibOptions({
+      takeProfit: "386",
+    }))).rejects.toThrow('Invalid take-profit extension "386". Use one of the configured extensions (decimal or shorthand).');
+
+    expect(placeLimitTpSlOrderMock).not.toHaveBeenCalled();
+  });
+
+  it("rounds entry up and take-profit down with contextual buckets", async () => {
+    await handleFibAction("btc", fibOptions({
+      floor: "90000",
+      ceiling: "100000",
+      entry: "382",
+      takeProfit: "618",
+      round: true,
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("BTC-USD", expect.objectContaining({
+      limitPrice: "93900.00",
+      takeProfitPrice: "106100.00",
+    }));
+  });
+
+  it("rounds BONK using one tick buckets from price increment", async () => {
+    getProductInfoMock.mockResolvedValueOnce({
+      base_increment: "1",
+      price_increment: "0.00000001",
+    });
+
+    await handleFibAction("bonk", fibOptions({
+      floor: "0.00000500",
+      ceiling: "0.00000600",
+      entry: "382",
+      takeProfit: "618",
+      round: true,
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("BONK-USD", expect.objectContaining({
+      limitPrice: "0.00000539",
+      takeProfitPrice: "0.00000661",
+    }));
+  });
+
+  it("rounds ADA with contextual 0.0005 buckets", async () => {
+    getProductInfoMock.mockResolvedValueOnce({
+      base_increment: "0.00000001",
+      price_increment: "0.0001",
+    });
+
+    await handleFibAction("ada", fibOptions({
+      floor: "0.2",
+      ceiling: "0.3",
+      entry: "382",
+      takeProfit: "618",
+      round: true,
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("ADA-USD", expect.objectContaining({
+      limitPrice: "0.2385",
+      takeProfitPrice: "0.3615",
+    }));
+  });
+
+  it("rounds SOL with contextual 0.1 buckets", async () => {
+    getProductInfoMock.mockResolvedValueOnce({
+      base_increment: "0.00000001",
+      price_increment: "0.01",
+    });
+
+    await handleFibAction("sol", fibOptions({
+      floor: "70",
+      ceiling: "90",
+      entry: "382",
+      takeProfit: "618",
+      round: true,
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("SOL-USD", expect.objectContaining({
+      limitPrice: "77.70",
+      takeProfitPrice: "102.30",
+    }));
+  });
+
+  it("rounds ETH with contextual 5-dollar buckets", async () => {
+    getProductInfoMock.mockResolvedValueOnce({
+      base_increment: "0.00000001",
+      price_increment: "0.01",
+    });
+
+    await handleFibAction("eth", fibOptions({
+      floor: "1800",
+      ceiling: "2100",
+      entry: "382",
+      takeProfit: "618",
+      round: true,
+    }));
+
+    expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("ETH-USD", expect.objectContaining({
+      limitPrice: "1915.00",
+      takeProfitPrice: "2285.00",
+    }));
   });
 });

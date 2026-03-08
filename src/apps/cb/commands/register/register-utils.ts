@@ -28,6 +28,9 @@ export const OptionFlags = {
   modifyBuyPrice: "--buyPrice <buyPrice>",
   floor: "-f, --floor <price>",
   ceiling: "-c, --ceiling <price>",
+  fibEntry: "-e, --entry <extension>",
+  fibTakeProfit: "-t, --take-profit <extension>",
+  fibRound: "-r, --round",
 } as const;
 
 export function printErrorAndExit(commandName: string, e: unknown, code = 1) {

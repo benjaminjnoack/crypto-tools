@@ -12,12 +12,25 @@ export function registerFibCommand(program: Command) {
     .requiredOption(OptionFlags.floor, "Fib floor/0 anchor price in USD")
     .requiredOption(OptionFlags.ceiling, "Fib ceiling/1 anchor price in USD")
     .option(
+      OptionFlags.fibEntry,
+      "Entry extension (for example: 0.382 or shorthand 382)",
+    )
+    .option(
+      OptionFlags.fibTakeProfit,
+      "Take-profit extension (for example: 1.618 or shorthand 618)",
+    )
+    .option(
+      OptionFlags.fibRound,
+      "Round entry up and take-profit down with contextual price buckets",
+      false,
+    )
+    .option(
       OptionFlags.bufferPercent,
       "Percent to lower the stop price before sizing (0-100; default 0.100)",
       DEFAULT_BUFFER_PERCENT,
     )
     .option(
-      OptionFlags.riskPercent,
+      "--riskPercent <riskPercent>",
       "Max account risk used for sizing (0-100; default 0.25)",
       DEFAULT_RISK_PERCENT,
     )
@@ -36,7 +49,7 @@ export function registerFibCommand(program: Command) {
       false,
     )
     .description(
-      "Build a fib-extension spot plan from floor/ceiling anchors with prompted entry and take-profit levels",
+      "Build a fib-extension spot plan from floor/ceiling anchors with prompted or provided entry and take-profit levels",
     )
     .action(withAction("fib", parseProductIdOptions(FibOptionsSchema), handleFibAction));
 }

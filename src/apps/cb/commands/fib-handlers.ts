@@ -13,6 +13,7 @@ const ENTRY_LEVELS = [0.382, 0.295, 0.236] as const;
 const EXIT_LEVELS = [1.272, 1.414, 1.618, 2, 2.272, 2.414, 2.618, 3, 3.272, 3.618, 4, 4.236, 4.618, 5] as const;
 const DEFAULT_ENTRY_LEVEL = 0.382;
 const DEFAULT_EXIT_LEVEL = 1.618;
+const EPSILON = 1e-9;
 
 function deriveFibPrice(fib0: number, fib1: number, level: number): number {
   return fib0 + (fib1 - fib0) * level;
@@ -58,6 +59,68 @@ function promptFibLevel(
   throw new Error(`Invalid ${label.toLowerCase()} level selection "${raw}". Use a menu number or a listed fib level.`);
 }
 
+function parseLevelSelection(raw: string, levels: readonly number[], kind: "entry" | "take-profit"): number {
+  const direct = Number.parseFloat(raw);
+  if (Number.isFinite(direct) && levels.some((level) => Math.abs(level - direct) < EPSILON)) {
+    return direct;
+  }
+
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(
+      `Invalid ${kind} extension "${raw}". Use one of the configured extensions (decimal or shorthand).`,
+    );
+  }
+
+  if (raw.length > 3) {
+    throw new Error(
+      `Invalid ${kind} extension "${raw}". Use one of the configured extensions (decimal or shorthand).`,
+    );
+  }
+  const normalized = Number(kind === "entry"
+    ? `0.${raw.padStart(3, "0")}`
+    : `1.${raw.padStart(3, "0")}`);
+
+  if (levels.some((level) => Math.abs(level - normalized) < EPSILON)) {
+    return normalized;
+  }
+
+  throw new Error(
+    `Invalid ${kind} extension "${raw}". Use one of the configured extensions (decimal or shorthand).`,
+  );
+}
+
+function toNiceStep(target: number): number {
+  const exponent = Math.floor(Math.log10(target));
+  const magnitude = 10 ** exponent;
+  const normalized = target / magnitude;
+  if (normalized <= 1) {
+    return magnitude;
+  }
+  if (normalized <= 2) {
+    return 2 * magnitude;
+  }
+  if (normalized <= 5) {
+    return 5 * magnitude;
+  }
+  return 10 * magnitude;
+}
+
+function roundUp(value: number, step: number): number {
+  return Math.ceil((value - EPSILON) / step) * step;
+}
+
+function roundDown(value: number, step: number): number {
+  return Math.floor((value + EPSILON) / step) * step;
+}
+
+function resolveRoundStep(entryPrice: number, takeProfitPrice: number, priceIncrement: number): number {
+  const referencePrice = Math.max((entryPrice + takeProfitPrice) / 2, priceIncrement);
+  const target = Math.max(referencePrice * 0.001, priceIncrement);
+  const niceStep = toNiceStep(target);
+  const increments = Math.max(1, Math.round(niceStep / priceIncrement));
+  return increments * priceIncrement;
+}
+
 export async function handleFibAction(product: string, options: FibOptions): Promise<void> {
   const productInstance = await getProductInfo(product);
 
@@ -72,15 +135,31 @@ export async function handleFibAction(product: string, options: FibOptions): Pro
     return;
   }
 
-  const entryLevel = promptFibLevel("Entry", ENTRY_LEVELS, DEFAULT_ENTRY_LEVEL, fib0, fib1);
-  const exitLevel = promptFibLevel("Take-Profit", EXIT_LEVELS, DEFAULT_EXIT_LEVEL, fib0, fib1);
-  const buyPrice = deriveFibPrice(fib0, fib1, entryLevel);
-  const takeProfitPrice = deriveFibPrice(fib0, fib1, exitLevel);
+  const entryLevel = options.entry
+    ? parseLevelSelection(options.entry, ENTRY_LEVELS, "entry")
+    : promptFibLevel("Entry", ENTRY_LEVELS, DEFAULT_ENTRY_LEVEL, fib0, fib1);
+  const takeProfitLevel = options.takeProfit
+    ? parseLevelSelection(options.takeProfit, EXIT_LEVELS, "take-profit")
+    : promptFibLevel("Take-Profit", EXIT_LEVELS, DEFAULT_EXIT_LEVEL, fib0, fib1);
+  const rawBuyPrice = deriveFibPrice(fib0, fib1, entryLevel);
+  const rawTakeProfitPrice = deriveFibPrice(fib0, fib1, takeProfitLevel);
+  const priceIncrement = parseFloat(productInstance.price_increment);
+  const shouldRound = options.round;
+  const roundStep = shouldRound ? resolveRoundStep(rawBuyPrice, rawTakeProfitPrice, priceIncrement) : null;
+  const buyPrice = shouldRound && roundStep !== null ? roundUp(rawBuyPrice, roundStep) : rawBuyPrice;
+  const takeProfitPrice = shouldRound && roundStep !== null ? roundDown(rawTakeProfitPrice, roundStep) : rawTakeProfitPrice;
   const stopPrice = fib0;
 
+  if (takeProfitPrice <= buyPrice) {
+    throw new Error("Rounded take-profit price must remain greater than rounded entry price.");
+  }
+
   console.log(`\nSelected Entry: Fib ${entryLevel.toFixed(3)} @ $${buyPrice.toFixed(2)}`);
-  console.log(`Selected TP:    Fib ${exitLevel.toFixed(3)} @ $${takeProfitPrice.toFixed(2)}`);
+  console.log(`Selected TP:    Fib ${takeProfitLevel.toFixed(3)} @ $${takeProfitPrice.toFixed(2)}`);
   console.log(`Stop Anchor:    Fib 0.000 @ $${fib0.toFixed(2)}`);
+  if (shouldRound && roundStep !== null) {
+    console.log(`Round Step:     $${roundStep.toFixed(8)}`);
+  }
 
   const { available, hold, total } = await requestCurrencyAccount("USD", "0.01");
   console.info(`Available = ${available}, Hold = ${hold}, Total = ${total}`);

@@ -128,9 +128,12 @@ export const FibOptionsSchema = z
     bufferPercent: Percent,
     ceiling: PositiveNumericString,
     dryRunFlag: z.boolean(),
+    entry: PositiveNumericString.optional(),
     floor: PositiveNumericString,
     postOnly: z.boolean().optional(),
+    round: z.boolean(),
     riskPercent: Percent,
+    takeProfit: PositiveNumericString.optional(),
   })
   .strict();
 export type FibOptions = z.infer<typeof FibOptionsSchema>;
