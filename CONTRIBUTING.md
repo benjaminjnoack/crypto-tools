@@ -44,6 +44,7 @@ Never commit secrets, `.env` files, or credential material.
 - `src/shared/`: shared Coinbase integration, common utilities, schemas, logging, and helper binaries
 - `src/apps/cb/`: `cb` CLI (Coinbase trading commands)
 - `src/apps/hdb/`: `hdb` CLI (database-oriented tools and command groups)
+- `src/apps/hdb-portal/`: local read-only web portal over `hdb` data
 - `src/version.ts`: package version export
 - `test/`: repository-level Vitest test suites
 - `test/setup/no-network.ts`: global outbound-network block for tests
@@ -94,6 +95,7 @@ Order command topology is intentionally nested:
 
 - `npm run dev`: run `cb` from TypeScript (`tsx src/apps/cb/cli.ts`)
 - `npm run dev:hdb`: run `hdb` from TypeScript (`tsx src/apps/hdb/cli.ts`)
+- `npm run dev:hdb-portal`: run the local `hdb` portal
 - `npm run build`: clean + compile to `dist/` + mark CLI files executable
 - `npm run clean`: remove `dist/`
 - `npm run lint`: run ESLint
@@ -113,6 +115,7 @@ Order command topology is intentionally nested:
 Useful direct commands:
 
 - `node dist/apps/hdb/cli.js --help` (run built `hdb`)
+- `node dist/apps/hdb-portal/cli.js` (run built `hdb-portal`)
 
 ## Local Development Workflow
 

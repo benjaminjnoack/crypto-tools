@@ -1,11 +1,12 @@
 # crypto-tools
 
-Production Coinbase operations toolkit: `cb` for trade planning and order lifecycle management, `hdb` for ledger ingestion/reconciliation and tax-facing analytics, plus shared TypeScript modules for authenticated API access and reusable CLI infrastructure.
+Production Coinbase operations toolkit: `cb` for trade planning and order lifecycle management, `hdb` for ledger ingestion/reconciliation and tax-facing analytics, `hdb-portal` for local read-only web analysis, plus shared TypeScript modules for authenticated API access and reusable CLI infrastructure.
 
 ## What is here
 
 - `cb`: trading operations CLI (quotes, sizing, plan workflows, order lifecycle) (`src/apps/cb`)
 - `hdb`: accounting/data CLI (imports, snapshots, lots, reconciliation, exports) (`src/apps/hdb`)
+- `hdb-portal`: local web portal for `hdb` analysis (`src/apps/hdb-portal`)
 - `shared`: reusable Coinbase/auth/env/log/schema modules (`src/shared`)
 - `helper-env-check`: env/credential validation binary (`src/shared/bin/validate-env.ts`)
 
@@ -65,6 +66,7 @@ From source:
 - [`cb CLI README`](src/apps/cb/README.md)
 - [`src/apps/hdb/README.md`](src/apps/hdb/README.md)
 - [`src/apps/hdb/README.postgres.md`](src/apps/hdb/README.postgres.md)
+- [`src/apps/hdb-portal/README.md`](src/apps/hdb-portal/README.md)
 - [`src/shared/README.md`](src/shared/README.md)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md)
 

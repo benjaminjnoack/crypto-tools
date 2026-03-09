@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>hdb portal</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Local Portal</p>
+          <h1>hdb</h1>
+          <p class="subtle">Read-only analytics over your local ledger database.</p>
+        </div>
+        <nav class="nav">
+          <button class="nav-link is-active" data-view="dashboard">Dashboard</button>
+          <button class="nav-link" data-view="transactions">Transactions</button>
+          <button class="nav-link" data-view="balances">Balances</button>
+          <button class="nav-link" data-view="lots">Lots</button>
+          <button class="nav-link" data-view="gains">Capital Gains</button>
+        </nav>
+        <section class="sidebar-block">
+          <h2>Safety</h2>
+          <p>No live exchange calls. No rebuilds. No imports.</p>
+        </section>
+        <section class="sidebar-block">
+          <h2>Range</h2>
+          <label>
+            <span>From</span>
+            <input id="global-from" type="date" />
+          </label>
+          <label>
+            <span>To</span>
+            <input id="global-to" type="date" />
+          </label>
+          <button id="apply-range" class="secondary-button">Apply</button>
+        </section>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Analysis Workspace</p>
+            <h2 id="view-title">Dashboard</h2>
+          </div>
+          <div class="status-pill" id="health-status">Loading health…</div>
+        </header>
+
+        <section id="flash" class="flash hidden"></section>
+
+        <section class="view is-active" data-view-panel="dashboard">
+          <div class="cards" id="dashboard-cards"></div>
+          <div class="panel-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h3>Transactions by Asset</h3>
+              </div>
+              <div id="dashboard-asset-bars"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h3>Monthly Transaction Flow</h3>
+              </div>
+              <div id="dashboard-group-chart"></div>
+            </section>
+          </div>
+          <div class="panel-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h3>Recent Transactions</h3>
+              </div>
+              <div id="dashboard-recent-transactions"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head">
+                <h3>Top Capital Gain Groups</h3>
+              </div>
+              <div id="dashboard-gains-groups"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="transactions">
+          <div class="panel">
+            <div class="panel-head split">
+              <h3>Coinbase Transactions</h3>
+              <form id="transactions-form" class="inline-form">
+                <input name="asset" placeholder="BTC:ETH" />
+                <select name="classifier">
+                  <option value="">Any classifier</option>
+                  <option value="trade_buy">trade_buy</option>
+                  <option value="trade_sell">trade_sell</option>
+                  <option value="income">income</option>
+                  <option value="transfer_in">transfer_in</option>
+                  <option value="transfer_out">transfer_out</option>
+                </select>
+                <label><input type="checkbox" name="paired" /> pair synthetic</label>
+                <button type="submit" class="secondary-button">Refresh</button>
+              </form>
+            </div>
+            <div id="transactions-chart"></div>
+            <div id="transactions-table"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="balances">
+          <div class="panel">
+            <div class="panel-head split">
+              <h3>Coinbase Balances</h3>
+              <form id="balances-form" class="inline-form">
+                <input name="asset" placeholder="BTC" />
+                <button type="submit" class="secondary-button">Trace</button>
+              </form>
+            </div>
+            <div class="panel-grid">
+              <div id="balances-table"></div>
+              <div id="balance-trace-chart"></div>
+            </div>
+            <div id="balance-trace-table"></div>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="lots">
+          <div class="panel">
+            <div class="panel-head split">
+              <h3>Coinbase Lots</h3>
+              <form id="lots-form" class="inline-form">
+                <input name="asset" placeholder="BTC" required />
+                <select name="accounting">
+                  <option value="FIFO">FIFO</option>
+                  <option value="LIFO">LIFO</option>
+                  <option value="HIFO">HIFO</option>
+                </select>
+                <button type="submit" class="secondary-button">Analyze</button>
+              </form>
+            </div>
+            <div id="lots-summary"></div>
+            <div class="panel-grid">
+              <div id="lots-compare"></div>
+              <div id="lots-table"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="gains">
+          <div class="panel">
+            <div class="panel-head split">
+              <h3>CoinTracker Capital Gains</h3>
+              <form id="gains-form" class="inline-form">
+                <input name="assets" placeholder="BTC:ETH" />
+                <label><input type="checkbox" name="crypto" /> crypto only</label>
+                <label><input type="checkbox" name="zero" /> exclude zero</label>
+                <button type="submit" class="secondary-button">Refresh</button>
+              </form>
+            </div>
+            <div class="panel-grid">
+              <div id="gains-summary"></div>
+              <div id="gains-group-table"></div>
+            </div>
+            <div id="gains-table"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

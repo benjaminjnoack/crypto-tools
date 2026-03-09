@@ -42,11 +42,12 @@
     "helper-env-check": "./dist/shared/bin/validate-env.js"
   },
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.build.json && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-hdb-portal-assets.mjs && chmod +x dist/shared/bin/validate-env.js && chmod +x dist/apps/cb/cli.js && chmod +x dist/apps/hdb/cli.js",
     "clean": "rm -rf dist",
     "coverage": "npm run test:unit -- --coverage",
     "dev": "tsx src/apps/cb/cli.ts",
     "dev:hdb": "tsx src/apps/hdb/cli.ts",
+    "dev:hdb-portal": "tsx src/apps/hdb-portal/cli.ts",
     "lint": "eslint src test eslint.config.mjs vitest.config.ts vitest.integration.config.ts",
     "lint:fix": "eslint src test eslint.config.mjs vitest.config.ts vitest.integration.config.ts --fix",
     "major": "npm run release:check && npm version major && git push && git push --tags",
@@ -57,6 +58,7 @@
     "release:check": "npm run lint && npm run typecheck && npm run test && npm run pack:dry",
     "smoke:bin": "node dist/apps/cb/cli.js --help",
     "smoke:hdb": "node dist/apps/hdb/cli.js --help",
+    "smoke:hdb-portal": "node dist/apps/hdb-portal/cli.js",
     "test": "npm run test:unit",
     "test:integration": "vitest run --config vitest.integration.config.ts --passWithNoTests",
     "test:integration:preflight": "node scripts/check-integration-env.mjs",

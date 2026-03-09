@@ -4,6 +4,8 @@
 
 Source location: `src/apps/hdb`
 
+For the local web UI over `hdb` data, see [`../hdb-portal/README.md`](../hdb-portal/README.md).
+
 ## Requirements
 
 - Node.js `>=20`
