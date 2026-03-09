@@ -138,6 +138,9 @@ Use `hdb <command path> --help` for option details.
 - `npm run lint`
 - `npm run typecheck`
 - `npm run test`
+- `npm run validate:hdb:inputs`
+  - offline CSV parser validation for `${repoRoot}/data/input/*`
+  - optional input root override: `npm run validate:hdb:inputs -- --input-root <dir>`
 - `npm run build`
 - `npm run release:check`
 

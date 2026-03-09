@@ -63,7 +63,9 @@
     "test:integration:smoke": "env -i PATH=\"$PATH\" HOME=\"$HOME\" HELPER_ENV_FILE=\"${INTEGRATION_ENV_FILE:-$HOME/.config/helper/.env.readonly}\" HELPER_ALLOW_LIVE_EXCHANGE=true CI_INTEGRATION_READONLY=true sh -c 'npm run test:integration:preflight && npm run test:integration'",
     "test:unit": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "validate:hdb:inputs": "tsx scripts/validate-hdb-inputs.ts",
+    "verify:offline": "npm run typecheck && npm run lint && npm run test && npm run validate:hdb:inputs"
   },
   "keywords": [
     "Coinbase",
