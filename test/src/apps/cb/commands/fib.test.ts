@@ -135,7 +135,7 @@ describe("handleFibAction", () => {
 
   it("supports prompt selection by menu index", async () => {
     readlineQuestionMock
-      .mockReturnValueOnce("2")
+      .mockReturnValueOnce("3")
       .mockReturnValueOnce("1");
 
     await handleFibAction("btc", fibOptions());
