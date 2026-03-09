@@ -27,15 +27,12 @@ import { ORDER_STATUS, OrderPlacementValues } from "#shared/coinbase/schemas/coi
 import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
 import { logger, printOrder } from "#shared/log/index";
 
-function assertUpdateSource(cache?: boolean, remote?: boolean, yes?: boolean): void {
+function assertUpdateSource(cache?: boolean, remote?: boolean): void {
   if (cache && remote) {
     throw new Error("Invalid source: use either --cache or --remote, not both.");
   }
   if (!cache && !remote) {
     throw new Error("Missing source: select either --cache or --remote.");
-  }
-  if (remote && !yes) {
-    throw new Error("Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.");
   }
 }
 
@@ -138,12 +135,9 @@ export async function coinbaseOrdersFees(productId: string | undefined, options:
 }
 
 export async function coinbaseOrdersInsert(orderId: string, options: CoinbaseOrdersInsertOptions) {
-  const { remote, yes } = options;
+  const { remote } = options;
   if (!remote) {
     throw new Error("Missing source: use --remote for live Coinbase requests.");
-  }
-  if (!yes) {
-    throw new Error("Refusing live Coinbase request without confirmation. Re-run with --remote --yes.");
   }
 
   const order = await requestOrder(orderId);
@@ -151,8 +145,8 @@ export async function coinbaseOrdersInsert(orderId: string, options: CoinbaseOrd
 }
 
 export async function coinbaseOrdersUpdate(options: CoinbaseOrdersUpdateOptions) {
-  const { cache, remote, rsync, yes } = options;
-  assertUpdateSource(cache, remote, yes);
+  const { cache, remote, rsync } = options;
+  assertUpdateSource(cache, remote);
 
   const orders = cache
     ? await loadOrdersFromCache()
@@ -167,10 +161,7 @@ export async function coinbaseOrdersUpdate(options: CoinbaseOrdersUpdateOptions)
 }
 
 export async function coinbaseOrdersRegenerate(options: CoinbaseOrdersRegenerateOptions): Promise<void> {
-  const { drop, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop } = options;
 
   if (drop) {
     await dropCoinbaseOrdersTable();

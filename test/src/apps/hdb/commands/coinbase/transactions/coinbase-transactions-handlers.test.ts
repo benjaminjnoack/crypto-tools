@@ -235,7 +235,7 @@ describe("hdb coinbase transaction handlers", () => {
   });
 
   it("regenerates from csv directory with drop flow", async () => {
-    const count = await coinbaseTransactionsRegenerate({ yes: true, drop: true, normalize: true });
+    const count = await coinbaseTransactionsRegenerate({ drop: true, normalize: true });
 
     expect(dropCoinbaseTransactionsTableMock).toHaveBeenCalledTimes(1);
     expect(createCoinbaseTransactionsTableMock).toHaveBeenCalledTimes(1);
@@ -258,9 +258,8 @@ describe("hdb coinbase transaction handlers", () => {
     expect(rows).toEqual([{ id: "manual-1" }]);
   });
 
-  it("requires explicit confirmation flags for nav live calls", async () => {
+  it("requires explicit remote flag for nav live calls", async () => {
     await expect(coinbaseTransactionsNav({})).rejects.toThrow("Missing source: use --remote");
-    await expect(coinbaseTransactionsNav({ remote: true })).rejects.toThrow("without confirmation");
   });
 
   it("computes nav from account balances and transaction cash flow", async () => {
@@ -269,7 +268,7 @@ describe("hdb coinbase transaction handlers", () => {
       .mockResolvedValueOnce([{ num_quantity: "200" }]);
     selectCoinbaseTransactionsGroupMock.mockResolvedValueOnce([{ fee: "12.34" }]);
 
-    const pnl = await coinbaseTransactionsNav({ remote: true, yes: true, quiet: false });
+    const pnl = await coinbaseTransactionsNav({ remote: true, quiet: false });
 
     expect(requestAccountsMock).toHaveBeenCalledTimes(1);
     expect(requestProductMock).toHaveBeenCalledWith("BTC-USD");

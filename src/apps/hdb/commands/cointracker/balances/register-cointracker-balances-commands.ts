@@ -46,7 +46,6 @@ export function registerCointrackerBalancesCommands(cointracker: Command): void 
 
   rebuild
     .option("--drop", "Drop table and re-create before rebuilding", false)
-    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

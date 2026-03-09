@@ -172,16 +172,10 @@ describe("cointracker capital gains handlers", () => {
     expect(rawTotals[0]!.cost_basis).toBe("1");
   });
 
-  it("refuses regenerate without --yes", async () => {
-    await expect(cointrackerCapitalGainsRegenerate({ yes: false })).rejects.toThrow(
-      "Refusing to regenerate without confirmation. Re-run with --yes.",
-    );
-  });
-
   it("returns zero when no csv files found", async () => {
     readdirMock.mockResolvedValueOnce(["notes.txt"]);
 
-    const count = await cointrackerCapitalGainsRegenerate({ yes: true });
+    const count = await cointrackerCapitalGainsRegenerate({});
 
     expect(count).toBe(0);
     expect(loggerWarnMock).toHaveBeenCalledTimes(1);
@@ -190,7 +184,7 @@ describe("cointracker capital gains handlers", () => {
   it("rebuilds and inserts parsed rows", async () => {
     readdirMock.mockResolvedValueOnce(["a.csv", "b.csv"]);
 
-    const count = await cointrackerCapitalGainsRegenerate({ yes: true, drop: true });
+    const count = await cointrackerCapitalGainsRegenerate({ drop: true });
 
     expect(dropCointrackerCapitalGainsTableMock).toHaveBeenCalledTimes(1);
     expect(createCointrackerCapitalGainsTableMock).toHaveBeenCalledTimes(1);

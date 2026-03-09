@@ -290,10 +290,7 @@ export async function coinbaseTransactionsStatement(
 export async function coinbaseTransactionsRegenerate(
   options: CoinbaseTransactionsRegenerateOptions,
 ): Promise<number> {
-  const { drop, inputDir, normalize, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop, inputDir, normalize } = options;
 
   const resolvedInputDir = resolveCoinbaseTransactionsInputDir(inputDir);
   const fileNames = (await fs.readdir(resolvedInputDir))
@@ -427,12 +424,9 @@ export async function coinbaseTransactionsManual(
 export async function coinbaseTransactionsNav(
   options: CoinbaseTransactionsNavOptions,
 ): Promise<number> {
-  const { quiet, remote, yes } = options;
+  const { quiet, remote } = options;
   if (!remote) {
     throw new Error("Missing source: use --remote for account NAV.");
-  }
-  if (!yes) {
-    throw new Error("Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.");
   }
 
   const { from, to } = await getToAndFromDates(options);

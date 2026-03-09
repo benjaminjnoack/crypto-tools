@@ -69,7 +69,7 @@ export const CoinbaseTransactionsRegenerateOptionsSchema = DebugOptionsSchema.ex
   drop: z.boolean().optional(),
   inputDir: z.string().trim().min(1).optional(),
   normalize: z.boolean().optional(),
-  yes: z.boolean().optional(),
+  quiet: z.boolean().optional(),
 });
 
 export const CoinbaseTransactionsManualOptionsSchema = DebugOptionsSchema.extend({
@@ -93,7 +93,6 @@ export const CoinbaseTransactionsNavOptionsSchema = DebugOptionsSchema.extend({
   remote: z.boolean().optional(),
   to: z.string().optional(),
   year: z.string().regex(/^\\d{4}$/).optional(),
-  yes: z.boolean().optional(),
 });
 
 export type CoinbaseTransactionsQueryOptions = z.infer<typeof CoinbaseTransactionsQueryOptionsSchema>;

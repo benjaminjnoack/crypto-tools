@@ -44,7 +44,7 @@ export const CointrackerCapitalGainsGroupOptionsSchema = BaseCapitalGainsQuerySc
 export const CointrackerCapitalGainsRegenerateOptionsSchema = DebugOptionsSchema.extend({
   drop: z.boolean().optional(),
   inputDir: z.string().trim().min(1).optional(),
-  yes: z.boolean().optional(),
+  quiet: z.boolean().optional(),
 });
 
 export const CointrackerCapitalGainsUsdcOptionsSchema = DebugOptionsSchema.extend({

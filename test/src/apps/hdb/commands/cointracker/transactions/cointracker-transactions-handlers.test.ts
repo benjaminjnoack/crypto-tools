@@ -178,16 +178,10 @@ describe("cointracker transaction handlers", () => {
     expect(rows).toHaveLength(1);
   });
 
-  it("refuses regenerate without --yes", async () => {
-    await expect(cointrackerTransactionsRegenerate({ yes: false })).rejects.toThrow(
-      "Refusing to regenerate without confirmation. Re-run with --yes.",
-    );
-  });
-
   it("returns zero when no csv input files are found", async () => {
     readdirMock.mockResolvedValueOnce(["notes.txt"]);
 
-    const count = await cointrackerTransactionsRegenerate({ yes: true });
+    const count = await cointrackerTransactionsRegenerate({});
 
     expect(count).toBe(0);
     expect(loggerWarnMock).toHaveBeenCalledTimes(1);
@@ -201,7 +195,7 @@ describe("cointracker transaction handlers", () => {
     getClientMock.mockResolvedValueOnce({ connect: connectMock });
     readdirMock.mockResolvedValueOnce(["a.csv", "b.csv"]);
 
-    const count = await cointrackerTransactionsRegenerate({ yes: true, drop: true });
+    const count = await cointrackerTransactionsRegenerate({ drop: true });
 
     expect(count).toBe(2);
     expect(dropCointrackerTransactionsTableMock).toHaveBeenCalledTimes(1);
@@ -209,7 +203,7 @@ describe("cointracker transaction handlers", () => {
     expect(truncateCointrackerTransactionsTableMock).not.toHaveBeenCalled();
     expect(parseCointrackerTransactionsCsvMock).toHaveBeenCalledTimes(2);
     expect(insertCointrackerTransactionsBatchMock).toHaveBeenCalledTimes(1);
-    expect(cointrackerBalancesRegenerateMock).toHaveBeenCalledWith({ drop: true, yes: true });
+    expect(cointrackerBalancesRegenerateMock).toHaveBeenCalledWith({ drop: true, quiet: undefined });
     expect(txQueryMock).toHaveBeenNthCalledWith(1, "BEGIN");
     expect(txQueryMock).toHaveBeenNthCalledWith(2, "COMMIT");
     expect(releaseMock).toHaveBeenCalledTimes(1);

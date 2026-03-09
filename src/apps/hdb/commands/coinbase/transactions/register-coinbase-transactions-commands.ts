@@ -191,7 +191,6 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
     .option("--drop", "Drop table and re-create before repopulating", false)
     .option("--input-dir <dir>", "Input directory containing statement CSV files")
     .option("--normalize", "Normalize trade rows into synthetic pairs", true)
-    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),
@@ -213,7 +212,6 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
   nav
     .option("--quiet", "Suppress console output", false)
     .option("--remote", "Allow live Coinbase account and price requests", false)
-    .option("--yes", "Confirm live Coinbase requests", false)
     .action(
       withAction(
         parseOptions(),

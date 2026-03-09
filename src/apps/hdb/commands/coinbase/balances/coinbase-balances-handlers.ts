@@ -91,12 +91,9 @@ function buildConsoleRows(
   return rows.map((row) => toConsoleRow(row, raw, currentBalanceMap?.get(row.asset)));
 }
 
-async function getCurrentBalanceMap(remote: boolean | undefined, yes: boolean | undefined): Promise<Map<string, string>> {
+async function getCurrentBalanceMap(remote: boolean | undefined): Promise<Map<string, string>> {
   if (!remote) {
     throw new Error("Missing source: use --remote for live Coinbase balance checks.");
-  }
-  if (!yes) {
-    throw new Error("Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.");
   }
 
   const accounts = await requestAccounts();
@@ -119,13 +116,12 @@ async function getCurrentBalanceMap(remote: boolean | undefined, yes: boolean | 
 async function resolveCurrentBalanceMap(
   current: boolean | undefined,
   remote: boolean | undefined,
-  yes: boolean | undefined,
 ): Promise<Map<string, string> | undefined> {
   if (!current) {
     return undefined;
   }
 
-  return getCurrentBalanceMap(remote, yes);
+  return getCurrentBalanceMap(remote);
 }
 
 function getSignedDelta(row: CoinbaseTransactionRow): { asset: string; delta: number } {
@@ -160,7 +156,7 @@ export async function coinbaseBalances(
   asset: string,
   options: CoinbaseBalancesQueryOptions,
 ): Promise<CoinbaseBalanceRow[]> {
-  const { current, first, last, quiet, raw, remote, yes } = options;
+  const { current, first, last, quiet, raw, remote } = options;
   const assets = normalizeColonSeparatedUppercase(asset);
   const { from, to } = current
     ? { from: new Date(COINBASE_EPOCH), to: new Date() }
@@ -177,7 +173,7 @@ export async function coinbaseBalances(
     return rows;
   }
 
-  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote, yes);
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
   const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(applyFirstLastRows(tableRows, first, last));
 
@@ -187,7 +183,7 @@ export async function coinbaseBalances(
 export async function coinbaseBalancesBatch(
   options: CoinbaseBalancesBatchOptions,
 ): Promise<CoinbaseBalanceRow[]> {
-  const { current, quiet, raw, remote, yes } = options;
+  const { current, quiet, raw, remote } = options;
   const { to } = current ? { to: new Date() } : await getToAndFromDates(options);
   const rows = await selectCoinbaseBalancesAtTime(to);
 
@@ -200,7 +196,7 @@ export async function coinbaseBalancesBatch(
     return rows;
   }
 
-  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote, yes);
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
   const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(tableRows);
 
@@ -233,10 +229,7 @@ export async function coinbaseBalancesTrace(
 export async function coinbaseBalancesRegenerate(
   options: CoinbaseBalancesRegenerateOptions,
 ): Promise<number> {
-  const { drop, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop, quiet } = options;
 
   if (drop) {
     await dropCoinbaseBalanceLedgerTable();
@@ -306,7 +299,9 @@ export async function coinbaseBalancesRegenerate(
 
   logger.info(`Inserted ${ledgerRows.length} rows into ${COINBASE_BALANCE_LEDGER_TABLE}`);
   const snapshot = await selectCoinbaseBalancesAtTime(new Date());
-  console.table(snapshot.map((row) => toConsoleRow(row, false)));
+  if (!quiet) {
+    console.table(snapshot.map((row) => toConsoleRow(row, false)));
+  }
 
   return ledgerRows.length;
 }

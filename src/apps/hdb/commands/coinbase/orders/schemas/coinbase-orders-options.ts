@@ -24,7 +24,6 @@ export type CoinbaseOrdersFeesOptions = z.infer<typeof CoinbaseOrdersFeesOptions
 
 export const CoinbaseOrdersInsertOptionsSchema = DebugOptionsSchema.extend({
   remote: z.boolean().optional(),
-  yes: z.boolean().optional(),
 });
 export type CoinbaseOrdersInsertOptions = z.infer<typeof CoinbaseOrdersInsertOptionsSchema>;
 
@@ -34,7 +33,6 @@ export const CoinbaseOrdersUpdateOptionsSchema = DebugOptionsSchema
     cache: z.boolean().optional(),
     remote: z.boolean().optional(),
     rsync: z.boolean().optional(),
-    yes: z.boolean().optional(),
   })
 export type CoinbaseOrdersUpdateOptions = z.infer<typeof CoinbaseOrdersUpdateOptionsSchema>;
 

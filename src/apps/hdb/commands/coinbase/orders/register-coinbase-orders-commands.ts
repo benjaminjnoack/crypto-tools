@@ -91,7 +91,6 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
 
   importOne
     .option("--remote", "Allow live Coinbase API request for this command", false)
-    .option("--yes", "Confirm live Coinbase API request", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -115,7 +114,6 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
 
   sync
     .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
-    .option("--yes", "Confirm live Coinbase API requests", false)
     .action(
       withAction(
         parseOptions(),
@@ -139,7 +137,6 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
   rebuild
     .option("--drop", "Drop table and re-create before repopulating", false)
     .option("--remote", "Allow live Coinbase API requests (mutually exclusive with --cache)", false)
-    .option("--yes", "Confirm destructive rebuild and any live Coinbase API requests", false)
     .action(
       withAction(
         parseOptions(),

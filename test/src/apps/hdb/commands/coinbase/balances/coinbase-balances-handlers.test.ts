@@ -162,13 +162,12 @@ describe("hdb coinbase balance handlers", () => {
     expect(rows).toHaveLength(1);
   });
 
-  it("requires explicit confirmation flags for current live checks", async () => {
+  it("requires explicit remote flag for current live checks", async () => {
     await expect(coinbaseBalances("btc", { current: true })).rejects.toThrow("Missing source: use --remote");
-    await expect(coinbaseBalances("btc", { current: true, remote: true })).rejects.toThrow("without confirmation");
   });
 
-  it("supports current balance check with remote+yes", async () => {
-    await coinbaseBalances("btc", { current: true, remote: true, yes: true });
+  it("supports current balance check with remote", async () => {
+    await coinbaseBalances("btc", { current: true, remote: true });
 
     expect(requestAccountsMock).toHaveBeenCalledTimes(1);
     expect(tableMock).toHaveBeenCalledTimes(1);
@@ -186,7 +185,7 @@ describe("hdb coinbase balance handlers", () => {
   });
 
   it("regenerates balance ledger and writes computed rows", async () => {
-    const count = await coinbaseBalancesRegenerate({ yes: true, drop: false });
+    const count = await coinbaseBalancesRegenerate({ drop: false });
 
     expect(createCoinbaseBalanceLedgerTableMock).toHaveBeenCalledTimes(1);
     expect(truncateCoinbaseBalanceLedgerTableMock).toHaveBeenCalledTimes(1);
@@ -211,9 +210,4 @@ describe("hdb coinbase balance handlers", () => {
     expect(count).toBe(5);
   });
 
-  it("refuses regenerate without --yes", async () => {
-    await expect(coinbaseBalancesRegenerate({ yes: false })).rejects.toThrow(
-      "Refusing to regenerate without confirmation. Re-run with --yes.",
-    );
-  });
 });

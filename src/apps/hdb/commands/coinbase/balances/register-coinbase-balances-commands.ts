@@ -39,7 +39,6 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
     .option("--quiet", "Suppress console output", false)
     .option("--raw", "Display raw balance values", false)
     .option("--remote", "Allow live Coinbase account requests", false)
-    .option("--yes", "Confirm live Coinbase requests", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -68,7 +67,6 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
     .option("--quiet", "Suppress console output", false)
     .option("--raw", "Display raw balance values", false)
     .option("--remote", "Allow live Coinbase account requests", false)
-    .option("--yes", "Confirm live Coinbase requests", false)
     .action(
       withAction(
         parseOptions(),
@@ -108,7 +106,6 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
 
   rebuild
     .option("--drop", "Drop table and re-create before rebuilding", false)
-    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

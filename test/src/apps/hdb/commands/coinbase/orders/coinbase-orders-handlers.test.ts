@@ -140,17 +140,14 @@ describe("hdb coinbase order handlers", () => {
   });
 
   it("downloads one order then inserts it", async () => {
-    await coinbaseOrdersInsert("remote-id", { remote: true, yes: true });
+    await coinbaseOrdersInsert("remote-id", { remote: true });
     expect(requestOrderMock).toHaveBeenCalledWith("remote-id");
     expect(insertCoinbaseOrderMock).toHaveBeenCalledWith({ order_id: "remote-order" });
   });
 
-  it("refuses live insert without --remote --yes", async () => {
+  it("refuses live insert without --remote", async () => {
     await expect(coinbaseOrdersInsert("remote-id", {})).rejects.toThrow(
       "Missing source: use --remote for live Coinbase requests.",
-    );
-    await expect(coinbaseOrdersInsert("remote-id", { remote: true })).rejects.toThrow(
-      "Refusing live Coinbase request without confirmation. Re-run with --remote --yes.",
     );
   });
 
@@ -173,7 +170,7 @@ describe("hdb coinbase order handlers", () => {
   });
 
   it("updates from exchange source, caches, then inserts", async () => {
-    await coinbaseOrdersUpdate({ remote: true, yes: true, rsync: false } as { cache?: boolean; remote?: boolean; yes?: boolean; rsync?: boolean });
+    await coinbaseOrdersUpdate({ remote: true, rsync: false } as { cache?: boolean; remote?: boolean; rsync?: boolean });
 
     expect(requestOrdersMock).toHaveBeenCalledTimes(3);
     expect(saveOrderToCacheMock).toHaveBeenCalledTimes(6);
@@ -187,7 +184,7 @@ describe("hdb coinbase order handlers", () => {
     vi.setSystemTime(dateUtc({ year: 2026, month: 3, day: 1, hour: 12 }));
     selectCoinbaseOrderByLastFillTimeMock.mockResolvedValueOnce({ first: null, last: null });
 
-    await coinbaseOrdersUpdate({ remote: true, yes: true, rsync: true } as { cache?: boolean; remote?: boolean; yes?: boolean; rsync?: boolean });
+    await coinbaseOrdersUpdate({ remote: true, rsync: true } as { cache?: boolean; remote?: boolean; rsync?: boolean });
 
     const firstCall = requestOrdersMock.mock.calls[0];
     expect(firstCall?.[3]).toBe(isoUtc({ year: 2024, month: 1, day: 1 }));
@@ -195,20 +192,17 @@ describe("hdb coinbase order handlers", () => {
     vi.useRealTimers();
   });
 
-  it("requires explicit source for update and confirms remote mode", async () => {
+  it("requires explicit source for update", async () => {
     await expect(coinbaseOrdersUpdate({})).rejects.toThrow(
       "Missing source: select either --cache or --remote.",
     );
     await expect(coinbaseOrdersUpdate({ cache: true, remote: true })).rejects.toThrow(
       "Invalid source: use either --cache or --remote, not both.",
     );
-    await expect(coinbaseOrdersUpdate({ remote: true })).rejects.toThrow(
-      "Refusing live Coinbase requests without confirmation. Re-run with --remote --yes.",
-    );
   });
 
   it("regenerates with truncate flow and delegates to update", async () => {
-    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: false });
+    await coinbaseOrdersRegenerate({ cache: true, drop: false });
 
     expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
     expect(truncateCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
@@ -217,16 +211,10 @@ describe("hdb coinbase order handlers", () => {
   });
 
   it("regenerates with drop flow", async () => {
-    await coinbaseOrdersRegenerate({ cache: true, yes: true, drop: true });
+    await coinbaseOrdersRegenerate({ cache: true, drop: true });
     expect(dropCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
     expect(createCoinbaseOrdersTableMock).toHaveBeenCalledTimes(1);
     expect(truncateCoinbaseOrdersTableMock).not.toHaveBeenCalled();
-  });
-
-  it("refuses regenerate without --yes", async () => {
-    await expect(coinbaseOrdersRegenerate({ cache: true, yes: false })).rejects.toThrow(
-      "Refusing to regenerate without confirmation. Re-run with --yes.",
-    );
   });
 
   it("deduplicates orders by order_id before insert", async () => {
@@ -234,7 +222,7 @@ describe("hdb coinbase order handlers", () => {
     requestOrdersMock.mockResolvedValueOnce([{ order_id: "o2" }]);
     requestOrdersMock.mockResolvedValueOnce([{ order_id: "o3" }]);
 
-    await coinbaseOrdersUpdate({ remote: true, yes: true } as { remote?: boolean; yes?: boolean });
+    await coinbaseOrdersUpdate({ remote: true } as { remote?: boolean });
 
     expect(insertCoinbaseOrderMock).toHaveBeenCalledTimes(3);
     expect(insertCoinbaseOrderMock).toHaveBeenNthCalledWith(1, { order_id: "o1" });

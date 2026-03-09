@@ -153,10 +153,7 @@ function resolveCointrackerTransactionsInputDir(inputDir?: string): string {
 export async function cointrackerTransactionsRegenerate(
   options: CointrackerTransactionsRegenerateOptions,
 ): Promise<number> {
-  const { drop, inputDir, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop, inputDir, quiet } = options;
 
   const resolvedInputDir = resolveCointrackerTransactionsInputDir(inputDir);
   const fileNames = (await fs.readdir(resolvedInputDir))
@@ -204,6 +201,6 @@ export async function cointrackerTransactionsRegenerate(
   }
 
   logger.info(`Inserted ${rows.length} cointracker transaction rows`);
-  await cointrackerBalancesRegenerate({ drop, yes: true });
+  await cointrackerBalancesRegenerate({ drop, quiet });
   return rows.length;
 }

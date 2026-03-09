@@ -303,10 +303,7 @@ export async function cointrackerCapitalGainsGroup(
 export async function cointrackerCapitalGainsRegenerate(
   options: CointrackerCapitalGainsRegenerateOptions,
 ): Promise<number> {
-  const { drop, inputDir, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop, inputDir } = options;
 
   const resolvedInputDir = resolveCapitalGainsInputDir(inputDir);
   const fileNames = (await fs.readdir(resolvedInputDir))

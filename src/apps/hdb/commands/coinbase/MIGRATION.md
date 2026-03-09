@@ -56,7 +56,7 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 
 - `orders/get`: migrated
 - `orders/fees`: migrated
-- `orders/insert`: migrated (live-gated with `--remote --yes`)
+- `orders/insert`: migrated (live-gated with `--remote`)
 - `orders/update`: migrated (explicit source gating: `--cache` or `--remote`)
 - `orders/object`: migrated
 - `orders/regenerate`: migrated
@@ -72,7 +72,7 @@ Current TS surface (`src/apps/hdb/commands/coinbase`):
 - `transactions/group`: migrated
 - `transactions/id`: migrated (lot-id mode pending)
 - `transactions/manual`: migrated
-- `transactions/nav`: migrated (live-gated with `--remote --yes`)
+- `transactions/nav`: migrated (live-gated with `--remote`)
 - `transactions/statement`: migrated
 - `transactions/regenerate`: migrated
 

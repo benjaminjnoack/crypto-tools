@@ -90,7 +90,6 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
   rebuild
     .option("--drop", "Drop table and re-create before inserting", false)
     .option("--input-dir <dir>", "Input directory containing CoinTracker transaction CSV files")
-    .option("--yes", "Confirm destructive table rebuild", false)
     .action(
       withAction(
         parseOptions(),

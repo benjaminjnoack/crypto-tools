@@ -19,7 +19,7 @@ export const CointrackerBalancesQueryOptionsSchema = DebugOptionsSchema.extend({
 
 export const CointrackerBalancesRegenerateOptionsSchema = DebugOptionsSchema.extend({
   drop: z.boolean().optional(),
-  yes: z.boolean().optional(),
+  quiet: z.boolean().optional(),
 });
 
 export const CointrackerBalancesAssetArgSchema = ColonSeparatedAssetStringSchema;

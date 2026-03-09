@@ -13,7 +13,6 @@ export const CoinbaseBalancesQueryOptionsSchema = DebugOptionsSchema.extend({
   remote: z.boolean().optional(),
   to: z.string().optional(),
   year: z.string().regex(/^\d{4}$/).optional(),
-  yes: z.boolean().optional(),
 });
 
 export const CoinbaseBalancesBatchOptionsSchema = DebugOptionsSchema.extend({
@@ -25,7 +24,6 @@ export const CoinbaseBalancesBatchOptionsSchema = DebugOptionsSchema.extend({
   remote: z.boolean().optional(),
   to: z.string().optional(),
   year: z.string().regex(/^\d{4}$/).optional(),
-  yes: z.boolean().optional(),
 });
 
 export const CoinbaseBalancesTraceOptionsSchema = DebugOptionsSchema.extend({
@@ -37,7 +35,7 @@ export const CoinbaseBalancesTraceOptionsSchema = DebugOptionsSchema.extend({
 
 export const CoinbaseBalancesRegenerateOptionsSchema = DebugOptionsSchema.extend({
   drop: z.boolean().optional(),
-  yes: z.boolean().optional(),
+  quiet: z.boolean().optional(),
 });
 
 export type CoinbaseBalancesQueryOptions = z.infer<typeof CoinbaseBalancesQueryOptionsSchema>;

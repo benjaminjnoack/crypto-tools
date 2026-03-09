@@ -46,10 +46,7 @@ export async function cointrackerBalances(
 export async function cointrackerBalancesRegenerate(
   options: CointrackerBalancesRegenerateOptions,
 ): Promise<number> {
-  const { drop, yes } = options;
-  if (!yes) {
-    throw new Error("Refusing to regenerate without confirmation. Re-run with --yes.");
-  }
+  const { drop, quiet } = options;
 
   if (drop) {
     await dropCointrackerBalancesTable();
@@ -62,6 +59,8 @@ export async function cointrackerBalancesRegenerate(
   await rebuildCointrackerBalancesLedger();
 
   const rows = await selectCointrackerLastBalance();
-  console.table(rows);
+  if (!quiet) {
+    console.table(rows);
+  }
   return rows.length;
 }

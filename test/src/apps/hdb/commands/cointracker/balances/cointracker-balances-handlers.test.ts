@@ -63,14 +63,8 @@ describe("cointracker balances handlers", () => {
     expect(rows).toEqual([{ currency: "BTC", balance: "1" }]);
   });
 
-  it("refuses regenerate without --yes", async () => {
-    await expect(cointrackerBalancesRegenerate({ yes: false })).rejects.toThrow(
-      "Refusing to regenerate without confirmation. Re-run with --yes.",
-    );
-  });
-
   it("rebuilds balances table with truncate flow", async () => {
-    const count = await cointrackerBalancesRegenerate({ yes: true, drop: false });
+    const count = await cointrackerBalancesRegenerate({ drop: false });
 
     expect(createCointrackerBalancesTableMock).toHaveBeenCalledTimes(1);
     expect(truncateCointrackerBalancesTableMock).toHaveBeenCalledTimes(1);
@@ -81,7 +75,7 @@ describe("cointracker balances handlers", () => {
   });
 
   it("rebuilds balances table with drop flow", async () => {
-    await cointrackerBalancesRegenerate({ yes: true, drop: true });
+    await cointrackerBalancesRegenerate({ drop: true });
 
     expect(dropCointrackerBalancesTableMock).toHaveBeenCalledTimes(1);
     expect(createCointrackerBalancesTableMock).toHaveBeenCalledTimes(1);

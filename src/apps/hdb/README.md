@@ -65,17 +65,20 @@ Install binary in your shell:
 ### System
 
 - `hdb health`
+- `hdb system rebuild-all`
+  - rebuilds all input-derived tables sequentially
+  - excludes Coinbase orders
+  - stages: Coinbase transactions -> Coinbase balances -> CoinTracker transactions/balances -> CoinTracker gains
 
 ### Coinbase
 
 - `hdb coinbase balances list <asset>`
   - `asset` supports colon-separated values
-  - `--current` live check requires `--remote --yes`
+  - `--current` live check requires `--remote`
 - `hdb coinbase balances snapshot`
-  - `--current` live check requires `--remote --yes`
+  - `--current` live check requires `--remote`
 - `hdb coinbase balances trace <asset>`
 - `hdb coinbase balances rebuild`
-  - requires `--yes`
 - `hdb coinbase lots analyze <asset>`
 - `hdb coinbase lots analyze-all`
 - `hdb coinbase lots compare <asset>`
@@ -85,14 +88,11 @@ Install binary in your shell:
 - `hdb coinbase orders inspect <orderId>`
 - `hdb coinbase orders fees [productId]`
 - `hdb coinbase orders import-one <orderId>`
-  - requires explicit live mode: `--remote --yes`
+  - requires explicit live mode: `--remote`
 - `hdb coinbase orders rebuild`
-  - requires `--yes`
   - source selection required: `--cache` or `--remote`
-  - live mode requires confirmation: `--remote --yes`
 - `hdb coinbase orders sync`
   - requires source selection: `--cache` or `--remote`
-  - live mode requires confirmation: `--remote --yes`
 
 ### Coinbase Transactions
 
@@ -102,10 +102,9 @@ Install binary in your shell:
 - `hdb coinbase transactions add-manual <asset>`
 - `hdb coinbase transactions import-statement <filepath>`
 - `hdb coinbase transactions rebuild`
-  - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/coinbase-transactions`
 - `hdb coinbase transactions analyze-nav`
-  - requires explicit live mode: `--remote --yes`
+  - requires explicit live mode: `--remote`
 
 Coinbase migration status and next slices are tracked in:
 - [`src/apps/hdb/commands/coinbase/MIGRATION.md`](./commands/coinbase/MIGRATION.md)
@@ -114,7 +113,6 @@ Coinbase migration status and next slices are tracked in:
 
 - `hdb cointracker balances list [currency]`
 - `hdb cointracker balances rebuild`
-  - requires `--yes`
 - `hdb cointracker gains list [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`
@@ -122,14 +120,12 @@ Coinbase migration status and next slices are tracked in:
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`
 - `hdb cointracker gains rebuild`
-  - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
 - `hdb cointracker gains analyze-usdc`
   - use `--buckets` or `--interval <day|week|month|quarter|year>`
 - `hdb cointracker transactions list [asset]`
 - `hdb cointracker transactions summary [asset]`
 - `hdb cointracker transactions rebuild`
-  - requires `--yes`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-transactions`
   - also rebuilds `cointracker_balances_ledger`
 

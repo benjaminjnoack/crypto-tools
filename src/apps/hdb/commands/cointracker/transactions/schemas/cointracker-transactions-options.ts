@@ -67,7 +67,7 @@ export const CointrackerTransactionsGroupOptionsSchema =
 export const CointrackerTransactionsRegenerateOptionsSchema = DebugOptionsSchema.extend({
   drop: z.boolean().optional(),
   inputDir: z.string().trim().min(1).optional(),
-  yes: z.boolean().optional(),
+  quiet: z.boolean().optional(),
 });
 
 export type CointrackerTransactionsQueryOptions = z.infer<typeof CointrackerTransactionsQueryOptionsSchema>;
