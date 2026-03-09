@@ -1,6 +1,6 @@
 {
   "name": "crypto-tools",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "author": "Ben Noack",
   "description": "Coinbase CLI tools and shared TypeScript library utilities",
   "license": "Apache-2.0",
