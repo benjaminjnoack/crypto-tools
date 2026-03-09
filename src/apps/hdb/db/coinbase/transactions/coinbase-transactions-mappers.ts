@@ -33,6 +33,46 @@ type ParsedStatementRow = {
   manual: boolean;
 };
 
+type StatementColumnKey = keyof typeof STATEMENT_COLUMNS;
+
+type DetectedHeader = {
+  headerRowIndex: number;
+  columnIndexes: Record<StatementColumnKey, number>;
+};
+
+type ParseStatementRecordsResult = {
+  records: StatementCsvRow[];
+  firstDataRowNum: number;
+};
+
+const REQUIRED_STATEMENT_KEYS: StatementColumnKey[] = [
+  "ID",
+  "TIMESTAMP",
+  "TYPE",
+  "ASSET",
+  "QUANTITY",
+  "PRICE_CURRENCY",
+  "PRICE_AT_TX",
+  "SUBTOTAL",
+  "TOTAL",
+  "FEE",
+  "NOTES",
+];
+
+const STATEMENT_COLUMN_ALIASES: Record<StatementColumnKey, string[]> = {
+  ID: ["ID"],
+  TIMESTAMP: ["Timestamp"],
+  TYPE: ["Transaction Type"],
+  ASSET: ["Asset"],
+  QUANTITY: ["Quantity Transacted"],
+  PRICE_CURRENCY: ["Price Currency"],
+  PRICE_AT_TX: ["Price at Transaction"],
+  SUBTOTAL: ["Subtotal"],
+  TOTAL: ["Total (inclusive of fees and/or spread)", "Total (inclusive of fees/spread)"],
+  FEE: ["Fees and/or Spread", "Fees/Spread"],
+  NOTES: ["Notes"],
+};
+
 function normalizeHeaderCell(header: string, index: number): string {
   if (index === 0) {
     return header.replace(/^\uFEFF/, "").trim();
@@ -40,62 +80,103 @@ function normalizeHeaderCell(header: string, index: number): string {
   return header.trim();
 }
 
-function getStatementHeaders(): string[] {
-  return Object.values(STATEMENT_COLUMNS);
+function normalizeHeaderForMatch(header: string): string {
+  return header.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-function findStatementHeaderRowIndex(matrix: string[][]): number {
-  const required = getStatementHeaders();
+function getAliasToColumnKeyMap(): Map<string, StatementColumnKey> {
+  const map = new Map<string, StatementColumnKey>();
+  for (const key of REQUIRED_STATEMENT_KEYS) {
+    const aliases = STATEMENT_COLUMN_ALIASES[key];
+    for (const alias of aliases) {
+      map.set(normalizeHeaderForMatch(alias), key);
+    }
+  }
+  return map;
+}
+
+function findStatementHeader(matrix: string[][], source: string): DetectedHeader {
+  const aliasToColumnKey = getAliasToColumnKeyMap();
+  let bestCandidate:
+    | {
+      rowIndex: number;
+      matched: number;
+      missing: StatementColumnKey[];
+      normalizedHeaders: string[];
+    }
+    | undefined;
 
   for (let rowIndex = 0; rowIndex < matrix.length; rowIndex += 1) {
     const row = matrix[rowIndex] ?? [];
-    const normalized = row.map((cell, index) => normalizeHeaderCell(cell, index));
-    if (required.every((column) => normalized.includes(column))) {
-      return rowIndex;
+    const normalizedHeaders = row.map((cell, index) => normalizeHeaderCell(cell, index));
+    const columnIndexesPartial: Partial<Record<StatementColumnKey, number>> = {};
+
+    normalizedHeaders.forEach((header, columnIndex) => {
+      const matchKey = aliasToColumnKey.get(normalizeHeaderForMatch(header));
+      if (matchKey && columnIndexesPartial[matchKey] === undefined) {
+        columnIndexesPartial[matchKey] = columnIndex;
+      }
+    });
+
+    const missing = REQUIRED_STATEMENT_KEYS.filter((key) => columnIndexesPartial[key] === undefined);
+    const matched = REQUIRED_STATEMENT_KEYS.length - missing.length;
+
+    if (matched === REQUIRED_STATEMENT_KEYS.length) {
+      return {
+        headerRowIndex: rowIndex,
+        columnIndexes: columnIndexesPartial as Record<StatementColumnKey, number>,
+      };
+    }
+
+    if (!bestCandidate || matched > bestCandidate.matched) {
+      bestCandidate = { rowIndex, matched, missing, normalizedHeaders };
     }
   }
 
-  return -1;
+  const requiredColumnNames = REQUIRED_STATEMENT_KEYS.map((key) => STATEMENT_COLUMNS[key]).join("; ");
+  const foundColumns = (bestCandidate?.normalizedHeaders ?? [])
+    .filter((header) => header.length > 0)
+    .join("; ");
+  const missingColumns = (bestCandidate?.missing ?? REQUIRED_STATEMENT_KEYS)
+    .map((key) => STATEMENT_COLUMNS[key])
+    .join("; ");
+  const candidateRow = bestCandidate ? bestCandidate.rowIndex + 1 : "n/a";
+  const matchedCount = bestCandidate?.matched ?? 0;
+
+  throw new Error(
+    `Unsupported Coinbase statement CSV format in ${source}. ` +
+    `Matched ${matchedCount}/${REQUIRED_STATEMENT_KEYS.length} required columns on best candidate header row ${candidateRow}. ` +
+    `Missing required columns: ${missingColumns}. ` +
+    `Found columns: ${foundColumns || "(none)"}. ` +
+    `Supported required columns: ${requiredColumnNames}.`,
+  );
 }
 
-function parseStatementRecords(csvText: string, source: string): Array<Record<string, string>> {
+function parseStatementRecords(csvText: string, source: string): ParseStatementRecordsResult {
   const matrix = parseCsvMatrix(csvText);
   if (matrix.length === 0) {
-    return [];
+    return { records: [], firstDataRowNum: 2 };
   }
 
-  const headerRowIndex = findStatementHeaderRowIndex(matrix);
-  if (headerRowIndex < 0) {
-    throw new Error(`CSV missing header row: ${source}`);
-  }
-
+  const { headerRowIndex, columnIndexes } = findStatementHeader(matrix, source);
   const headerRow = matrix[headerRowIndex];
   if (!headerRow || headerRow.length === 0) {
     throw new Error(`CSV missing header row: ${source}`);
   }
 
-  const headers = headerRow.map((header, index) => normalizeHeaderCell(header, index));
   const dataRows = matrix.slice(headerRowIndex + 1);
-
-  return dataRows
+  const records = dataRows
     .filter((cells) => cells.some((cell) => cell.trim().length > 0))
     .map((cells) => {
-      const record: Record<string, string> = {};
-      headers.forEach((header, index) => {
-        record[header] = cells[index] ?? "";
-      });
+      const record = {} as StatementCsvRow;
+      for (const key of REQUIRED_STATEMENT_KEYS) {
+        const header = STATEMENT_COLUMNS[key];
+        record[header] = cells[columnIndexes[key]] ?? "";
+      }
       return record;
     });
-}
 
-function assertHasColumns(row: Record<string, string>, source: string, rowNum: number): StatementCsvRow {
-  const required = getStatementHeaders();
-  for (const column of required) {
-    if (!(column in row)) {
-      throw new Error(`CSV validation failed in ${source} row ${rowNum}: missing ${column}`);
-    }
-  }
-  return row as StatementCsvRow;
+  return { records, firstDataRowNum: headerRowIndex + 2 };
 }
 
 function parseMoneyLike(value: string, fieldName: string): string {
@@ -290,12 +371,11 @@ export function parseCoinbaseTransactionsStatementCsv(
   normalize: boolean,
   manual: boolean,
 ): CoinbaseTransactionInsertRow[] {
-  const records = parseStatementRecords(csvText, source);
+  const { records, firstDataRowNum } = parseStatementRecords(csvText, source);
 
   const parsedRows = records.map((record, index) => {
-    const rowNum = index + 2;
-    const valid = assertHasColumns(record, source, rowNum);
-    return mapCsvRowToParsed(valid, source, rowNum, manual);
+    const rowNum = firstDataRowNum + index;
+    return mapCsvRowToParsed(record, source, rowNum, manual);
   });
 
   const expanded = normalize ? parsedRows.flatMap((row) => normalizeTradeRow(row)) : parsedRows;

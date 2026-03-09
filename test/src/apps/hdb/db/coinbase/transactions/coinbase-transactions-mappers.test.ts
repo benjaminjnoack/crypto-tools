@@ -29,4 +29,33 @@ describe("coinbase transactions mappers", () => {
     expect(rows[0]?.id).toBe("tx-preamble");
     expect(rows[0]?.timestamp.toISOString()).toBe("2026-03-05T23:31:19.000Z");
   });
+
+  it("throws a descriptive format error for unsupported headers", () => {
+    const csv = [
+      "Transactions",
+      "User,Dummy User,dummy-account-id",
+      "TxId,When,Type,Coin,Qty,Currency,Price,Subtotal,Total,Fee,Description",
+      "tx-1,2026-03-05 23:31:19 UTC,Reward Income,USDC,1,USD,$1.00,$1.00,$1.00,$0.00,Preamble row",
+    ].join("\n");
+
+    expect(() => parseCoinbaseTransactionsStatementCsv(csv, "unknown.csv", true, false)).toThrow(
+      "Unsupported Coinbase statement CSV format",
+    );
+    expect(() => parseCoinbaseTransactionsStatementCsv(csv, "unknown.csv", true, false)).toThrow(
+      "Missing required columns",
+    );
+  });
+
+  it("reports accurate row numbers for preamble format data errors", () => {
+    const csv = [
+      "Transactions",
+      "User,Dummy User,dummy-account-id",
+      "ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes",
+      "tx-preamble,not-a-date,Reward Income,USDC,1,USD,$1.00,$1.00,$1.00,$0.00,Preamble row",
+    ].join("\n");
+
+    expect(() => parseCoinbaseTransactionsStatementCsv(csv, "bad-ts.csv", true, false)).toThrow(
+      "row 4: invalid timestamp not-a-date",
+    );
+  });
 });
