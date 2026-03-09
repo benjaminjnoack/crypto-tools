@@ -1,5 +1,5 @@
 import type { CoinbaseTransactionInsertRow } from "./coinbase-transactions-repository.js";
-import { parseCsvRecords } from "../../shared/csv-parsing.js";
+import { parseCsvMatrix } from "../../shared/csv-parsing.js";
 
 const STATEMENT_COLUMNS = {
   ID: "ID",
@@ -33,8 +33,63 @@ type ParsedStatementRow = {
   manual: boolean;
 };
 
+function normalizeHeaderCell(header: string, index: number): string {
+  if (index === 0) {
+    return header.replace(/^\uFEFF/, "").trim();
+  }
+  return header.trim();
+}
+
+function getStatementHeaders(): string[] {
+  return Object.values(STATEMENT_COLUMNS);
+}
+
+function findStatementHeaderRowIndex(matrix: string[][]): number {
+  const required = getStatementHeaders();
+
+  for (let rowIndex = 0; rowIndex < matrix.length; rowIndex += 1) {
+    const row = matrix[rowIndex] ?? [];
+    const normalized = row.map((cell, index) => normalizeHeaderCell(cell, index));
+    if (required.every((column) => normalized.includes(column))) {
+      return rowIndex;
+    }
+  }
+
+  return -1;
+}
+
+function parseStatementRecords(csvText: string, source: string): Array<Record<string, string>> {
+  const matrix = parseCsvMatrix(csvText);
+  if (matrix.length === 0) {
+    return [];
+  }
+
+  const headerRowIndex = findStatementHeaderRowIndex(matrix);
+  if (headerRowIndex < 0) {
+    throw new Error(`CSV missing header row: ${source}`);
+  }
+
+  const headerRow = matrix[headerRowIndex];
+  if (!headerRow || headerRow.length === 0) {
+    throw new Error(`CSV missing header row: ${source}`);
+  }
+
+  const headers = headerRow.map((header, index) => normalizeHeaderCell(header, index));
+  const dataRows = matrix.slice(headerRowIndex + 1);
+
+  return dataRows
+    .filter((cells) => cells.some((cell) => cell.trim().length > 0))
+    .map((cells) => {
+      const record: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        record[header] = cells[index] ?? "";
+      });
+      return record;
+    });
+}
+
 function assertHasColumns(row: Record<string, string>, source: string, rowNum: number): StatementCsvRow {
-  const required = Object.values(STATEMENT_COLUMNS);
+  const required = getStatementHeaders();
   for (const column of required) {
     if (!(column in row)) {
       throw new Error(`CSV validation failed in ${source} row ${rowNum}: missing ${column}`);
@@ -235,11 +290,12 @@ export function parseCoinbaseTransactionsStatementCsv(
   normalize: boolean,
   manual: boolean,
 ): CoinbaseTransactionInsertRow[] {
-  const records = parseCsvRecords(csvText, source);
+  const records = parseStatementRecords(csvText, source);
 
   const parsedRows = records.map((record, index) => {
-    const valid = assertHasColumns(record, source, index + 2);
-    return mapCsvRowToParsed(valid, source, index + 2, manual);
+    const rowNum = index + 2;
+    const valid = assertHasColumns(record, source, rowNum);
+    return mapCsvRowToParsed(valid, source, rowNum, manual);
   });
 
   const expanded = normalize ? parsedRows.flatMap((row) => normalizeTradeRow(row)) : parsedRows;

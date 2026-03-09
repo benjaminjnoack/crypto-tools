@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parseCoinbaseTransactionsStatementCsv } from "../src/apps/hdb/db/coinbase/transactions/coinbase-transactions-mappers.ts";
-import { parseCointrackerCapitalGainsCsv } from "../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-mappers.ts";
-import { parseCointrackerTransactionsCsv } from "../src/apps/hdb/db/cointracker/transactions/cointracker-transactions-mappers.ts";
+import { parseCoinbaseTransactionsStatementCsv } from "../src/apps/hdb/db/coinbase/transactions/coinbase-transactions-mappers.js";
+import { parseCointrackerCapitalGainsCsv } from "../src/apps/hdb/db/cointracker/capital-gains/cointracker-capital-gains-mappers.js";
+import { parseCointrackerTransactionsCsv } from "../src/apps/hdb/db/cointracker/transactions/cointracker-transactions-mappers.js";
 
 type ParserConfig = {
   key: "coinbase-transactions" | "cointracker-transactions" | "cointracker-capital-gains";
