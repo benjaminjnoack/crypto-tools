@@ -2,7 +2,7 @@
   "name": "crypto-tools",
   "version": "0.0.31",
   "author": "Ben Noack",
-  "description": "Coinbase CLI tools and shared TypeScript library utilities",
+  "description": "Coinbase operations toolkit with cb trading workflows, hdb accounting/reconciliation pipelines, and shared TypeScript infrastructure",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -68,12 +68,16 @@
     "verify:offline": "npm run typecheck && npm run lint && npm run test && npm run validate:hdb:inputs"
   },
   "keywords": [
-    "Coinbase",
+    "coinbase",
     "coinbase-advanced-trade",
     "cli",
     "command-line",
     "trading",
     "crypto",
+    "accounting",
+    "reconciliation",
+    "tax",
+    "postgresql",
     "typescript"
   ],
   "devDependencies": {

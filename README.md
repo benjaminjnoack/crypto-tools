@@ -1,12 +1,12 @@
 # crypto-tools
 
-Monorepo for Coinbase-related CLI tooling and shared TypeScript modules.
+Production Coinbase operations toolkit: `cb` for trade planning and order lifecycle management, `hdb` for ledger ingestion/reconciliation and tax-facing analytics, plus shared TypeScript modules for authenticated API access and reusable CLI infrastructure.
 
 ## What is here
 
-- `cb`: trading-oriented Coinbase CLI (`src/apps/cb`)
-- `hdb`: database-oriented helper CLI (`src/apps/hdb`)
-- `shared`: shared Coinbase/env/log/schema modules (`src/shared`)
+- `cb`: trading operations CLI (quotes, sizing, plan workflows, order lifecycle) (`src/apps/cb`)
+- `hdb`: accounting/data CLI (imports, snapshots, lots, reconciliation, exports) (`src/apps/hdb`)
+- `shared`: reusable Coinbase/auth/env/log/schema modules (`src/shared`)
 - `helper-env-check`: env/credential validation binary (`src/shared/bin/validate-env.ts`)
 
 ## Import Aliases
