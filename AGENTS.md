@@ -74,6 +74,13 @@ In `src/apps/cb/commands/register/`:
 - Expand fixture factories before duplicating order literals in tests.
 - When refactoring, preserve behavior and update/extend tests in the same change.
 
+## Data Privacy (Code + Tests)
+
+- Never include real PII in source code, comments, fixtures, logs, docs, or tests.
+- Never use real personal/account-identifying values (names, emails, phone numbers, wallet addresses, account IDs, transaction IDs, API credentials, or similar) in committed artifacts.
+- When example data is needed, use realistic-looking synthetic dummy values only.
+- Prefer clearly-labeled placeholder domains/identities (for example, `example.com`, `dummy`, `test`) and deterministic fixture generators over copied real-world data.
+
 ## Change Management
 
 - Keep changes scoped and incremental.

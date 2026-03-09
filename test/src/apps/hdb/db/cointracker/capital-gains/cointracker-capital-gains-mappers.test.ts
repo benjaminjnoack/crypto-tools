@@ -16,6 +16,19 @@ describe("cointracker capital gains mappers", () => {
     expect(rows[0]?.received_date.toISOString()).toBe(isoUtc({ year: 2026, month: 1, day: 1 }));
   });
 
+  it("parses slash-formatted dates", () => {
+    const csv = [
+      "Asset Amount,Asset Name,Received Date,Date Sold,Proceeds (USD),Cost Basis (USD),Gain (USD),Type",
+      "1,BTC,06/29/2024,07/02/2024,100,90,10,Short Term",
+    ].join("\n");
+
+    const rows = parseCointrackerCapitalGainsCsv(csv, "test.csv");
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.received_date.toISOString()).toBe(isoUtc({ year: 2024, month: 6, day: 29 }));
+    expect(rows[0]?.date_sold.toISOString()).toBe(isoUtc({ year: 2024, month: 7, day: 2 }));
+  });
+
   it("throws for malformed rows", () => {
     const badCsv = "Asset Amount,Asset Name\n1,BTC";
     expect(() => parseCointrackerCapitalGainsCsv(badCsv, "bad.csv")).toThrow("CSV validation failed");
