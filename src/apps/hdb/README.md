@@ -133,6 +133,73 @@ Coinbase migration status and next slices are tracked in:
 
 Use `hdb <command path> --help` for option details.
 
+## Remaining TODOs
+
+This section tracks legacy `old.js` TODOs that are still relevant for the migrated `hdb` app.
+
+### 1) Incremental transaction import + controlled overrides
+
+Goal: support incremental ingestion of new CSVs by filename (without full rebuild), with explicit conflict handling.
+
+Current state: Coinbase supports `import-statement <filepath>` and both Coinbase/CoinTracker support directory rebuilds. Conflict replacement is available for manual Coinbase inserts only.
+
+Needed:
+- Add incremental file import command(s) for CoinTracker transactions similar to Coinbase statement import.
+- Add explicit conflict policy (`error`, `skip`, `replace`) for CSV imports/rebuilds.
+- For replace paths on Coinbase transactions, trigger or enforce dependent recomputation (at minimum balances, and potentially lots) to keep derived data consistent.
+
+### 2) Tie Coinbase transactions to orders/fills
+
+Goal: map trade transactions to order lifecycle and fill records for stronger auditability and reconciliation.
+
+Current state: `coinbase_orders` is stored, but `coinbase_transactions` rows do not contain `order_id`, and there is no fill-level table.
+
+Needed:
+- Add a `coinbase_fills` model (or equivalent) with fill-level attributes, including `order_id`.
+- Build a deterministic transaction-to-fill linking path where possible.
+- Add explicit unmatched/ambiguous handling plus optional manual overrides for hard cases.
+
+### 3) Historical NAV reconstruction
+
+Goal: compute point-in-time NAV over a historical range, not only current snapshot NAV.
+
+Current state: `coinbase transactions analyze-nav` uses current live account balances and current product prices, not historical prices.
+
+Needed:
+- Historical price source and ingestion pipeline.
+- Local storage for historical candles/prices keyed by product and interval.
+- Valuation logic that joins historical holdings with historical prices at consistent timestamps.
+- Policy for missing candle data (fail, nearest, interpolation).
+
+Reference:
+- Coinbase Advanced Trade candles API: https://docs.cdp.coinbase.com/api-reference/advanced-trade-api/rest-api/products/get-product-candles
+
+### 4) CoinTracker balances ledger linkage to Coinbase transactions
+
+Goal: extend CoinTracker balance ledger to optionally reference matched Coinbase transaction IDs for cross-system reconciliation.
+
+Current state: CoinTracker balances ledger is implemented and references `cointracker_transaction_id`, but it does not store Coinbase linkage.
+
+Needed:
+- Add Coinbase linkage field(s) or a dedicated mapping table.
+- Build matching heuristics (timestamp window, asset, quantity, type).
+- Persist match confidence/status and allow unresolved rows.
+
+### 5) Explain CoinTracker PnL vs Coinbase NAV deltas
+
+Goal: provide a reproducible reconciliation report that explains differences between CoinTracker PnL and Coinbase NAV.
+
+Current state: both views exist, but there is no dedicated decomposition/reporting workflow.
+
+Needed:
+- Define exact reconciliation semantics (realized/unrealized, cash handling, fees, time windows, excluded assets).
+- Add command/report output that breaks deltas into categories (pricing basis, unmatched transfers, fees, synthetic rows, timing differences).
+- Add regression tests over fixed fixtures to prevent silent drift in reconciliation logic.
+
+### Completed Legacy TODO
+
+- USDC day-level grouping is available now via `hdb cointracker gains analyze-usdc --interval day`.
+
 ## Development
 
 - `npm run lint`
