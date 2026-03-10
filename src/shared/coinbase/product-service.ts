@@ -1,9 +1,9 @@
 import { requestProduct } from "./rest.js";
 import { loadProductFromCache, saveProductToCache } from "./cache/product-cache.js";
 import { type CoinbaseProduct } from "./schemas/coinbase-rest-schemas.js";
-import { printError } from "#shared/log/error";
-import { logger } from "#shared/log/logger";
-import { type ProductId, ProductIdSchema } from "#shared/schemas/shared-primitives";
+import { printError } from "../log/error.js";
+import { logger } from "../log/logger.js";
+import { type ProductId, ProductIdSchema } from "../schemas/shared-primitives.js";
 
 export function getProductId(product: string, currency: string = "USD"): ProductId {
   let productId = product.toUpperCase();

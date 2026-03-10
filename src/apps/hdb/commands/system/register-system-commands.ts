@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { addDebugOption } from "#shared/cli/option-builders";
+import { addDebugOption } from "../../../../shared/cli/option-builders.js";
 import { runAction } from "../shared/action-runner.js";
 import { handleTestAction } from "../test.js";
 import { type DebugOptions, DebugOptionsSchema } from "../schemas/debug-options.js";

@@ -1,6 +1,6 @@
 import pkg, { type Pool as PgPool } from "pg";
-import { getEnvConfig } from "#shared/common/index";
-import { logger } from "#shared/log/index";
+import { getEnvConfig } from "../../../../shared/common/index.js";
+import { logger } from "../../../../shared/log/index.js";
 
 const { Pool } = pkg;
 const E = getEnvConfig();

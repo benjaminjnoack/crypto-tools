@@ -1,6 +1,6 @@
 import type { Command } from "commander";
 import { z } from "zod";
-import { addDebugOption, addFromOption, addRangeOption, addToOption, addYearOption } from "#shared/cli/option-builders";
+import { addDebugOption, addFromOption, addRangeOption, addToOption, addYearOption } from "../../../../../shared/cli/option-builders.js";
 import { runAction, runActionWithArgument } from "../../shared/action-runner.js";
 import { parseArgWithOptions, parseOptions, withAction } from "../../register/register-utils.js";
 import { COINBASE_EPOCH } from "../../shared/date-range-utils.js";

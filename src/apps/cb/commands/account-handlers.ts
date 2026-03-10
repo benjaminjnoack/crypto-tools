@@ -1,11 +1,11 @@
 import type { AccountsOptions } from "./schemas/command-options.js";
-import { toIncrement } from "#shared/common/index";
+import { toIncrement } from "../../../shared/common/index.js";
 import {
   getProductInfo,
   getTransactionSummary,
   requestAccounts,
   requestCurrencyAccount,
-} from "#shared/coinbase/index";
+} from "../../../shared/coinbase/index.js";
 
 export async function handleAccountsAction(
   product: string | null,

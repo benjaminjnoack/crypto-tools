@@ -1,1 +1,1 @@
-export { DebugOptionsSchema, type DebugOptions } from "#shared/cli/common-options";
+export { DebugOptionsSchema, type DebugOptions } from "../../../../shared/cli/common-options.js";

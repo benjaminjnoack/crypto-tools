@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LogLevelSchema } from "#shared/log/schemas/logger";
+import { LogLevelSchema } from "../../log/schemas/logger.js";
 
 export const EnvSchema = z
   .object({

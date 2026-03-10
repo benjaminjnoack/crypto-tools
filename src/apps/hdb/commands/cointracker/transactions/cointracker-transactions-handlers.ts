@@ -18,8 +18,8 @@ import type {
   CointrackerTransactionsQueryOptions,
   CointrackerTransactionsRegenerateOptions,
 } from "./schemas/cointracker-transactions-options.js";
-import { getEnvConfig } from "#shared/common/index";
-import { logger } from "#shared/log/index";
+import { getEnvConfig } from "../../../../../shared/common/index.js";
+import { logger } from "../../../../../shared/log/index.js";
 
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {

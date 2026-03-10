@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Percent, PositiveNumericString } from "#shared/schemas/shared-primitives";
+import { Percent, PositiveNumericString } from "../../../../shared/schemas/shared-primitives.js";
 
 export const AccountsOptionsSchema = z
   .object({

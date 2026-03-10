@@ -10,13 +10,9 @@ Production Coinbase operations toolkit: `cb` for trade planning and order lifecy
 - `shared`: reusable Coinbase/auth/env/log/schema modules (`src/shared`)
 - `helper-env-check`: env/credential validation binary (`src/shared/bin/validate-env.ts`)
 
-## Import Aliases
+## Imports
 
-Prefer path aliases over deep relative imports:
-
-- `#shared/*` -> `src/shared/*`
-- `#cb/*` -> `src/apps/cb/*`
-- `#hdb/*` -> `src/apps/hdb/*`
+Use explicit relative imports with `.js` specifiers under NodeNext.
 
 ## Requirements
 

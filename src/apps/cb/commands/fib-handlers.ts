@@ -7,7 +7,7 @@ import {
   getProductInfo,
   getTransactionSummary,
   requestCurrencyAccount,
-} from "#shared/coinbase/index";
+} from "../../../shared/coinbase/index.js";
 
 const ENTRY_LEVELS = [0.5, 0.382, 0.295, 0.236] as const;
 const EXIT_LEVELS = [1.272, 1.414, 1.618, 2, 2.272, 2.414, 2.618, 3, 3.272, 3.618, 4, 4.236, 4.618, 5] as const;

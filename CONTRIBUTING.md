@@ -52,13 +52,7 @@ Never commit secrets, `.env` files, or credential material.
 
 ## Module Imports
 
-Use path aliases for cross-module imports:
-
-- `#shared/*` -> `src/shared/*`
-- `#cb/*` -> `src/apps/cb/*`
-- `#hdb/*` -> `src/apps/hdb/*`
-
-Prefer aliases instead of deep relative paths like `../../../...`.
+Use explicit relative imports with `.js` specifiers under NodeNext.
 
 ### CLI Entrypoints
 

@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { selectCoinbaseOrderByLastFillTime } from "../../db/coinbase/orders/coinbase-orders-repository.js";
 import { DateRange, type DateRangeValue } from "../schemas/date-range.js";
-import { logger } from "#shared/log/index";
+import { logger } from "../../../../shared/log/index.js";
 
 /**
  * 1 * 10^-8

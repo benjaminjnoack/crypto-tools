@@ -8,7 +8,7 @@ import {
   addRsyncOption,
   addToOption,
   addYearOption,
-} from "#shared/cli/option-builders";
+} from "../../../../../shared/cli/option-builders.js";
 import { runAction, runActionWithArgument } from "../../shared/action-runner.js";
 import {
   coinbaseOrders,

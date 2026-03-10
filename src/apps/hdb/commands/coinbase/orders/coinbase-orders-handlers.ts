@@ -17,15 +17,15 @@ import type {
 import { COINBASE_EPOCH, getToAndFromDates } from "../../shared/date-range-utils.js";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { coinbaseOrdersDir } from "#shared/coinbase/cache/coinbase-cache";
-import { loadOrderFromCache, saveOrderToCache } from "#shared/coinbase/cache/order-cache";
+import { coinbaseOrdersDir } from "../../../../../shared/coinbase/cache/coinbase-cache.js";
+import { loadOrderFromCache, saveOrderToCache } from "../../../../../shared/coinbase/cache/order-cache.js";
 import {
   getProductId,
-} from "#shared/coinbase/index";
-import { requestOrder, requestOrders } from "#shared/coinbase/rest";
-import { ORDER_STATUS, OrderPlacementValues } from "#shared/coinbase/schemas/coinbase-enum-schemas";
-import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
-import { logger, printOrder } from "#shared/log/index";
+} from "../../../../../shared/coinbase/index.js";
+import { requestOrder, requestOrders } from "../../../../../shared/coinbase/rest.js";
+import { ORDER_STATUS, OrderPlacementValues } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
+import type { CoinbaseOrder } from "../../../../../shared/coinbase/schemas/coinbase-order-schemas.js";
+import { logger, printOrder } from "../../../../../shared/log/index.js";
 
 function assertUpdateSource(cache?: boolean, remote?: boolean): void {
   if (cache && remote) {

@@ -1,6 +1,6 @@
 import path from "node:path";
-import { loadJsonFromCache, saveJsonToCache } from "#shared/common/cache";
-import { type CoinbaseProduct, CoinbaseProductSchema } from "#shared/coinbase/schemas/coinbase-rest-schemas";
+import { loadJsonFromCache, saveJsonToCache } from "../../common/cache.js";
+import { type CoinbaseProduct, CoinbaseProductSchema } from "../schemas/coinbase-rest-schemas.js";
 import { coinbaseProductsDir } from "./coinbase-cache.js";
 
 export function loadProductFromCache(productId: string): CoinbaseProduct {

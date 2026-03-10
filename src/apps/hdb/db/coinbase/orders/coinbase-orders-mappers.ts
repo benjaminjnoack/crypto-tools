@@ -1,5 +1,5 @@
-import { ORDER_TYPES } from "#shared/coinbase/schemas/coinbase-enum-schemas";
-import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
+import { ORDER_TYPES } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
+import type { CoinbaseOrder } from "../../../../../shared/coinbase/schemas/coinbase-order-schemas.js";
 
 type OrderPriceFields = {
   baseSize: string | null;

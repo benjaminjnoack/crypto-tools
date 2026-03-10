@@ -1,6 +1,6 @@
-import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
-import { requestAccounts } from "#shared/coinbase/rest";
-import { OrdersHistoricalBatchResponseSchema } from "#shared/coinbase/schemas/coinbase-rest-schemas";
+import { getSignedConfig, requestWithSchema } from "../../src/shared/coinbase/http/http-client.js";
+import { requestAccounts } from "../../src/shared/coinbase/rest.js";
+import { OrdersHistoricalBatchResponseSchema } from "../../src/shared/coinbase/schemas/coinbase-rest-schemas.js";
 import { describe, expect, it } from "vitest";
 
 const shouldRunReadonlyIntegration =

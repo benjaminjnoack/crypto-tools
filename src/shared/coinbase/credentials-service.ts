@@ -1,7 +1,7 @@
 import { promises } from "node:fs";
-import { getEnvConfig } from "#shared/common/env";
+import { getEnvConfig } from "../common/env.js";
 import { type Credentials, CredentialsSchema } from "./schemas/coinbase-credentials-schemas.js";
-import { logger } from "#shared/log/logger";
+import { logger } from "../log/logger.js";
 
 let credentials: Credentials | null = null;
 

@@ -6,10 +6,10 @@ import {
   parseNone,
   type Parser,
   withParsedAction,
-} from "#shared/cli/register-utils";
-import { getProductId } from "#shared/coinbase/index";
-import { printError } from "#shared/log/index";
-import type { ProductId } from "#shared/schemas/shared-primitives";
+} from "../../../../shared/cli/register-utils.js";
+import { getProductId } from "../../../../shared/coinbase/index.js";
+import { printError } from "../../../../shared/log/index.js";
+import type { ProductId } from "../../../../shared/schemas/shared-primitives.js";
 
 export const OptionFlags = {
   baseSize: "-b, --baseSize <baseSize>",

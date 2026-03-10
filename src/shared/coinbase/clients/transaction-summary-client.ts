@@ -1,8 +1,8 @@
-import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
+import { getSignedConfig, requestWithSchema } from "../http/http-client.js";
 import {
   type TransactionSummary,
   TransactionSummaryResponseSchema,
-} from "#shared/coinbase/schemas/coinbase-rest-schemas";
+} from "../schemas/coinbase-rest-schemas.js";
 
 export async function requestTransactionSummary(
   productType: string = "SPOT",

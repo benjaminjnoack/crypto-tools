@@ -1,6 +1,6 @@
 import readlineSync from "readline-sync";
 import chalk from "chalk";
-import { ORDER_SIDE } from "#shared/coinbase/index";
+import { ORDER_SIDE } from "../../../shared/coinbase/index.js";
 
 type SummaryLine = {
   label: string;

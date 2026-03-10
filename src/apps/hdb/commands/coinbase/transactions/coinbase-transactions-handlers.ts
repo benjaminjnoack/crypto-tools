@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
-import { requestAccounts, requestProduct } from "#shared/coinbase/rest";
-import { logger } from "#shared/log/index";
-import { getEnvConfig } from "#shared/common/index";
+import { requestAccounts, requestProduct } from "../../../../../shared/coinbase/rest.js";
+import { logger } from "../../../../../shared/log/index.js";
+import { getEnvConfig } from "../../../../../shared/common/index.js";
 import {
   getAbbreviatedType,
   getClassifierForType,

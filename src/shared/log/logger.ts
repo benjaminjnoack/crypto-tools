@@ -1,5 +1,5 @@
 import { LOG_LEVELS, type LogLevel } from "./schemas/logger.js";
-import { getEnvConfig } from "#shared/common/env";
+import { getEnvConfig } from "../common/env.js";
 
 const LEVEL_PRIORITY: Record<LogLevel, number> = {
   debug: 10,

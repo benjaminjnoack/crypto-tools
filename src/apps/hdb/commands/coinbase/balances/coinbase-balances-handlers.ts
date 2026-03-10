@@ -1,5 +1,5 @@
-import { requestAccounts } from "#shared/coinbase/rest";
-import { logger } from "#shared/log/index";
+import { requestAccounts } from "../../../../../shared/coinbase/rest.js";
+import { logger } from "../../../../../shared/log/index.js";
 import {
   COINBASE_BALANCE_LEDGER_TABLE,
   type CoinbaseBalanceRow,

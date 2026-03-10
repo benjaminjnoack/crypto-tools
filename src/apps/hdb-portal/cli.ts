@@ -1,4 +1,4 @@
-import { primeEnv } from "#shared/common/index";
+import { primeEnv } from "../../shared/common/index.js";
 import { startPortalServer } from "./server.js";
 
 async function main() {

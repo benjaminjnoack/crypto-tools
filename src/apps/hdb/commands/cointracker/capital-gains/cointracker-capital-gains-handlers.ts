@@ -34,8 +34,8 @@ import {
   writeCapitalGainsGroupCsv,
   writeCapitalGainsGroupF8949,
 } from "./cointracker-capital-gains-export.js";
-import { getEnvConfig } from "#shared/common/index";
-import { logger } from "#shared/log/index";
+import { getEnvConfig } from "../../../../../shared/common/index.js";
+import { logger } from "../../../../../shared/log/index.js";
 
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {

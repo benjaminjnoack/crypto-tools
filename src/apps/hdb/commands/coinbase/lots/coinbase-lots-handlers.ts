@@ -1,5 +1,5 @@
-import { logger } from "#shared/log/index";
-import { getEnvConfig } from "#shared/common/index";
+import { logger } from "../../../../../shared/log/index.js";
+import { getEnvConfig } from "../../../../../shared/common/index.js";
 import { DUST_THRESHOLD, getToAndFromDates } from "../../shared/date-range-utils.js";
 import { traceCoinbaseBalanceLedger } from "../../../db/coinbase/balances/coinbase-balances-repository.js";
 import {

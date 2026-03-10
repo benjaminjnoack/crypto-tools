@@ -6,11 +6,6 @@
     "lib": ["ES2023"],
     "types": ["node"],
     "baseUrl": ".",
-    "paths": {
-      "#shared/*": ["src/shared/*"],
-      "#cb/*": ["src/apps/cb/*"],
-      "#hdb/*": ["src/apps/hdb/*"]
-    },
 
     "strict": true,
     "noUncheckedIndexedAccess": true,

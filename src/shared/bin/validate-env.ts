@@ -3,9 +3,9 @@
 import { access } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { getCredentials } from "#shared/coinbase/credentials-service";
-import { getEnvConfig, primeEnv } from "#shared/common/env";
-import { logger } from "#shared/log/logger";
+import { getCredentials } from "../coinbase/credentials-service.js";
+import { getEnvConfig, primeEnv } from "../common/env.js";
+import { logger } from "../log/logger.js";
 
 type Args = {
   envFilePath?: string;

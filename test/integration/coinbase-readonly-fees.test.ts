@@ -1,4 +1,4 @@
-import { requestTransactionSummary } from "#shared/coinbase/rest";
+import { requestTransactionSummary } from "../../src/shared/coinbase/rest.js";
 import { describe, expect, it } from "vitest";
 
 const shouldRunReadonlyIntegration =

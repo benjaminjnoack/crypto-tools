@@ -1,10 +1,10 @@
-import { getSignedConfig, requestWithSchema } from "#shared/coinbase/http/http-client";
+import { getSignedConfig, requestWithSchema } from "../http/http-client.js";
 import {
   BestBidAskResponseSchema,
   type CoinbasePriceBook,
   type TickerResponse,
   TickerResponseSchema,
-} from "#shared/coinbase/schemas/coinbase-rest-schemas";
+} from "../schemas/coinbase-rest-schemas.js";
 
 export async function requestBestBidAsk(product_id: string): Promise<CoinbasePriceBook> {
   const requestPath = "/api/v3/brokerage/best_bid_ask";

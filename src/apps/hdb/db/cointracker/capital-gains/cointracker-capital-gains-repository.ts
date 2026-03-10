@@ -1,5 +1,5 @@
 import { getClient } from "../../db-client.js";
-import { logger } from "#shared/log/index";
+import { logger } from "../../../../../shared/log/index.js";
 import {
   buildCapitalGainsConditions,
   buildSelectCointrackerCapitalGainsGroupSql,

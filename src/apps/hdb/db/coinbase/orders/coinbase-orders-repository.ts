@@ -1,7 +1,7 @@
 import { getClient } from "../../db-client.js";
-import { ORDER_STATUS } from "#shared/coinbase/schemas/coinbase-enum-schemas";
-import type { CoinbaseOrder } from "#shared/coinbase/schemas/coinbase-order-schemas";
-import { logger } from "#shared/log/index";
+import { ORDER_STATUS } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
+import type { CoinbaseOrder } from "../../../../../shared/coinbase/schemas/coinbase-order-schemas.js";
+import { logger } from "../../../../../shared/log/index.js";
 import {
   type CoinbaseOrderRow,
   getOrderPriceFields,

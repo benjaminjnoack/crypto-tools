@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import { createOrder } from "./orders-client.js";
-import { logger } from "#shared/log/logger";
+import { logger } from "../log/logger.js";
 import { ORDER_SIDE, type OrderSide } from "./schemas/coinbase-enum-schemas.js";
 import type { OrderRequest } from "./schemas/coinbase-rest-schemas.js";
 

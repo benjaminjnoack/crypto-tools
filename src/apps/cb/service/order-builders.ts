@@ -11,8 +11,8 @@ import {
   ORDER_SIDE,
   ORDER_TYPES,
   type OrderSide,
-} from "#shared/coinbase/index";
-import { toIncrement } from "#shared/common/index";
+} from "../../../shared/coinbase/index.js";
+import { toIncrement } from "../../../shared/common/index.js";
 
 function toIncrementUp(increment: string, value: number): string {
   const floored = parseFloat(toIncrement(increment, value));

@@ -20,8 +20,8 @@ import {
   ORDER_SIDE,
   ORDER_TYPES,
   requestBestBidAsk,
-} from "#shared/coinbase/index";
-import type { EditOrderRequest } from "#shared/coinbase/schemas/coinbase-rest-schemas";
+} from "../../../shared/coinbase/index.js";
+import type { EditOrderRequest } from "../../../shared/coinbase/schemas/coinbase-rest-schemas.js";
 import {
   buildBracketOrderValues,
   buildBreakEvenStopPrice,

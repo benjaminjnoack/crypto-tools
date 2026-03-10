@@ -1,4 +1,4 @@
-import { logger } from "#shared/log/index";
+import { logger } from "../../../../shared/log/index.js";
 import { coinbaseBalancesRegenerate } from "../coinbase/balances/coinbase-balances-handlers.js";
 import { coinbaseTransactionsRegenerate } from "../coinbase/transactions/coinbase-transactions-handlers.js";
 import { cointrackerCapitalGainsRegenerate } from "../cointracker/capital-gains/cointracker-capital-gains-handlers.js";

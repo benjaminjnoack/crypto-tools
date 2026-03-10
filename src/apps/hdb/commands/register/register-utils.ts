@@ -2,4 +2,4 @@ export {
   parseArgWithOptions,
   parseOptions,
   withParsedAction as withAction,
-} from "#shared/cli/register-utils";
+} from "../../../../shared/cli/register-utils.js";

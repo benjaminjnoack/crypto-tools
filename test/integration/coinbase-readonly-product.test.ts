@@ -1,4 +1,4 @@
-import { requestProduct } from "#shared/coinbase/rest";
+import { requestProduct } from "../../src/shared/coinbase/rest.js";
 import { describe, expect, it } from "vitest";
 
 const shouldRunReadonlyIntegration =

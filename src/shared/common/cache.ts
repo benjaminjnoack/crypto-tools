@@ -1,7 +1,7 @@
 import path from "node:path";
 import envPaths from "env-paths";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { logger } from "#shared/log/logger";
+import { logger } from "../log/logger.js";
 
 const paths = envPaths("helper");
 export const cacheDir = paths.cache;

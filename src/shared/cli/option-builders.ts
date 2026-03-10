@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { OptionFlags } from "#shared/cli/option-flags";
+import { OptionFlags } from "./option-flags.js";
 
 export function addDebugOption(command: Command, description = "Enable debug logging", defaultValue = false): Command {
   return command.option(OptionFlags.debug, description, defaultValue);
