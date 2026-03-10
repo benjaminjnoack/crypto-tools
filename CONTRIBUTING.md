@@ -114,10 +114,12 @@ Useful direct commands:
 ## Local Development Workflow
 
 1. Implement changes.
-2. Run quality checks:
-   - `npm run lint`
-   - `npm run typecheck`
-   - `npm run test`
+2. Run quality checks using risk-tiered validation:
+   - Low risk (docs/CSS/static copy): targeted lint on touched files is the minimum.
+   - Medium risk (non-critical logic/refactors/parser-output): targeted lint + targeted tests during iteration.
+   - High risk (order logic, math, schemas/validation, shared core utilities): strict targeted lint + targeted tests during iteration.
+   - End-of-task gate for medium/high: run full `npm run typecheck && npm run lint && npm run test` once before handoff.
+   - If mixed scope, use the highest risk tier. If uncertain, default to medium.
 3. Validate build artifacts:
    - `npm run build`
    - `npm run smoke:bin`

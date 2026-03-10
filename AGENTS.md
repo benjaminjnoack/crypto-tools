@@ -19,13 +19,28 @@
 
 ## Required Validation Workflow
 
-For code changes, run these checks unless the task is docs-only:
+For code changes, use risk-tiered validation (unless the task is docs-only):
 
-1. `npm run typecheck`
-2. `npm run lint` (or targeted `npx eslint ...` during iteration, then full lint when practical)
-3. `npm run test` (or targeted `npm test -- <files>` during iteration, then broader test run for affected area)
+- Classify change risk before validating:
+  - Low risk: docs, CSS/static presentation, copy, comments, non-executable config text.
+  - Medium risk: non-critical app logic, refactors, command wiring, parser/output behavior.
+  - High risk: order logic, numerical calculations, schemas/validation, shared core utilities.
+- During iteration, prefer targeted checks for the touched area:
+  - Targeted lint: `npx eslint <touched files>`
+  - Targeted tests: `npm test -- <files>`
+- End-of-task gate:
+  - Medium/high risk changes must run full validation once:
+    1. `npm run typecheck`
+    2. `npm run lint`
+    3. `npm run test`
+  - Low risk changes require targeted lint at minimum; full typecheck/tests are optional unless touched code requires them.
+- If a change spans tiers, apply the highest tier.
+- If uncertain, default to medium risk.
 
-Report what was run and what was not run.
+Always report:
+- selected risk tier and rationale
+- commands run
+- commands intentionally not run (and why)
 
 ## Safe Execution Rules
 
