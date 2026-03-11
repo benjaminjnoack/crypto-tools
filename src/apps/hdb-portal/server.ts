@@ -288,10 +288,22 @@ function writePortalResponse(res: ServerResponse, response: PortalResponse): voi
   res.end(response.body);
 }
 
+function formatRequestUrlForLog(urlString: string): string {
+  const url = new URL(urlString, "http://localhost");
+  const entries = Array.from(url.searchParams.entries());
+  if (entries.length === 0) {
+    return url.pathname;
+  }
+
+  const renderedParams = entries.map(([key, value]) => `  ${key}: ${value}`).join("\n");
+  return `${url.pathname}\n${renderedParams}`;
+}
+
 export function createPortalServer() {
   return http.createServer((req: IncomingMessage, res: ServerResponse) => {
     const method = req.method ?? "GET";
     const url = req.url ?? "/";
+    console.log(`[hdb-portal] ${method} ${formatRequestUrlForLog(url)}`);
     void routePortalRequest(method, url)
       .then((response) => {
         writePortalResponse(res, response);
