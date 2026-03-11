@@ -288,15 +288,201 @@ function writePortalResponse(res: ServerResponse, response: PortalResponse): voi
   res.end(response.body);
 }
 
-function formatRequestUrlForLog(urlString: string): string {
-  const url = new URL(urlString, "http://localhost");
-  const entries = Array.from(url.searchParams.entries());
-  if (entries.length === 0) {
-    return url.pathname;
+function quoteShellArg(value: string): string {
+  if (/^[a-zA-Z0-9_./:@-]+$/.test(value)) {
+    return value;
+  }
+  return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
+function maybeAppendValueFlag(parts: string[], flag: string, value: string | null): void {
+  if (value && value.length > 0) {
+    parts.push(flag, quoteShellArg(value));
+  }
+}
+
+function maybeAppendPositional(parts: string[], value: string | null): void {
+  if (value && value.length > 0) {
+    parts.push(quoteShellArg(value));
+  }
+}
+
+function maybeAppendBooleanFlag(parts: string[], flag: string, value: string | null): void {
+  if (value === "true") {
+    parts.push(flag);
+  }
+}
+
+function buildDateFlags(params: URLSearchParams): string[] {
+  const flags: string[] = [];
+  maybeAppendValueFlag(flags, "--from", params.get("from"));
+  maybeAppendValueFlag(flags, "--to", params.get("to"));
+  return flags;
+}
+
+function buildCoinbaseTransactionFlags(params: URLSearchParams): string[] {
+  const flags = buildDateFlags(params);
+  maybeAppendValueFlag(flags, "--classifier", params.get("classifier"));
+  maybeAppendValueFlag(flags, "--not-classifier", params.get("notClassifier"));
+  maybeAppendBooleanFlag(flags, "--manual", params.get("manual"));
+  maybeAppendBooleanFlag(flags, "--exclude-manual", params.get("excludeManual"));
+  maybeAppendBooleanFlag(flags, "--synthetic", params.get("synthetic"));
+  maybeAppendBooleanFlag(flags, "--exclude-synthetic", params.get("excludeSynthetic"));
+  maybeAppendValueFlag(flags, "--type", params.get("type"));
+  maybeAppendValueFlag(flags, "--exclude", params.get("exclude"));
+  return flags;
+}
+
+function synthesizePortalCommand(pathname: string, params: URLSearchParams): string | null {
+  if (pathname === "/api/health") {
+    return "hdb health";
   }
 
-  const renderedParams = entries.map(([key, value]) => `  ${key}: ${value}`).join("\n");
-  return `${url.pathname}\n${renderedParams}`;
+  if (pathname === "/api/dashboard/summary") {
+    const dateFlags = buildDateFlags(params).join(" ");
+    const balances = ["hdb", "coinbase", "balances", "snapshot"];
+    maybeAppendValueFlag(balances, "--to", params.get("to"));
+    const txSummary = ["hdb", "coinbase", "transactions", "summary", "--interval", "month"];
+    txSummary.push(...buildDateFlags(params));
+    const lotsSummary = ["hdb", "coinbase", "lots", "analyze-all", "--accounting", "FIFO", "--totals"];
+    lotsSummary.push(...buildDateFlags(params));
+    const gainsSummary = ["hdb", "cointracker", "gains", "summary", "--gains"];
+    gainsSummary.push(...buildDateFlags(params));
+
+    return [
+      `# hdb dashboard equivalent (${dateFlags || "default date range"})`,
+      `  ${balances.join(" ")}`,
+      `  ${txSummary.join(" ")}`,
+      `  ${lotsSummary.join(" ")}`,
+      `  ${gainsSummary.join(" ")}`,
+    ].join("\n");
+  }
+
+  if (pathname === "/api/coinbase/balances") {
+    const currentSnapshot = params.get("currentSnapshot");
+    const asset = params.get("asset");
+    const isSnapshot = currentSnapshot === null || currentSnapshot === "true";
+
+    if (isSnapshot) {
+      const parts = ["hdb", "coinbase", "balances", "snapshot"];
+      maybeAppendValueFlag(parts, "--to", params.get("to"));
+      const command = parts.join(" ");
+      if (asset) {
+        return `${command}  # snapshot command has no asset selector; UI asset filter=${asset}`;
+      }
+      return command;
+    }
+
+    const parts = ["hdb", "coinbase", "balances", "list"];
+    if (asset) {
+      parts.push(quoteShellArg(asset));
+    } else {
+      parts.push("<asset>");
+    }
+    parts.push(...buildDateFlags(params));
+    return asset
+      ? parts.join(" ")
+      : `${parts.join(" ")}  # UI request omitted asset; CLI requires one`;
+  }
+
+  if (pathname === "/api/coinbase/balances/trace") {
+    const asset = params.get("asset");
+    if (!asset) {
+      return "hdb coinbase balances trace <asset>";
+    }
+
+    const parts = ["hdb", "coinbase", "balances", "trace", quoteShellArg(asset)];
+    maybeAppendValueFlag(parts, "--to", params.get("to"));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/coinbase/transactions") {
+    const parts = ["hdb", "coinbase", "transactions", "list"];
+    maybeAppendPositional(parts, params.get("asset"));
+    parts.push(...buildCoinbaseTransactionFlags(params));
+    maybeAppendBooleanFlag(parts, "--balance", params.get("includeBalances"));
+    maybeAppendBooleanFlag(parts, "--paired", params.get("paired"));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/coinbase/transactions/group") {
+    const parts = ["hdb", "coinbase", "transactions", "summary"];
+    maybeAppendPositional(parts, params.get("asset"));
+    parts.push(...buildCoinbaseTransactionFlags(params));
+    maybeAppendValueFlag(parts, "--interval", params.get("interval"));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/coinbase/lots") {
+    const asset = params.get("asset");
+    const parts = ["hdb", "coinbase", "lots", "analyze", asset ? quoteShellArg(asset) : "<asset>"];
+    parts.push(...buildDateFlags(params));
+    maybeAppendValueFlag(parts, "--accounting", params.get("accounting"));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/coinbase/lots/compare") {
+    const asset = params.get("asset");
+    const parts = ["hdb", "coinbase", "lots", "compare", asset ? quoteShellArg(asset) : "<asset>"];
+    parts.push(...buildDateFlags(params));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/cointracker/gains") {
+    const parts = ["hdb", "cointracker", "gains", "list"];
+    maybeAppendPositional(parts, params.get("assets"));
+    parts.push(...buildDateFlags(params));
+    maybeAppendBooleanFlag(parts, "--cash", params.get("cash"));
+    maybeAppendBooleanFlag(parts, "--crypto", params.get("crypto"));
+    maybeAppendValueFlag(parts, "--received", params.get("received"));
+    maybeAppendValueFlag(parts, "--sent", params.get("sent"));
+    maybeAppendValueFlag(parts, "--exclude", params.get("exclude"));
+    maybeAppendBooleanFlag(parts, "--zero", params.get("zero"));
+    maybeAppendBooleanFlag(parts, "--gains", params.get("gains"));
+    return parts.join(" ");
+  }
+
+  if (pathname === "/api/cointracker/gains/group") {
+    const parts = ["hdb", "cointracker", "gains", "summary"];
+    maybeAppendPositional(parts, params.get("assets"));
+    parts.push(...buildDateFlags(params));
+    maybeAppendBooleanFlag(parts, "--bleeders", params.get("bleeders"));
+    maybeAppendBooleanFlag(parts, "--cash", params.get("cash"));
+    maybeAppendBooleanFlag(parts, "--crypto", params.get("crypto"));
+    maybeAppendValueFlag(parts, "--received", params.get("received"));
+    maybeAppendValueFlag(parts, "--sent", params.get("sent"));
+    maybeAppendValueFlag(parts, "--exclude", params.get("exclude"));
+    maybeAppendBooleanFlag(parts, "--zero", params.get("zero"));
+    maybeAppendBooleanFlag(parts, "--gains", params.get("gains"));
+    maybeAppendValueFlag(parts, "--type", params.get("type"));
+    return parts.join(" ");
+  }
+
+  return null;
+}
+
+export function synthesizeHdbCommandForPortalRequest(urlString: string): string | null {
+  try {
+    const url = new URL(urlString, "http://localhost");
+    return synthesizePortalCommand(url.pathname, url.searchParams);
+  } catch {
+    return null;
+  }
+}
+
+function formatRequestUrlForLog(urlString: string): string {
+  try {
+    const url = new URL(urlString, "http://localhost");
+    const entries = Array.from(url.searchParams.entries());
+    if (entries.length === 0) {
+      return url.pathname;
+    }
+
+    const renderedParams = entries.map(([key, value]) => `  ${key}: ${value}`).join("\n");
+    return `${url.pathname}\n${renderedParams}`;
+  } catch {
+    return urlString;
+  }
 }
 
 export function createPortalServer() {
@@ -304,6 +490,10 @@ export function createPortalServer() {
     const method = req.method ?? "GET";
     const url = req.url ?? "/";
     console.log(`[hdb-portal] ${method} ${formatRequestUrlForLog(url)}`);
+    const command = method === "GET" ? synthesizeHdbCommandForPortalRequest(url) : null;
+    if (command) {
+      console.log(`[hdb-portal] hdb equivalent:\n${command}`);
+    }
     void routePortalRequest(method, url)
       .then((response) => {
         writePortalResponse(res, response);

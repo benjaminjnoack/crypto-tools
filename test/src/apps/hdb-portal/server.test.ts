@@ -37,7 +37,10 @@ vi.mock("../../../../src/apps/hdb-portal/service/portal-data-service.js", () => 
   getPortalHealthSummary: getPortalHealthSummaryMock,
 }));
 
-import { routePortalRequest } from "../../../../src/apps/hdb-portal/server.js";
+import {
+  routePortalRequest,
+  synthesizeHdbCommandForPortalRequest,
+} from "../../../../src/apps/hdb-portal/server.js";
 
 describe("hdb portal routing", () => {
   beforeEach(() => {
@@ -104,5 +107,32 @@ describe("hdb portal routing", () => {
   it("rejects non-get methods", async () => {
     const response = await routePortalRequest("POST", "/api/health");
     expect(response.status).toBe(405);
+  });
+});
+
+describe("hdb portal command synthesis", () => {
+  it("maps coinbase transactions request to hdb list command", () => {
+    const command = synthesizeHdbCommandForPortalRequest(
+      "/api/coinbase/transactions?asset=btc:eth&classifier=trade_buy&manual=true&excludeManual=true&includeBalances=true&paired=true&from=2026-01-01&to=2026-02-01",
+    );
+
+    expect(command).toBe(
+      "hdb coinbase transactions list btc:eth --from 2026-01-01 --to 2026-02-01 --classifier trade_buy --manual --exclude-manual --balance --paired",
+    );
+  });
+
+  it("maps cointracker grouped gains request to hdb summary command", () => {
+    const command = synthesizeHdbCommandForPortalRequest(
+      "/api/cointracker/gains/group?assets=btc:eth&crypto=true&zero=true&gains=true&type=short&from=2026-01-01&to=2026-02-01",
+    );
+
+    expect(command).toBe(
+      "hdb cointracker gains summary btc:eth --from 2026-01-01 --to 2026-02-01 --crypto --zero --gains --type short",
+    );
+  });
+
+  it("maps health to hdb health", () => {
+    const command = synthesizeHdbCommandForPortalRequest("/api/health");
+    expect(command).toBe("hdb health");
   });
 });
