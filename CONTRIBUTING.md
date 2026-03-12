@@ -150,11 +150,11 @@ This avoids inheriting a fully loaded local shell env while still allowing expli
 Behavior matrix for Coinbase REST calls:
 
 | `HELPER_ALLOW_LIVE_EXCHANGE` | `CI_INTEGRATION_READONLY` | `GET` requests | non-`GET` requests |
-|---|---|---|---|
-| `false` | `false` | blocked | blocked |
-| `false` | `true` | blocked | blocked |
-| `true` | `false` | allowed | allowed |
-| `true` | `true` | allowed | blocked |
+|------------------------------|---------------------------|----------------|--------------------|
+| `false`                      | `false`                   | blocked        | blocked            |
+| `false`                      | `true`                    | blocked        | blocked            |
+| `true`                       | `false`                   | allowed        | allowed            |
+| `true`                       | `true`                    | allowed        | blocked            |
 
 ## hdb Database Notes
 
