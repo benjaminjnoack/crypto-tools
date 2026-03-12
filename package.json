@@ -52,6 +52,7 @@
     "test:unit": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "typecheck": "tsc -p tsconfig.json",
+    "ui": "tsx src/apps/hdb-portal/cli.ts",
     "validate:hdb:inputs": "tsx scripts/validate-hdb-inputs.ts",
     "verify:offline": "npm run typecheck && npm run lint && npm run test && npm run validate:hdb:inputs"
   },
