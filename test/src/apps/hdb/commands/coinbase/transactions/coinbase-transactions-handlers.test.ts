@@ -256,12 +256,36 @@ describe("hdb coinbase transaction handlers", () => {
     );
   });
 
+  it("requires an explicit transaction id for id lookups", async () => {
+    await expect(coinbaseTransactionsId(undefined, {})).rejects.toThrow("Must provide transaction ID(s)");
+  });
+
   it("imports statement csv rows in a transaction", async () => {
     const count = await coinbaseTransactionsStatement("/tmp/statement.csv", { normalize: true });
 
     expect(parseCoinbaseTransactionsStatementCsvMock).toHaveBeenCalledTimes(1);
     expect(insertCoinbaseTransactionsBatchMock).toHaveBeenCalledTimes(1);
     expect(count).toBe(2);
+  });
+
+  it("rolls back statement imports when batch insertion fails", async () => {
+    const clientQueryMock = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+    const releaseMock = vi.fn();
+    getClientMock.mockResolvedValueOnce({
+      connect: vi.fn(() => Promise.resolve({ query: clientQueryMock, release: releaseMock })),
+    });
+    insertCoinbaseTransactionsBatchMock.mockRejectedValueOnce(new Error("batch failed"));
+
+    await expect(coinbaseTransactionsStatement("/tmp/statement.csv", { normalize: true })).rejects.toThrow(
+      "batch failed",
+    );
+
+    expect(clientQueryMock).toHaveBeenNthCalledWith(1, "BEGIN");
+    expect(clientQueryMock).toHaveBeenNthCalledWith(2, "ROLLBACK");
+    expect(releaseMock).toHaveBeenCalledTimes(1);
   });
 
   it("regenerates from csv directory with drop flow", async () => {
@@ -304,5 +328,25 @@ describe("hdb coinbase transaction handlers", () => {
     expect(requestProductMock).toHaveBeenCalledWith("BTC-USD");
     expect(tableMock).toHaveBeenCalledTimes(1);
     expect(pnl).toBe(5200);
+  });
+
+  it("skips invalid and zero balances and warns on pricing failures during nav", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      { currency: "USD", available_balance: { value: "100" }, hold: { value: "0" } },
+      { currency: "ETH", available_balance: { value: "0.5" }, hold: { value: "0" } },
+      { currency: "DOGE", available_balance: { value: "NaN" }, hold: { value: "0" } },
+      { currency: "ADA", available_balance: { value: "0" }, hold: { value: "0" } },
+    ]);
+    requestProductMock.mockRejectedValueOnce(new Error("market unavailable"));
+    selectCoinbaseTransactionsMock
+      .mockResolvedValueOnce([{ num_quantity: "250" }])
+      .mockResolvedValueOnce([{ num_quantity: "50" }]);
+    selectCoinbaseTransactionsGroupMock.mockResolvedValueOnce([{ fee: "1.00" }]);
+
+    const pnl = await coinbaseTransactionsNav({ remote: true, quiet: true });
+
+    expect(loggerWarnMock).toHaveBeenCalledWith("Skipping NAV pricing for ETH: market unavailable");
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(pnl).toBe(-100);
   });
 });

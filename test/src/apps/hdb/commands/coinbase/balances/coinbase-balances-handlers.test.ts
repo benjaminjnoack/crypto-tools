@@ -18,6 +18,9 @@ const {
   loggerErrorMock,
   logMock,
   tableMock,
+  clientQueryMock,
+  clientReleaseMock,
+  poolConnectMock,
 } = vi.hoisted(() => ({
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
     from: dateUtc({ year: 2026, month: 1, day: 1 }),
@@ -90,16 +93,19 @@ const {
     },
   ])),
   getClientMock: vi.fn(() => Promise.resolve({
-    connect: vi.fn(() => Promise.resolve({
-      query: vi.fn(() => Promise.resolve(undefined)),
-      release: vi.fn(),
-    })),
+    connect: poolConnectMock,
   })),
   loggerWarnMock: vi.fn(),
   loggerInfoMock: vi.fn(),
   loggerErrorMock: vi.fn(),
   logMock: vi.fn(),
   tableMock: vi.fn(),
+  clientQueryMock: vi.fn(() => Promise.resolve(undefined)),
+  clientReleaseMock: vi.fn(),
+  poolConnectMock: vi.fn(() => Promise.resolve({
+    query: clientQueryMock,
+    release: clientReleaseMock,
+  })),
 }));
 
 vi.mock("../../../../../../../src/apps/hdb/commands/shared/date-range-utils.js", () => ({
@@ -185,6 +191,16 @@ describe("hdb coinbase balance handlers", () => {
     expect(logMock.mock.calls[0]?.[0]).toContain("\"filters\"");
   });
 
+  it("prints current snapshot balances as json with current-balance metadata", async () => {
+    await coinbaseBalancesBatch({ current: true, remote: true, json: true, raw: true });
+
+    expect(requestAccountsMock).toHaveBeenCalledTimes(1);
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"mode\": \"snapshot\"");
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"includesCurrentBalance\": true");
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"raw\": true");
+  });
+
   it("queries batch snapshot and trace", async () => {
     await coinbaseBalancesBatch({ quiet: false, raw: true });
     await coinbaseBalancesTrace("eth2", { quiet: false, raw: true });
@@ -194,6 +210,24 @@ describe("hdb coinbase balance handlers", () => {
       "ETH",
       dateUtc({ year: 2026, month: 1, day: 31 }),
     );
+  });
+
+  it("warns when list or trace lookups return no balances", async () => {
+    selectCoinbaseBalanceLedgerMock.mockResolvedValueOnce([]);
+    traceCoinbaseBalanceLedgerMock.mockResolvedValueOnce([]);
+
+    await expect(coinbaseBalances("btc", { quiet: false })).resolves.toEqual([]);
+    await expect(coinbaseBalancesTrace("btc", { quiet: false })).resolves.toEqual([]);
+
+    expect(loggerWarnMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses drop flow when regenerating from scratch", async () => {
+    await coinbaseBalancesRegenerate({ drop: true, quiet: true });
+
+    expect(dropCoinbaseBalanceLedgerTableMock).toHaveBeenCalledTimes(1);
+    expect(createCoinbaseBalanceLedgerTableMock).toHaveBeenCalledTimes(1);
+    expect(truncateCoinbaseBalanceLedgerTableMock).not.toHaveBeenCalled();
   });
 
   it("regenerates balance ledger and writes computed rows", async () => {
@@ -220,6 +254,55 @@ describe("hdb coinbase balance handlers", () => {
     expect(insertedRows[4]?.balance).toBe("-0.3");
     expect(loggerErrorMock).toHaveBeenCalledTimes(1);
     expect(count).toBe(5);
+  });
+
+  it("supports unwrap into ETH without a negative balance", async () => {
+    selectCoinbaseTransactionsMock.mockResolvedValueOnce([
+      {
+        id: "tx-eth",
+        timestamp: dateUtc({ year: 2026, month: 1, day: 5 }),
+        type: "Unwrap",
+        asset: "ETH",
+        num_quantity: "0.25",
+        notes: "unwrap eth",
+      },
+    ]);
+
+    const count = await coinbaseBalancesRegenerate({ quiet: true });
+
+    const firstBatch = insertCoinbaseBalanceLedgerBatchMock.mock.calls[0]?.[0];
+    expect(firstBatch?.[0]?.asset).toBe("ETH");
+    expect(firstBatch?.[1]?.tx_id).toBe("tx-eth");
+    expect(firstBatch?.[1]?.balance).toBe("0.25");
+    expect(loggerErrorMock).not.toHaveBeenCalled();
+    expect(count).toBe(2);
+  });
+
+  it("rolls back and rethrows when batched inserts fail", async () => {
+    insertCoinbaseBalanceLedgerBatchMock.mockRejectedValueOnce(new Error("insert failed"));
+
+    await expect(coinbaseBalancesRegenerate({ quiet: true })).rejects.toThrow("insert failed");
+
+    expect(clientQueryMock).toHaveBeenNthCalledWith(1, "BEGIN");
+    expect(clientQueryMock).toHaveBeenNthCalledWith(2, "ROLLBACK");
+    expect(clientReleaseMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws when a transaction quantity is invalid during regenerate", async () => {
+    selectCoinbaseTransactionsMock.mockResolvedValueOnce([
+      {
+        id: "tx-bad",
+        timestamp: dateUtc({ year: 2026, month: 1, day: 2 }),
+        type: "Buy",
+        asset: "BTC",
+        num_quantity: "not-a-number",
+        notes: "bad row",
+      },
+    ]);
+
+    await expect(coinbaseBalancesRegenerate({ quiet: true })).rejects.toThrow(
+      "Invalid transaction quantity for tx-bad: not-a-number",
+    );
   });
 
 });
