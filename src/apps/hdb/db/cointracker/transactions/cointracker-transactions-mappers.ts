@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { CointrackerTransactionInsertRow } from "./cointracker-transactions-repository.js";
 import { parseCsvRecords } from "../../shared/csv-parsing.js";
 
-const CointrackerTransactionCsvRowSchema = z.object({
+const CointrackerTransactionCsvRowBaseSchema = z.object({
   Date: z.string().trim().min(1),
   Type: z.string().trim().min(1),
   "Transaction ID": z.string().trim().min(1),
@@ -24,6 +24,10 @@ const CointrackerTransactionCsvRowSchema = z.object({
   "Realized Return (USD)": z.string(),
   "Fee Realized Return (USD)": z.string(),
   "Transaction Hash": z.string(),
+});
+
+const CointrackerTransactionCsvRowSchema = CointrackerTransactionCsvRowBaseSchema.extend({
+  "Block Explorer URL": z.string().optional(),
 });
 
 type CointrackerTransactionCsvRow = z.infer<typeof CointrackerTransactionCsvRowSchema>;
