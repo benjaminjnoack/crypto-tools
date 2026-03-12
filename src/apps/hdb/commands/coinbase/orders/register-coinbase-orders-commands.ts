@@ -18,10 +18,10 @@ import {
   coinbaseOrdersRegenerate,
   coinbaseOrdersUpdate,
 } from "./coinbase-orders-handlers.js";
-import { DebugOptionsSchema } from "../../schemas/debug-options.js";
 import {
   CoinbaseOrdersFeesOptionsSchema,
   CoinbaseOrdersInsertOptionsSchema,
+  CoinbaseOrdersReadOptionsSchema,
   CoinbaseOrdersRegenerateOptionsSchema,
   CoinbaseOrdersUpdateOptionsSchema,
 } from "./schemas/coinbase-orders-options.js";
@@ -41,10 +41,11 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
   addDebugOption(show);
 
   show
+    .option("--json", "Print machine-readable JSON output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
-        async (orderId, options) => runActionWithArgument(coinbaseOrders, orderId, options, DebugOptionsSchema),
+        async (orderId, options) => runActionWithArgument(coinbaseOrders, orderId, options, CoinbaseOrdersReadOptionsSchema),
       ),
     );
 
@@ -55,11 +56,12 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
   addDebugOption(inspect);
 
   inspect
+    .option("--json", "Print machine-readable JSON output", false)
     .action(
       withAction(
         parseArgWithOptions(z.string()),
         async (orderId, options) =>
-          runActionWithArgument(coinbaseOrdersObject, orderId, options, DebugOptionsSchema),
+          runActionWithArgument(coinbaseOrdersObject, orderId, options, CoinbaseOrdersReadOptionsSchema),
       ),
     );
 

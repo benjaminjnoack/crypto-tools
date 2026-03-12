@@ -74,10 +74,13 @@ Install binary in your shell:
 
 - `hdb coinbase balances list <asset>`
   - `asset` supports colon-separated values
+  - `--json` prints structured troubleshooting output
   - `--current` live check requires `--remote`
 - `hdb coinbase balances snapshot`
+  - `--json` prints structured troubleshooting output
   - `--current` live check requires `--remote`
 - `hdb coinbase balances trace <asset>`
+  - `--json` prints structured troubleshooting output
 - `hdb coinbase balances rebuild`
 - `hdb coinbase lots analyze <asset>`
 - `hdb coinbase lots analyze-all`
@@ -85,7 +88,9 @@ Install binary in your shell:
 - `hdb coinbase lots compare-all`
   - supports `--csv` and `--f8949` exports
 - `hdb coinbase orders show <orderId>`
+  - `--json` prints `{ row, meta }`
 - `hdb coinbase orders inspect <orderId>`
+  - `--json` prints `{ row, meta }`
 - `hdb coinbase orders fees [productId]`
 - `hdb coinbase orders import-one <orderId>`
   - requires explicit live mode: `--remote`
@@ -97,8 +102,11 @@ Install binary in your shell:
 ### Coinbase Transactions
 
 - `hdb coinbase transactions list [asset]`
+  - `--json` prints `{ rows, filters, meta }`
 - `hdb coinbase transactions summary [asset]`
+  - `--json` prints `{ rows, totals, filters, meta }`
 - `hdb coinbase transactions show [id]`
+  - `--json` prints `{ rows, filters, meta }`
 - `hdb coinbase transactions add-manual <asset>`
 - `hdb coinbase transactions import-statement <filepath>`
 - `hdb coinbase transactions rebuild`
@@ -115,10 +123,10 @@ Coinbase migration status and next slices are tracked in:
 - `hdb cointracker balances rebuild`
 - `hdb cointracker gains list [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
-  - totals/format: `--totals`, `--raw`
+  - totals/format: `--totals`, `--raw`, `--json`
 - `hdb cointracker gains summary [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
-  - totals/format: `--totals`, `--raw`
+  - totals/format: `--totals`, `--raw`, `--json`
 - `hdb cointracker gains rebuild`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
 - `hdb cointracker gains analyze-usdc`
@@ -130,6 +138,28 @@ Coinbase migration status and next slices are tracked in:
   - also rebuilds `cointracker_balances_ledger`
 
 Use `hdb <command path> --help` for option details.
+
+## Troubleshooting Workflow
+
+Prefer these two local-only paths when validating `hdb` correctness:
+
+1. `hdb ... --json`
+   - best for repeated debugging and agent-assisted inspection
+   - stable machine-readable output with normalized filters and row counts
+2. `psql` with the local `hdb_readonly` role
+   - best for ad hoc SQL when the existing command surface is not enough
+   - use only for local read-only inspection
+
+Examples:
+
+```bash
+hdb coinbase transactions list btc --from 2026-01-01 --to 2026-02-01 --json
+hdb coinbase balances trace eth --to 2026-02-01T00:00:00Z --json
+hdb cointracker gains summary btc:eth --totals --json
+psql "postgresql://hdb_readonly:readonly_password@localhost:5432/hdb" -c "select count(*) from coinbase_transactions;"
+```
+
+`--json` is read-only and intended for troubleshooting. It is not available on mutation commands. For CoinTracker gains, `--json` cannot be combined with `--csv` or `--f8949`.
 
 ## Remaining TODOs
 

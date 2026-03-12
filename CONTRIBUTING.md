@@ -161,6 +161,7 @@ Behavior matrix for Coinbase REST calls:
 - `hdb` uses PostgreSQL for local workflows.
 - Use `DATABASE_URL` for connection configuration.
 - Local Postgres setup examples are documented in `src/apps/hdb/README.postgres.md`.
+- For troubleshooting, prefer `hdb ... --json` for command-owned read-only views and use a local read-only SQL role such as `hdb_readonly` for ad hoc inspection.
 
 ## Linting and Code Quality
 

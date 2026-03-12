@@ -23,6 +23,7 @@ const BaseTransactionQuerySchema = DebugOptionsSchema.extend({
   excludeSynthetic: z.boolean().optional(),
   first: z.string().regex(/^\d+$/).optional(),
   from: z.string().optional(),
+  json: z.boolean().optional(),
   last: z.string().regex(/^\d+$/).optional(),
   manual: z.boolean().optional(),
   notes: z.boolean().optional(),
@@ -54,6 +55,7 @@ export const CoinbaseTransactionsGroupOptionsSchema = BaseTransactionQuerySchema
 export const CoinbaseTransactionsIdOptionsSchema = DebugOptionsSchema.extend({
   balance: z.boolean().optional(),
   classify: z.boolean().optional(),
+  json: z.boolean().optional(),
   lotId: z.string().trim().min(1).optional(),
   notes: z.boolean().optional(),
   quiet: z.boolean().optional(),

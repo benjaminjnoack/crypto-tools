@@ -41,6 +41,32 @@ sudo -u postgres psql -c "CREATE DATABASE hdb OWNER hdb_user;"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE hdb TO hdb_user;"
 ```
 
+## Optional: Create a Read-Only Troubleshooting Role
+
+Use this local role for safe ad hoc inspection from `psql` or other SQL clients.
+
+Replace `readonly_password` with a local-only password.
+
+```bash
+sudo -u postgres psql -d hdb -c "CREATE ROLE hdb_readonly WITH LOGIN PASSWORD 'readonly_password';"
+sudo -u postgres psql -d hdb -c "GRANT CONNECT ON DATABASE hdb TO hdb_readonly;"
+sudo -u postgres psql -d hdb -c "GRANT USAGE ON SCHEMA public TO hdb_readonly;"
+sudo -u postgres psql -d hdb -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO hdb_readonly;"
+sudo -u postgres psql -d hdb -c "ALTER DEFAULT PRIVILEGES FOR ROLE hdb_user IN SCHEMA public GRANT SELECT ON TABLES TO hdb_readonly;"
+```
+
+Connect with:
+
+```bash
+psql "postgresql://hdb_readonly:readonly_password@localhost:5432/hdb"
+```
+
+Recommended usage:
+
+- keep the application on `hdb_user`
+- use `hdb_readonly` only for troubleshooting and inspection
+- prefer `hdb ... --json` first when an existing command already exposes the data you need
+
 ## Connect Test
 
 ```bash

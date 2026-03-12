@@ -212,12 +212,42 @@ describe("hdb coinbase transaction handlers", () => {
     expect(rows).toHaveLength(1);
   });
 
+  it("prints transaction list as json", async () => {
+    await coinbaseTransactions("btc", {
+      json: true,
+      balance: true,
+      paired: true,
+      quiet: false,
+    });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"rows\"");
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"includeBalances\": true");
+  });
+
+  it("prints grouped transactions as json with totals", async () => {
+    await coinbaseTransactionsGroup("btc", { interval: "month", json: true });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"totals\"");
+  });
+
   it("selects transaction IDs from colon-separated id string", async () => {
     const rows = await coinbaseTransactionsId("id-1:id-2", { quiet: false });
 
     expect(selectCoinbaseTransactionsByIdsMock).toHaveBeenCalledWith(["id-1", "id-2"]);
     expect(tableMock).toHaveBeenCalledTimes(1);
     expect(rows).toHaveLength(1);
+  });
+
+  it("prints transaction ids as json", async () => {
+    await coinbaseTransactionsId("id-1:id-2", { json: true });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"ids\"");
   });
 
   it("throws for unsupported lot-id mode", async () => {

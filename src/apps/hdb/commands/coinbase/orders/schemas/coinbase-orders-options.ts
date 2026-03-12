@@ -22,6 +22,11 @@ export const CoinbaseOrdersFeesOptionsSchema = DebugOptionsSchema
   });
 export type CoinbaseOrdersFeesOptions = z.infer<typeof CoinbaseOrdersFeesOptionsSchema>;
 
+export const CoinbaseOrdersReadOptionsSchema = DebugOptionsSchema.extend({
+  json: z.boolean().optional(),
+});
+export type CoinbaseOrdersReadOptions = z.infer<typeof CoinbaseOrdersReadOptionsSchema>;
+
 export const CoinbaseOrdersInsertOptionsSchema = DebugOptionsSchema.extend({
   remote: z.boolean().optional(),
 });

@@ -11,6 +11,7 @@ import {
 import type {
   CoinbaseOrdersFeesOptions,
   CoinbaseOrdersInsertOptions,
+  CoinbaseOrdersReadOptions,
   CoinbaseOrdersRegenerateOptions,
   CoinbaseOrdersUpdateOptions,
 } from "./schemas/coinbase-orders-options.js";
@@ -26,6 +27,7 @@ import { requestOrder, requestOrders } from "../../../../../shared/coinbase/rest
 import { ORDER_STATUS, OrderPlacementValues } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
 import type { CoinbaseOrder } from "../../../../../shared/coinbase/schemas/coinbase-order-schemas.js";
 import { logger, printOrder } from "../../../../../shared/log/index.js";
+import { printJson } from "../../shared/json-output.js";
 
 function assertUpdateSource(cache?: boolean, remote?: boolean): void {
   if (cache && remote) {
@@ -109,14 +111,36 @@ async function loadOrdersFromRemote(options: CoinbaseOrdersUpdateOptions): Promi
   return orders;
 }
 
-export async function coinbaseOrders(orderId: string): Promise<CoinbaseOrder> {
+export async function coinbaseOrders(orderId: string, options: CoinbaseOrdersReadOptions): Promise<CoinbaseOrder> {
   const order = await selectCoinbaseOrder(orderId);
+  if (options.json) {
+    printJson({
+      row: order,
+      meta: {
+        orderId,
+        view: "show",
+      },
+    });
+    return order;
+  }
+
   printOrder(order);
   return order;
 }
 
-export async function coinbaseOrdersObject(orderId: string): Promise<CoinbaseOrder> {
+export async function coinbaseOrdersObject(orderId: string, options: CoinbaseOrdersReadOptions): Promise<CoinbaseOrder> {
   const order = await selectCoinbaseOrder(orderId);
+  if (options.json) {
+    printJson({
+      row: order,
+      meta: {
+        orderId,
+        view: "inspect",
+      },
+    });
+    return order;
+  }
+
   console.dir(order, { depth: null });
   return order;
 }

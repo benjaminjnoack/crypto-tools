@@ -25,6 +25,7 @@ const {
   getEnvConfigMock,
   loggerWarnMock,
   loggerInfoMock,
+  logMock,
   tableMock,
 } = vi.hoisted(() => ({
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
@@ -62,6 +63,7 @@ const {
   getEnvConfigMock: vi.fn(() => ({ HELPER_HDB_ROOT_DIR: "/tmp/hdb-root" })),
   loggerWarnMock: vi.fn(),
   loggerInfoMock: vi.fn(),
+  logMock: vi.fn(),
   tableMock: vi.fn(),
 }));
 
@@ -126,6 +128,7 @@ describe("cointracker capital gains handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "table").mockImplementation(tableMock);
+    vi.spyOn(console, "log").mockImplementation(logMock);
   });
 
   it("queries gains and totals", async () => {
@@ -147,6 +150,22 @@ describe("cointracker capital gains handlers", () => {
     expect(writeCapitalGainsGroupCsvMock).toHaveBeenCalledTimes(1);
     expect(tableMock).toHaveBeenCalledTimes(2);
     expect(rows).toEqual([{ group: "BTC" }]);
+  });
+
+  it("prints gains as json", async () => {
+    await cointrackerCapitalGains("btc", { json: true, totals: true });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"totals\"");
+  });
+
+  it("prints grouped gains as json", async () => {
+    await cointrackerCapitalGainsGroup("btc", { json: true, totals: true });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"rows\"");
   });
 
   it("passes pages option to grouped f8949 export", async () => {
@@ -216,5 +235,11 @@ describe("cointracker capital gains handlers", () => {
     await cointrackerCapitalGainsGroup("btc", { quiet: true, type: "short", csv: true });
     expect(loggerWarnMock).toHaveBeenCalledWith("CSV/F8949 export with --type is not supported for grouped gains");
     expect(writeCapitalGainsGroupCsvMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects json with file export flags", async () => {
+    await expect(cointrackerCapitalGains("btc", { json: true, csv: true })).rejects.toThrow(
+      "Invalid output mode: --json cannot be combined with file export flags.",
+    );
   });
 });

@@ -21,6 +21,7 @@ const BaseCapitalGainsQuerySchema = DebugOptionsSchema.extend({
   from: z.string().optional(),
   gains: z.boolean().optional(),
   headers: z.boolean().optional(),
+  json: z.boolean().optional(),
   last: z.string().regex(/^\d+$/).optional(),
   pages: z.boolean().optional(),
   quiet: z.boolean().optional(),

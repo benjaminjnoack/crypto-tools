@@ -35,6 +35,7 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
   list
     .option("--current", "Include current account balance check from Coinbase", false)
     .option("--first <first>", "Show only first N rows")
+    .option("--json", "Print machine-readable JSON output", false)
     .option("--last <last>", "Show only last N rows")
     .option("--quiet", "Suppress console output", false)
     .option("--raw", "Display raw balance values", false)
@@ -64,6 +65,7 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
 
   snapshot
     .option("--current", "Include current account balance check from Coinbase", false)
+    .option("--json", "Print machine-readable JSON output", false)
     .option("--quiet", "Suppress console output", false)
     .option("--raw", "Display raw balance values", false)
     .option("--remote", "Allow live Coinbase account requests", false)
@@ -83,6 +85,7 @@ export function registerCoinbaseBalancesCommands(coinbase: Command): void {
   addYearOption(trace, "Trace balances up to the end of the specified year");
 
   trace
+    .option("--json", "Print machine-readable JSON output", false)
     .option("--quiet", "Suppress console output", false)
     .option("--raw", "Display raw balance values", false)
     .action(

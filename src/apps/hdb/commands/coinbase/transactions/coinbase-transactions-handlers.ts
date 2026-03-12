@@ -27,6 +27,7 @@ import type { CoinbaseTransactionFilters } from "../../../db/coinbase/transactio
 import { parseCoinbaseTransactionsStatementCsv } from "../../../db/coinbase/transactions/coinbase-transactions-mappers.js";
 import { getClient } from "../../../db/db-client.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
+import { printJson } from "../../shared/json-output.js";
 import type {
   CoinbaseTransactionsGroupOptions,
   CoinbaseTransactionsIdOptions,
@@ -165,6 +166,15 @@ function buildTransactionFilters(
   };
 }
 
+function printTransactionJson(payload: {
+  rows: Array<Record<string, unknown>>;
+  filters: Record<string, unknown>;
+  meta: Record<string, unknown>;
+  totals?: Array<Record<string, unknown>> | undefined;
+}): void {
+  printJson(payload);
+}
+
 function resolveCoinbaseTransactionsInputDir(inputDir?: string): string {
   if (inputDir) {
     return path.resolve(inputDir);
@@ -188,6 +198,30 @@ export async function coinbaseTransactions(
   const filters = buildTransactionFilters(asset, options, from, to);
   const rows = await selectCoinbaseTransactions(filters, Boolean(balance), Boolean(paired));
 
+  if (options.json) {
+    const tableRows = rows.map((row) => toTransactionConsoleRow(row, options));
+    const outputRows = applyFirstLastRows(tableRows, first, last);
+    printTransactionJson({
+      rows: outputRows,
+      filters: {
+        ...filters,
+        from: filters.from.toISOString(),
+        to: filters.to.toISOString(),
+      },
+      meta: {
+        rowCount: outputRows.length,
+        totalRows: rows.length,
+        appliedFirst: first ?? null,
+        appliedLast: last ?? null,
+        includeBalances: Boolean(balance),
+        includePaired: Boolean(paired),
+        notes: Boolean(options.notes),
+        classify: Boolean(options.classify),
+      },
+    });
+    return rows as Array<Record<string, unknown>>;
+  }
+
   if (!quiet) {
     if (rows.length === 0) {
       logger.warn(`No transactions found from ${from.toISOString()} to ${to.toISOString()}`);
@@ -210,12 +244,33 @@ export async function coinbaseTransactionsGroup(
 
   const filters = buildTransactionFilters(asset, options, from, to);
   const rows = await selectCoinbaseTransactionsGroup(filters, interval);
+  const totals = interval ? await selectCoinbaseTransactionsGroup(filters) : undefined;
+
+  if (options.json) {
+    const payload: Parameters<typeof printTransactionJson>[0] = {
+      rows,
+      filters: {
+        ...filters,
+        from: filters.from.toISOString(),
+        to: filters.to.toISOString(),
+        interval: interval ?? null,
+      },
+      meta: {
+        rowCount: rows.length,
+        totalsRowCount: totals?.length ?? 0,
+      },
+    };
+    if (totals) {
+      payload.totals = totals;
+    }
+    printTransactionJson(payload);
+    return rows as Array<Record<string, unknown>>;
+  }
 
   if (!quiet) {
     console.table(rows);
     if (interval) {
       console.log("Totals:");
-      const totals = await selectCoinbaseTransactionsGroup(filters);
       console.table(totals);
     }
   }
@@ -238,6 +293,23 @@ export async function coinbaseTransactionsId(
 
   const ids = normalizeColonSeparated(id);
   const rows = await selectCoinbaseTransactionsByIds(ids);
+
+  if (options.json) {
+    const tableRows = rows.map((row) => toTransactionConsoleRow(row, { ...options, balance }));
+    printTransactionJson({
+      rows: tableRows,
+      filters: {
+        ids,
+      },
+      meta: {
+        rowCount: tableRows.length,
+        includeBalances: Boolean(balance),
+        notes: Boolean(options.notes),
+        classify: Boolean(options.classify),
+      },
+    });
+    return rows as Array<Record<string, unknown>>;
+  }
 
   if (!quiet) {
     if (rows.length === 0) {

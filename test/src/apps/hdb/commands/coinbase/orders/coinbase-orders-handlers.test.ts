@@ -20,6 +20,7 @@ const {
   loggerInfoMock,
   loggerErrorMock,
   loggerWarnMock,
+  logMock,
 } = vi.hoisted(() => ({
   selectCoinbaseOrderMock: vi.fn(() => Promise.resolve({ order_id: "id-1" })),
   selectCoinbaseOrderByLastFillTimeMock: vi.fn(() => Promise.resolve({ first: null, last: null })),
@@ -44,6 +45,7 @@ const {
   loggerInfoMock: vi.fn(),
   loggerErrorMock: vi.fn(),
   loggerWarnMock: vi.fn(),
+  logMock: vi.fn(),
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -110,10 +112,11 @@ import {
 describe("hdb coinbase order handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "log").mockImplementation(logMock);
   });
 
   it("loads and prints a single stored order", async () => {
-    await coinbaseOrders("abc");
+    await coinbaseOrders("abc", {});
     expect(selectCoinbaseOrderMock).toHaveBeenCalledWith("abc");
     expect(printOrderMock).toHaveBeenCalledWith({ order_id: "id-1" });
   });
@@ -133,10 +136,20 @@ describe("hdb coinbase order handlers", () => {
 
   it("prints reconstructed order object", async () => {
     const dirMock = vi.spyOn(console, "dir").mockImplementation(() => undefined);
-    const value = await coinbaseOrdersObject("abc");
+    const value = await coinbaseOrdersObject("abc", {});
     expect(selectCoinbaseOrderMock).toHaveBeenCalledWith("abc");
     expect(dirMock).toHaveBeenCalledTimes(1);
     expect(value).toEqual({ order_id: "id-1" });
+  });
+
+  it("prints order views as json", async () => {
+    await coinbaseOrders("abc", { json: true });
+    await coinbaseOrdersObject("abc", { json: true });
+
+    expect(printOrderMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(2);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"view\": \"show\"");
+    expect(logMock.mock.calls[1]?.[0]).toContain("\"view\": \"inspect\"");
   });
 
   it("downloads one order then inserts it", async () => {

@@ -17,6 +17,7 @@ import {
 } from "../../../db/coinbase/transactions/coinbase-transactions-repository.js";
 import { getClient } from "../../../db/db-client.js";
 import { COINBASE_EPOCH, DUST_THRESHOLD, getToAndFromDates } from "../../shared/date-range-utils.js";
+import { printJson } from "../../shared/json-output.js";
 import type {
   CoinbaseBalancesBatchOptions,
   CoinbaseBalancesQueryOptions,
@@ -89,6 +90,43 @@ function buildConsoleRows(
   currentBalanceMap?: Map<string, string>,
 ): BalanceTableRow[] {
   return rows.map((row) => toConsoleRow(row, raw, currentBalanceMap?.get(row.asset)));
+}
+
+function printBalanceJson(
+  rows: CoinbaseBalanceRow[],
+  options: {
+    assets?: string[] | undefined;
+    current?: boolean | undefined;
+    currentBalanceMap?: Map<string, string> | undefined;
+    first?: string | undefined;
+    raw?: boolean | undefined;
+    to: Date;
+    from?: Date | undefined;
+    last?: string | undefined;
+    mode: "list" | "snapshot" | "trace";
+  },
+): void {
+  const tableRows = buildConsoleRows(rows, options.raw, options.currentBalanceMap);
+  const outputRows = options.mode === "snapshot" ? tableRows : applyFirstLastRows(tableRows, options.first, options.last);
+
+  printJson({
+    rows: outputRows,
+    filters: {
+      assets: options.assets ?? [],
+      current: Boolean(options.current),
+      from: options.from?.toISOString() ?? null,
+      to: options.to.toISOString(),
+    },
+    meta: {
+      mode: options.mode,
+      rowCount: outputRows.length,
+      totalRows: rows.length,
+      appliedFirst: options.first ?? null,
+      appliedLast: options.last ?? null,
+      raw: Boolean(options.raw),
+      includesCurrentBalance: Boolean(options.currentBalanceMap),
+    },
+  });
 }
 
 async function getCurrentBalanceMap(remote: boolean | undefined): Promise<Map<string, string>> {
@@ -174,6 +212,21 @@ export async function coinbaseBalances(
   }
 
   const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
+  if (options.json) {
+    printBalanceJson(rows, {
+      assets,
+      current,
+      currentBalanceMap,
+      first,
+      from,
+      last,
+      mode: "list",
+      raw,
+      to,
+    });
+    return rows;
+  }
+
   const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(applyFirstLastRows(tableRows, first, last));
 
@@ -197,6 +250,17 @@ export async function coinbaseBalancesBatch(
   }
 
   const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
+  if (options.json) {
+    printBalanceJson(rows, {
+      current,
+      currentBalanceMap,
+      mode: "snapshot",
+      raw,
+      to,
+    });
+    return rows;
+  }
+
   const tableRows = buildConsoleRows(rows, raw, currentBalanceMap);
   console.table(tableRows);
 
@@ -219,6 +283,16 @@ export async function coinbaseBalancesTrace(
 
   if (rows.length === 0) {
     logger.warn(`No balances found for ${ticker} to ${to.toISOString()}`);
+    return rows;
+  }
+
+  if (options.json) {
+    printBalanceJson(rows, {
+      assets: [ticker],
+      mode: "trace",
+      raw,
+      to,
+    });
     return rows;
   }
 

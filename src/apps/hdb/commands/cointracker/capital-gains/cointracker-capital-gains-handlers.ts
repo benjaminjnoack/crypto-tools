@@ -36,6 +36,7 @@ import {
 } from "./cointracker-capital-gains-export.js";
 import { getEnvConfig } from "../../../../../shared/common/index.js";
 import { logger } from "../../../../../shared/log/index.js";
+import { assertNoJsonWithFileExport, printJson } from "../../shared/json-output.js";
 
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {
@@ -154,8 +155,9 @@ export async function cointrackerCapitalGains(
   assetsArg: string | undefined,
   options: CointrackerCapitalGainsGetOptions,
 ): Promise<Array<Record<string, unknown>>> {
-  const { cash, crypto, csv, f8949, first, gains, headers, last, pages, quiet, raw, received, sent, totals, zero } = options;
+  const { cash, crypto, csv, f8949, first, gains, headers, json, last, pages, quiet, raw, received, sent, totals, zero } = options;
   const { from, to } = await getToAndFromDates(options);
+  assertNoJsonWithFileExport(json, csv, f8949);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
   const baseExcluding = normalizeColonSeparatedUppercase(options.exclude);
@@ -179,13 +181,37 @@ export async function cointrackerCapitalGains(
     filters,
     Boolean(gains),
   );
+  const outputRows = applyFirstLastRows(rows, first, last);
+  const totalsRow = totals ? await selectCointrackerCapitalGainsTotals({ assets, excluding, from, to }) : undefined;
 
-  if (!quiet) {
-    console.table(applyFirstLastRows(rows, first, last));
+  if (json) {
+    printJson({
+      rows: outputRows,
+      totals: totalsRow ?? null,
+      filters: {
+        ...filters,
+        from: from.toISOString(),
+        to: to.toISOString(),
+        received: filters.received?.toISOString() ?? null,
+        sent: filters.sent?.toISOString() ?? null,
+      },
+      meta: {
+        rowCount: outputRows.length,
+        totalRows: rows.length,
+        appliedFirst: first ?? null,
+        appliedLast: last ?? null,
+        orderByGains: Boolean(gains),
+        raw: Boolean(raw),
+      },
+    });
+    return rows as Array<Record<string, unknown>>;
   }
 
-  if (totals) {
-    const totalsRow = await selectCointrackerCapitalGainsTotals({ assets, excluding, from, to });
+  if (!quiet) {
+    console.table(outputRows);
+  }
+
+  if (totalsRow) {
     console.table([formatTotalsForDisplay(totalsRow, raw)]);
 
     if (csv || f8949) {
@@ -225,6 +251,7 @@ export async function cointrackerCapitalGainsGroup(
     first,
     gains,
     headers,
+    json,
     last,
     pages,
     quiet,
@@ -236,6 +263,7 @@ export async function cointrackerCapitalGainsGroup(
     zero,
   } = options;
   const { from, to } = await getToAndFromDates(options);
+  assertNoJsonWithFileExport(json, csv, f8949);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
   const baseExcluding = normalizeColonSeparatedUppercase(options.exclude);
@@ -263,16 +291,40 @@ export async function cointrackerCapitalGainsGroup(
     filters,
     Boolean(gains),
   );
+  const formattedRows = formatGroupRowsForDisplay(
+    rows as unknown as Array<Record<string, string>>,
+    raw,
+  );
+  const outputRows = applyFirstLastRows(formattedRows, first, last);
+  const totalsRow = totals ? await selectCointrackerCapitalGainsGroupTotals(filters) : undefined;
 
-  if (!quiet) {
-    const formattedRows = formatGroupRowsForDisplay(
-      rows as unknown as Array<Record<string, string>>,
-      raw,
-    );
-    console.table(applyFirstLastRows(formattedRows, first, last));
+  if (json) {
+    printJson({
+      rows: outputRows,
+      totals: totalsRow ?? null,
+      filters: {
+        ...filters,
+        from: from.toISOString(),
+        to: to.toISOString(),
+        received: filters.received?.toISOString() ?? null,
+        sent: filters.sent?.toISOString() ?? null,
+      },
+      meta: {
+        rowCount: outputRows.length,
+        totalRows: rows.length,
+        appliedFirst: first ?? null,
+        appliedLast: last ?? null,
+        orderByGains: Boolean(gains),
+        raw: Boolean(raw),
+      },
+    });
+    return rows as Array<Record<string, unknown>>;
   }
 
-  const totalsRow = totals ? await selectCointrackerCapitalGainsGroupTotals(filters) : undefined;
+  if (!quiet) {
+    console.table(outputRows);
+  }
+
   if (totalsRow) {
     console.table([formatTotalsForDisplay(totalsRow, raw)]);
   }

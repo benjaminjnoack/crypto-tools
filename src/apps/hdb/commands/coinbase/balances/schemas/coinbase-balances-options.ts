@@ -6,6 +6,7 @@ export const CoinbaseBalancesQueryOptionsSchema = DebugOptionsSchema.extend({
   current: z.boolean().optional(),
   first: z.string().regex(/^\d+$/).optional(),
   from: z.string().optional(),
+  json: z.boolean().optional(),
   last: z.string().regex(/^\d+$/).optional(),
   quiet: z.boolean().optional(),
   range: DateRangeSchema.optional(),
@@ -18,6 +19,7 @@ export const CoinbaseBalancesQueryOptionsSchema = DebugOptionsSchema.extend({
 export const CoinbaseBalancesBatchOptionsSchema = DebugOptionsSchema.extend({
   current: z.boolean().optional(),
   from: z.string().optional(),
+  json: z.boolean().optional(),
   quiet: z.boolean().optional(),
   raw: z.boolean().optional(),
   range: DateRangeSchema.optional(),
@@ -27,6 +29,7 @@ export const CoinbaseBalancesBatchOptionsSchema = DebugOptionsSchema.extend({
 });
 
 export const CoinbaseBalancesTraceOptionsSchema = DebugOptionsSchema.extend({
+  json: z.boolean().optional(),
   quiet: z.boolean().optional(),
   raw: z.boolean().optional(),
   to: z.string().optional(),

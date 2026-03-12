@@ -16,6 +16,7 @@ const {
   loggerWarnMock,
   loggerInfoMock,
   loggerErrorMock,
+  logMock,
   tableMock,
 } = vi.hoisted(() => ({
   getToAndFromDatesMock: vi.fn(() => Promise.resolve({
@@ -97,6 +98,7 @@ const {
   loggerWarnMock: vi.fn(),
   loggerInfoMock: vi.fn(),
   loggerErrorMock: vi.fn(),
+  logMock: vi.fn(),
   tableMock: vi.fn(),
 }));
 
@@ -148,6 +150,7 @@ describe("hdb coinbase balance handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "table").mockImplementation(tableMock);
+    vi.spyOn(console, "log").mockImplementation(logMock);
   });
 
   it("queries balances and prints rows", async () => {
@@ -171,6 +174,15 @@ describe("hdb coinbase balance handlers", () => {
 
     expect(requestAccountsMock).toHaveBeenCalledTimes(1);
     expect(tableMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("prints balances as json", async () => {
+    await coinbaseBalances("btc:eth", { json: true, raw: false });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"rows\"");
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"filters\"");
   });
 
   it("queries batch snapshot and trace", async () => {
