@@ -188,6 +188,25 @@ function resolveCoinbaseTransactionsInputDir(inputDir?: string): string {
   return path.resolve(HELPER_HDB_ROOT_DIR, "input", "coinbase-transactions");
 }
 
+async function insertCoinbaseTransactionRowsInBatches(rows: CoinbaseTransactionInsertRow[]): Promise<void> {
+  const BATCH_SIZE = 2000;
+  const pool = await getClient();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE);
+      await insertCoinbaseTransactionsBatch(batch, client);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function coinbaseTransactions(
   asset: string | undefined,
   options: CoinbaseTransactionsQueryOptions,
@@ -338,22 +357,7 @@ export async function coinbaseTransactionsStatement(
     Boolean(manual),
   );
 
-  const BATCH_SIZE = 2000;
-  const pool = await getClient();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-      const batch = rows.slice(i, i + BATCH_SIZE);
-      await insertCoinbaseTransactionsBatch(batch, client);
-    }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  await insertCoinbaseTransactionRowsInBatches(rows);
 
   logger.info(`Imported ${rows.length} statement rows from ${fullPath}`);
   return rows.length;
@@ -397,22 +401,7 @@ export async function coinbaseTransactionsRegenerate(
     await truncateCoinbaseTransactionsTable();
   }
 
-  const BATCH_SIZE = 2000;
-  const pool = await getClient();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-      const batch = rows.slice(i, i + BATCH_SIZE);
-      await insertCoinbaseTransactionsBatch(batch, client);
-    }
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  await insertCoinbaseTransactionRowsInBatches(rows);
 
   logger.info(`Inserted ${rows.length} coinbase transaction rows`);
   return rows.length;
