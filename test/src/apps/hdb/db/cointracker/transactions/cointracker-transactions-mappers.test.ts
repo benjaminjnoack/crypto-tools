@@ -31,11 +31,37 @@ describe("cointracker transactions mappers", () => {
     expect(rows[0]?.date.toISOString()).toBe(isoUtc({ year: 2025, month: 11, day: 18, hour: 1, minute: 49, second: 19 }));
     expect(rows[0]?.received_wallet).toBe("Coinbase Staked AVAX");
     expect(rows[0]?.transaction_hash).toBe("hash-1");
+    expect(rows[0]?.received_cost_basis).toBe("0.00");
+  });
+
+  it("treats cointracker placeholder values as null", () => {
+    const csv = [
+      "Date,Type,Transaction ID,Received Quantity,Received Currency,Received Cost Basis (USD),Received Wallet,Received Address,Received Comment,Sent Quantity,Sent Currency,Sent Cost Basis (USD),Sent Wallet,Sent Address,Sent Comment,Fee Amount,Fee Currency,Fee Cost Basis (USD),Realized Return (USD),Fee Realized Return (USD),Transaction Hash,Block Explorer URL",
+      "11/18/2025 01:49:19,STAKING_REWARD,tx-2,0.00000011,AVAX,...,Coinbase Staked AVAX,,,,,...,,,,,,...,...,...,,",
+    ].join("\n");
+
+    const rows = parseCointrackerTransactionsCsv(csv, "placeholders.csv");
+
+    expect(rows[0]?.received_cost_basis).toBeNull();
+    expect(rows[0]?.sent_cost_basis).toBeNull();
+    expect(rows[0]?.realized_return).toBeNull();
+    expect(rows[0]?.transaction_hash).toBeNull();
   });
 
   it("throws for malformed rows", () => {
     const csv = "Date,Type\n2026-01-01T00:00:00,BUY";
 
     expect(() => parseCointrackerTransactionsCsv(csv, "bad.csv")).toThrow("CSV validation failed");
+  });
+
+  it("points to the row and column for invalid numeric values", () => {
+    const csv = [
+      "Date,Type,Transaction ID,Received Quantity,Received Currency,Received Cost Basis (USD),Received Wallet,Received Address,Received Comment,Sent Quantity,Sent Currency,Sent Cost Basis (USD),Sent Wallet,Sent Address,Sent Comment,Fee Amount,Fee Currency,Fee Cost Basis (USD),Realized Return (USD),Fee Realized Return (USD),Transaction Hash",
+      "2026-01-01T00:00:00,BUY,tx-1,1,BTC,nope,,,note,50000,USD,50000,,,,10,USD,10,0,0,",
+    ].join("\n");
+
+    expect(() => parseCointrackerTransactionsCsv(csv, "bad-numeric.csv")).toThrow(
+      'CSV validation failed in bad-numeric.csv row 2 column "Received Cost Basis (USD)": invalid numeric value "nope"',
+    );
   });
 });

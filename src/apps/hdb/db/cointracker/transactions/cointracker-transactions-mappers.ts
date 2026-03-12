@@ -34,7 +34,21 @@ type CointrackerTransactionCsvRow = z.infer<typeof CointrackerTransactionCsvRowS
 
 function cleanNullable(value: string): string | null {
   const trimmed = value.trim();
-  return trimmed === "" ? null : trimmed;
+  return trimmed === "" || trimmed === "..." ? null : trimmed;
+}
+
+function cleanNumericNullable(value: string, source: string, rowNumber: number, column: string): string | null {
+  const cleaned = cleanNullable(value);
+  if (cleaned === null) {
+    return null;
+  }
+
+  const parsed = Number(cleaned);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`CSV validation failed in ${source} row ${rowNumber} column "${column}": invalid numeric value "${cleaned}"`);
+  }
+
+  return cleaned;
 }
 
 function parseDateAsUtc(dateValue: string): Date {
@@ -45,28 +59,37 @@ function parseDateAsUtc(dateValue: string): Date {
   return parsed;
 }
 
-function mapCsvRowToInsertRow(row: CointrackerTransactionCsvRow): CointrackerTransactionInsertRow {
+function mapCsvRowToInsertRow(
+  row: CointrackerTransactionCsvRow,
+  source: string,
+  rowNumber: number,
+): CointrackerTransactionInsertRow {
   return {
     transaction_id: row["Transaction ID"],
     date: parseDateAsUtc(row.Date),
     type: row.Type,
-    received_quantity: cleanNullable(row["Received Quantity"]),
+    received_quantity: cleanNumericNullable(row["Received Quantity"], source, rowNumber, "Received Quantity"),
     received_currency: cleanNullable(row["Received Currency"]),
-    received_cost_basis: cleanNullable(row["Received Cost Basis (USD)"]),
+    received_cost_basis: cleanNumericNullable(row["Received Cost Basis (USD)"], source, rowNumber, "Received Cost Basis (USD)"),
     received_wallet: cleanNullable(row["Received Wallet"]),
     received_address: cleanNullable(row["Received Address"]),
     received_comment: cleanNullable(row["Received Comment"]),
-    sent_quantity: cleanNullable(row["Sent Quantity"]),
+    sent_quantity: cleanNumericNullable(row["Sent Quantity"], source, rowNumber, "Sent Quantity"),
     sent_currency: cleanNullable(row["Sent Currency"]),
-    sent_cost_basis: cleanNullable(row["Sent Cost Basis (USD)"]),
+    sent_cost_basis: cleanNumericNullable(row["Sent Cost Basis (USD)"], source, rowNumber, "Sent Cost Basis (USD)"),
     sent_wallet: cleanNullable(row["Sent Wallet"]),
     sent_address: cleanNullable(row["Sent Address"]),
     sent_comment: cleanNullable(row["Sent Comment"]),
-    fee_amount: cleanNullable(row["Fee Amount"]),
+    fee_amount: cleanNumericNullable(row["Fee Amount"], source, rowNumber, "Fee Amount"),
     fee_currency: cleanNullable(row["Fee Currency"]),
-    fee_cost_basis: cleanNullable(row["Fee Cost Basis (USD)"]),
-    realized_return: cleanNullable(row["Realized Return (USD)"]),
-    fee_realized_return: cleanNullable(row["Fee Realized Return (USD)"]),
+    fee_cost_basis: cleanNumericNullable(row["Fee Cost Basis (USD)"], source, rowNumber, "Fee Cost Basis (USD)"),
+    realized_return: cleanNumericNullable(row["Realized Return (USD)"], source, rowNumber, "Realized Return (USD)"),
+    fee_realized_return: cleanNumericNullable(
+      row["Fee Realized Return (USD)"],
+      source,
+      rowNumber,
+      "Fee Realized Return (USD)",
+    ),
     transaction_hash: cleanNullable(row["Transaction Hash"]),
   };
 }
@@ -77,12 +100,13 @@ export function parseCointrackerTransactionsCsv(
 ): CointrackerTransactionInsertRow[] {
   const records = parseCsvRecords(csvText, source);
   return records.map((record, index) => {
+    const rowNumber = index + 2;
     const parsed = CointrackerTransactionCsvRowSchema.safeParse(record);
     if (!parsed.success) {
       throw new Error(
-        `CSV validation failed in ${source} row ${index + 2}: ${parsed.error.issues.map((issue) => issue.message).join(", ")}`,
+        `CSV validation failed in ${source} row ${rowNumber}: ${parsed.error.issues.map((issue) => issue.message).join(", ")}`,
       );
     }
-    return mapCsvRowToInsertRow(parsed.data);
+    return mapCsvRowToInsertRow(parsed.data, source, rowNumber);
   });
 }
