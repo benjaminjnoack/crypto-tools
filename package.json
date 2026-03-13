@@ -1,6 +1,6 @@
 {
   "name": "crypto-tools",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "author": "Ben Noack",
   "description": "Coinbase operations toolkit with cb trading workflows, hdb accounting/reconciliation pipelines, and shared TypeScript infrastructure",
   "license": "Apache-2.0",
