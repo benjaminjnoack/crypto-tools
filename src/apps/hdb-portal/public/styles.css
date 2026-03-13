@@ -105,6 +105,15 @@ select {
   margin-bottom: 12px;
 }
 
+.range-shortcuts {
+  display: flex;
+  margin: -2px 0 12px;
+}
+
+.range-shortcuts .secondary-button {
+  width: 100%;
+}
+
 .main {
   padding: 28px;
 }

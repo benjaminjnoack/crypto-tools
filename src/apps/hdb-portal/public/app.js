@@ -1,3 +1,5 @@
+const COINBASE_EPOCH_DATE = "2024-01-01";
+
 const state = {
   from: defaultFrom(),
   to: defaultTo(),
@@ -383,12 +385,24 @@ async function refreshActiveView() {
 }
 
 function wireForms() {
-  document.querySelector("#global-from").value = state.from;
-  document.querySelector("#global-to").value = state.to;
+  const globalFromInput = document.querySelector("#global-from");
+  const globalToInput = document.querySelector("#global-to");
+  const applyRangeButton = document.querySelector("#apply-range");
+  const coinbaseEpochButton = document.querySelector("#set-coinbase-epoch");
 
-  document.querySelector("#apply-range").addEventListener("click", async () => {
-    state.from = document.querySelector("#global-from").value;
-    state.to = document.querySelector("#global-to").value;
+  globalFromInput.value = state.from;
+  globalToInput.value = state.to;
+
+  applyRangeButton.addEventListener("click", async () => {
+    state.from = globalFromInput.value;
+    state.to = globalToInput.value;
+    await refreshActiveView();
+  });
+
+  coinbaseEpochButton.addEventListener("click", async () => {
+    globalFromInput.value = COINBASE_EPOCH_DATE;
+    state.from = COINBASE_EPOCH_DATE;
+    state.to = globalToInput.value;
     await refreshActiveView();
   });
 
