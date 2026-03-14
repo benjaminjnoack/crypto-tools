@@ -233,6 +233,15 @@ export type AttachedTpSlValues = {
   stopPrice: string;
 };
 
+export type ReplaceableSellOrderValues = {
+  orderType: CoinbaseOrder["order_type"];
+  productId: string;
+  baseSize: string;
+  limitPrice: string;
+  stopPrice?: string;
+  postOnly?: boolean;
+};
+
 export function getModifiableOrderValues(order: CoinbaseOrder): ModifiableOrderValues {
   switch (order.order_type) {
     case ORDER_TYPES.LIMIT: {
@@ -276,6 +285,51 @@ export function getAttachedTpSlValues(order: CoinbaseOrder): AttachedTpSlValues 
     takeProfitPrice: attached.limit_price,
     stopPrice: attached.stop_trigger_price,
   };
+}
+
+export function getReplaceableSellOrderValues(order: CoinbaseOrder): ReplaceableSellOrderValues {
+  if (order.status !== "CANCELLED") {
+    throw new Error(`Order ${order.order_id} must be CANCELLED before it can be replaced.`);
+  }
+  if (order.side !== ORDER_SIDE.SELL) {
+    throw new Error(`Order ${order.order_id} must be a SELL order before it can be replaced.`);
+  }
+
+  switch (order.order_type) {
+    case ORDER_TYPES.LIMIT: {
+      const config = order.order_configuration.limit_limit_gtc;
+      return {
+        orderType: order.order_type,
+        productId: order.product_id,
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        postOnly: config.post_only,
+      };
+    }
+    case ORDER_TYPES.STOP_LIMIT: {
+      const config = order.order_configuration.stop_limit_stop_limit_gtc;
+      return {
+        orderType: order.order_type,
+        productId: order.product_id,
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        stopPrice: config.stop_price,
+      };
+    }
+    case ORDER_TYPES.BRACKET:
+    case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS: {
+      const config = order.order_configuration.trigger_bracket_gtc;
+      return {
+        orderType: order.order_type,
+        productId: order.product_id,
+        baseSize: config.base_size,
+        limitPrice: config.limit_price,
+        stopPrice: config.stop_trigger_price,
+      };
+    }
+    case ORDER_TYPES.MARKET:
+      throw new Error("Only priced sell orders can be replaced.");
+  }
 }
 
 export function buildModifyOrderValues(

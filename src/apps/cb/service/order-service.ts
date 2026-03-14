@@ -19,6 +19,7 @@ import {
   getTransactionSummary,
   ORDER_SIDE,
   ORDER_TYPES,
+  requestAccounts,
   requestBestBidAsk,
 } from "../../../shared/coinbase/index.js";
 import type { EditOrderRequest } from "../../../shared/coinbase/schemas/coinbase-rest-schemas.js";
@@ -32,8 +33,17 @@ import {
   buildStopLimitOrderValues,
   getAttachedTpSlValues,
   getModifiableOrderValues,
+  getReplaceableSellOrderValues,
 } from "./order-builders.js";
 import { confirmOrder, confirmOrderChange } from "./order-prompts.js";
+
+function getBaseCurrency(productId: string): string {
+  const [baseCurrency] = productId.split("-");
+  if (!baseCurrency) {
+    throw new Error(`Could not determine base currency for product ${productId}.`);
+  }
+  return baseCurrency;
+}
 
 /**
  * Places a market order after validation and confirmation.
@@ -324,4 +334,85 @@ export async function placeBreakEvenStopOrder(
     size: existing.baseSize,
     stop_price: stopPrice,
   });
+}
+
+export async function replaceCancelledSellOrder(orderId: string): Promise<void> {
+  const order = await getOrder(orderId);
+  const values = getReplaceableSellOrderValues(order);
+  const accounts = await requestAccounts();
+  const baseCurrency = getBaseCurrency(values.productId);
+  const baseAccount = accounts.find((account) => account.currency === baseCurrency);
+
+  if (!baseAccount) {
+    throw new Error(`Could not find ${baseCurrency} account for ${values.productId}.`);
+  }
+
+  const available = parseFloat(baseAccount.available_balance.value);
+  const required = parseFloat(values.baseSize);
+  if (!Number.isFinite(available)) {
+    throw new Error(`Invalid available balance for ${baseCurrency} account.`);
+  }
+  if (!Number.isFinite(required) || required <= 0) {
+    throw new Error(`Invalid base size on order ${orderId}.`);
+  }
+  if (available < required) {
+    throw new Error(
+      `Insufficient available ${baseCurrency} balance to replace order ${orderId}: `
+      + `need ${values.baseSize}, have ${baseAccount.available_balance.value}.`,
+    );
+  }
+
+  const confirmationPrice = values.stopPrice
+    ? `${values.limitPrice}/${values.stopPrice}`
+    : values.limitPrice;
+  const confirmationValue = values.stopPrice
+    ? `${(required * parseFloat(values.limitPrice)).toFixed(2)}/${(required * parseFloat(values.stopPrice)).toFixed(2)}`
+    : (required * parseFloat(values.limitPrice)).toFixed(2);
+
+  if (
+    !confirmOrder(
+      values.orderType,
+      ORDER_SIDE.SELL,
+      values.productId,
+      values.baseSize,
+      confirmationPrice,
+      confirmationValue,
+    )
+  ) {
+    console.log("Action canceled.");
+    return;
+  }
+
+  switch (values.orderType) {
+    case ORDER_TYPES.LIMIT:
+      await createLimitOrder(
+        values.productId,
+        ORDER_SIDE.SELL,
+        values.baseSize,
+        values.limitPrice,
+        values.postOnly ?? true,
+      );
+      return;
+    case ORDER_TYPES.STOP_LIMIT:
+      await createStopLimitOrder(
+        values.productId,
+        ORDER_SIDE.SELL,
+        values.baseSize,
+        values.limitPrice,
+        values.stopPrice!,
+      );
+      return;
+    case ORDER_TYPES.BRACKET:
+    case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS:
+      await createBracketOrder(
+        values.productId,
+        ORDER_SIDE.SELL,
+        values.baseSize,
+        values.limitPrice,
+        values.stopPrice!,
+      );
+      return;
+    case ORDER_TYPES.MARKET:
+      throw new Error("Only priced sell orders can be replaced.");
+  }
 }

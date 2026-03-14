@@ -13,6 +13,7 @@ const {
   getProductInfoMock,
   getTransactionSummaryMock,
   requestBestBidAskMock,
+  requestAccountsMock,
   toIncrementMock,
   createMarketOrderMock,
   createLimitOrderMock,
@@ -39,6 +40,15 @@ const {
     asks: [{ price: "101.00" }],
     bids: [{ price: "100.50" }],
   })),
+  requestAccountsMock: vi.fn(() => Promise.resolve([
+    {
+      currency: "BTC",
+      available_balance: { value: "2.0" },
+      hold: { value: "0" },
+      type: "ACCOUNT_TYPE_CRYPTO",
+      uuid: "11111111-1111-4111-8111-111111111111",
+    },
+  ])),
   toIncrementMock: vi.fn((increment: string, value: number) => {
     const decimals = increment.includes(".") ? increment.split(".")[1]?.length ?? 0 : 0;
     const factor = 10 ** decimals;
@@ -74,6 +84,7 @@ vi.mock("../../../../../src/shared/coinbase/transaction-summary-service.js", () 
   getTransactionSummary: getTransactionSummaryMock,
 }));
 vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
+  requestAccounts: requestAccountsMock,
   requestBestBidAsk: requestBestBidAskMock,
   requestMarketTrades: vi.fn(),
 }));
@@ -103,6 +114,7 @@ import {
   placeMarketOrder,
   placeModifyOrder,
   placeStopLimitOrder,
+  replaceCancelledSellOrder,
 } from "../../../../../src/apps/cb/service/order-service.js";
 
 const orderId = (offset = 0) => makeOrderId(offset);
@@ -474,5 +486,110 @@ describe("cb service orders", () => {
     await expect(placeBreakEvenStopOrder(orderId(5), {
       buyPrice: "100",
     })).rejects.toThrow("Break-even stop is only supported for BRACKET and TAKE_PROFIT_STOP_LOSS orders.");
+  });
+
+  it("replaces a cancelled sell limit order when funds are available", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(20),
+      product_id: "BTC-USD",
+      side: "SELL",
+      status: "CANCELLED",
+      baseSize: "0.75",
+      limitPrice: "105.00",
+      postOnly: false,
+    }));
+
+    await replaceCancelledSellOrder(orderId(20));
+
+    expect(requestAccountsMock).toHaveBeenCalledTimes(1);
+    expect(createLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "0.75", "105.00", false);
+  });
+
+  it("replaces a cancelled sell stop-limit order when funds are available", async () => {
+    getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
+      order_id: orderId(21),
+      product_id: "BTC-USD",
+      side: "SELL",
+      status: "CANCELLED",
+      baseSize: "0.5",
+      limitPrice: "99.00",
+      stopPrice: "100.00",
+    }));
+
+    await replaceCancelledSellOrder(orderId(21));
+
+    expect(createStopLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "0.5", "99.00", "100.00");
+  });
+
+  it("replaces cancelled sell bracket-like orders via bracket creation", async () => {
+    getOrderMock.mockResolvedValueOnce(makeTpSlOrder({
+      order_id: orderId(22),
+      product_id: "BTC-USD",
+      status: "CANCELLED",
+      baseSize: "1.50",
+      limitPrice: "120.00",
+      stopTriggerPrice: "95.00",
+    }));
+
+    await replaceCancelledSellOrder(orderId(22));
+
+    expect(createBracketOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "1.50", "120.00", "95.00");
+  });
+
+  it("rejects replacing orders that are not cancelled", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(23),
+      side: "SELL",
+      status: "OPEN",
+    }));
+
+    await expect(replaceCancelledSellOrder(orderId(23))).rejects.toThrow(
+      `Order ${orderId(23)} must be CANCELLED before it can be replaced.`,
+    );
+  });
+
+  it("rejects replacing orders that are not sell orders", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(24),
+      side: "BUY",
+      status: "CANCELLED",
+    }));
+
+    await expect(replaceCancelledSellOrder(orderId(24))).rejects.toThrow(
+      `Order ${orderId(24)} must be a SELL order before it can be replaced.`,
+    );
+  });
+
+  it("rejects replacement when available balance is insufficient", async () => {
+    getOrderMock.mockResolvedValueOnce(makeBracketOrder({
+      order_id: orderId(25),
+      product_id: "BTC-USD",
+      status: "CANCELLED",
+      baseSize: "3.00",
+    }));
+
+    await expect(replaceCancelledSellOrder(orderId(25))).rejects.toThrow(
+      `Insufficient available BTC balance to replace order ${orderId(25)}: need 3.00, have 2.0.`,
+    );
+  });
+
+  it("cancels replacement when prompt is declined", async () => {
+    readlineQuestionMock.mockReturnValueOnce("no");
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(26),
+      product_id: "BTC-USD",
+      side: "SELL",
+      status: "CANCELLED",
+      baseSize: "0.1",
+      limitPrice: "110.00",
+    }));
+
+    await replaceCancelledSellOrder(orderId(26));
+
+    expect(logSpy).toHaveBeenCalledWith("\nOrder Change Summary:");
+    expect(logSpy).toHaveBeenCalledWith("Action canceled.");
+    expect(createLimitOrderMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
   });
 });

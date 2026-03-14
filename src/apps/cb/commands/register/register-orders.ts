@@ -5,6 +5,7 @@ import {
   handleModifyAction,
   handleOrderAction,
   handleOrdersAction,
+  handleReplaceAction,
 } from "../order-handlers.js";
 import { BreakEvenStopOptionsSchema, ModifyOptionsSchema } from "../schemas/command-options.js";
 import {
@@ -33,6 +34,11 @@ export function registerOrderCommands(program: Command) {
     .command("cancel <order_id>")
     .description("Cancel an open order by order ID")
     .action(withAction("order cancel", parseArg(OrderIdSchema), handleCancelAction));
+
+  order
+    .command("replace <order_id>")
+    .description("Re-place a cancelled sell order with the same prices when funds are available")
+    .action(withAction("order replace", parseArg(OrderIdSchema), handleReplaceAction));
 
   order
     .command("modify <order_id>")

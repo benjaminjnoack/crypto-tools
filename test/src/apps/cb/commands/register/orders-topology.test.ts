@@ -8,12 +8,14 @@ const {
   handleModifyActionMock,
   handleOrderActionMock,
   handleOrdersActionMock,
+  handleReplaceActionMock,
 } = vi.hoisted(() => ({
   handleBreakEvenStopActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleCancelActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleModifyActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleOrderActionMock: vi.fn(() => Promise.resolve(undefined)),
   handleOrdersActionMock: vi.fn(() => Promise.resolve(undefined)),
+  handleReplaceActionMock: vi.fn(() => Promise.resolve(undefined)),
 }));
 
 vi.mock("../../../../../../src/apps/cb/commands/order-handlers.js", () => ({
@@ -22,6 +24,7 @@ vi.mock("../../../../../../src/apps/cb/commands/order-handlers.js", () => ({
   handleModifyAction: handleModifyActionMock,
   handleOrderAction: handleOrderActionMock,
   handleOrdersAction: handleOrdersActionMock,
+  handleReplaceAction: handleReplaceActionMock,
 }));
 
 import { registerOrderCommands } from "../../../../../../src/apps/cb/commands/register/register-orders.js";
@@ -40,10 +43,11 @@ describe("order command topology", () => {
     vi.clearAllMocks();
   });
 
-  it("supports nested order get/list/cancel/modify commands", async () => {
+  it("supports nested order get/list/cancel/replace/modify commands", async () => {
     await run(["order", "get", VALID_UUID]);
     await run(["order", "list"]);
     await run(["order", "cancel", VALID_UUID]);
+    await run(["order", "replace", VALID_UUID]);
     await run(["order", "modify", VALID_UUID, "--limitPrice", "101.50"]);
     await run(["order", "modify", VALID_UUID, "--takeProfitPrice", "121.50"]);
     await run(["order", "breakeven", VALID_UUID, "--buyPrice", "100", "--limitPrice", "101.50"]);
@@ -51,6 +55,7 @@ describe("order command topology", () => {
     expect(handleOrderActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleOrdersActionMock).toHaveBeenCalledWith(null);
     expect(handleCancelActionMock).toHaveBeenCalledWith(VALID_UUID);
+    expect(handleReplaceActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { limitPrice: "101.50" });
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { takeProfitPrice: "121.50" });
     expect(handleBreakEvenStopActionMock).toHaveBeenCalledWith(VALID_UUID, {
@@ -71,6 +76,7 @@ describe("order command topology", () => {
     expect(handleOrderActionMock).not.toHaveBeenCalled();
     expect(handleOrdersActionMock).not.toHaveBeenCalled();
     expect(handleCancelActionMock).not.toHaveBeenCalled();
+    expect(handleReplaceActionMock).not.toHaveBeenCalled();
     expect(handleModifyActionMock).not.toHaveBeenCalled();
     expect(handleBreakEvenStopActionMock).not.toHaveBeenCalled();
   });
