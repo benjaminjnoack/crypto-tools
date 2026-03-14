@@ -233,8 +233,9 @@ export type AttachedTpSlValues = {
   stopPrice: string;
 };
 
-export type ReplaceableSellOrderValues = {
+export type ReplaceableOrderValues = {
   orderType: CoinbaseOrder["order_type"];
+  side: CoinbaseOrder["side"];
   productId: string;
   baseSize: string;
   limitPrice: string;
@@ -287,12 +288,9 @@ export function getAttachedTpSlValues(order: CoinbaseOrder): AttachedTpSlValues 
   };
 }
 
-export function getReplaceableSellOrderValues(order: CoinbaseOrder): ReplaceableSellOrderValues {
+export function getReplaceableOrderValues(order: CoinbaseOrder): ReplaceableOrderValues {
   if (order.status !== "CANCELLED") {
     throw new Error(`Order ${order.order_id} must be CANCELLED before it can be replaced.`);
-  }
-  if (order.side !== ORDER_SIDE.SELL) {
-    throw new Error(`Order ${order.order_id} must be a SELL order before it can be replaced.`);
   }
 
   switch (order.order_type) {
@@ -300,6 +298,7 @@ export function getReplaceableSellOrderValues(order: CoinbaseOrder): Replaceable
       const config = order.order_configuration.limit_limit_gtc;
       return {
         orderType: order.order_type,
+        side: order.side,
         productId: order.product_id,
         baseSize: config.base_size,
         limitPrice: config.limit_price,
@@ -310,6 +309,7 @@ export function getReplaceableSellOrderValues(order: CoinbaseOrder): Replaceable
       const config = order.order_configuration.stop_limit_stop_limit_gtc;
       return {
         orderType: order.order_type,
+        side: order.side,
         productId: order.product_id,
         baseSize: config.base_size,
         limitPrice: config.limit_price,
@@ -321,6 +321,7 @@ export function getReplaceableSellOrderValues(order: CoinbaseOrder): Replaceable
       const config = order.order_configuration.trigger_bracket_gtc;
       return {
         orderType: order.order_type,
+        side: order.side,
         productId: order.product_id,
         baseSize: config.base_size,
         limitPrice: config.limit_price,

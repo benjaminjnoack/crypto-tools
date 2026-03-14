@@ -5,7 +5,7 @@ import type { BreakEvenStopOptions, ModifyOptions } from "./schemas/command-opti
 import {
   placeBreakEvenStopOrder,
   placeModifyOrder,
-  replaceCancelledSellOrder,
+  replaceCancelledOrder,
 } from "../service/order-service.js";
 
 export async function handleOrderAction(orderId: string): Promise<void> {
@@ -42,5 +42,5 @@ export async function handleBreakEvenStopAction(
 }
 
 export async function handleReplaceAction(orderId: string): Promise<void> {
-  await replaceCancelledSellOrder(orderId);
+  await replaceCancelledOrder(orderId);
 }

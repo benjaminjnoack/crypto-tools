@@ -37,7 +37,7 @@ export function registerOrderCommands(program: Command) {
 
   order
     .command("replace <order_id>")
-    .description("Re-place a cancelled sell order with the same prices when funds are available")
+    .description("Re-place a cancelled priced order with the same prices when funds are available")
     .action(withAction("order replace", parseArg(OrderIdSchema), handleReplaceAction));
 
   order

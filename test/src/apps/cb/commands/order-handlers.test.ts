@@ -8,7 +8,7 @@ const {
   getOrderMock,
   cancelOrderMock,
   placeModifyOrderMock,
-  replaceCancelledSellOrderMock,
+  replaceCancelledOrderMock,
   printOrderMock,
 } = vi.hoisted(() => ({
   placeBreakEvenStopOrderMock: vi.fn(() => Promise.resolve(undefined)),
@@ -17,7 +17,7 @@ const {
   getOrderMock: vi.fn(() => Promise.resolve({ order_id: "order-1" })),
   cancelOrderMock: vi.fn(() => Promise.resolve(true)),
   placeModifyOrderMock: vi.fn(() => Promise.resolve(undefined)),
-  replaceCancelledSellOrderMock: vi.fn(() => Promise.resolve(undefined)),
+  replaceCancelledOrderMock: vi.fn(() => Promise.resolve(undefined)),
   printOrderMock: vi.fn(),
 }));
 
@@ -40,7 +40,7 @@ vi.mock("../../../../../src/shared/log/orders.js", () => ({
 vi.mock("../../../../../src/apps/cb/service/order-service.js", () => ({
   placeBreakEvenStopOrder: placeBreakEvenStopOrderMock,
   placeModifyOrder: placeModifyOrderMock,
-  replaceCancelledSellOrder: replaceCancelledSellOrderMock,
+  replaceCancelledOrder: replaceCancelledOrderMock,
 }));
 
 import {
@@ -123,6 +123,6 @@ describe("orders command handlers", () => {
   it("delegates replace action to service", async () => {
     await handleReplaceAction(orderId);
 
-    expect(replaceCancelledSellOrderMock).toHaveBeenCalledWith(orderId);
+    expect(replaceCancelledOrderMock).toHaveBeenCalledWith(orderId);
   });
 });

@@ -42,6 +42,13 @@ const {
   })),
   requestAccountsMock: vi.fn(() => Promise.resolve([
     {
+      currency: "USD",
+      available_balance: { value: "1000.00" },
+      hold: { value: "0" },
+      type: "ACCOUNT_TYPE_FIAT",
+      uuid: "00000000-0000-4000-8000-000000000000",
+    },
+    {
       currency: "BTC",
       available_balance: { value: "2.0" },
       hold: { value: "0" },
@@ -114,7 +121,7 @@ import {
   placeMarketOrder,
   placeModifyOrder,
   placeStopLimitOrder,
-  replaceCancelledSellOrder,
+  replaceCancelledOrder,
 } from "../../../../../src/apps/cb/service/order-service.js";
 
 const orderId = (offset = 0) => makeOrderId(offset);
@@ -499,10 +506,26 @@ describe("cb service orders", () => {
       postOnly: false,
     }));
 
-    await replaceCancelledSellOrder(orderId(20));
+    await replaceCancelledOrder(orderId(20));
 
     expect(requestAccountsMock).toHaveBeenCalledTimes(1);
     expect(createLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "0.75", "105.00", false);
+  });
+
+  it("replaces a cancelled buy limit order when USD is available", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(24),
+      product_id: "BTC-USD",
+      side: "BUY",
+      status: "CANCELLED",
+      baseSize: "0.5",
+      limitPrice: "100.00",
+      postOnly: true,
+    }));
+
+    await replaceCancelledOrder(orderId(24));
+
+    expect(createLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "BUY", "0.5", "100.00", true);
   });
 
   it("replaces a cancelled sell stop-limit order when funds are available", async () => {
@@ -516,7 +539,7 @@ describe("cb service orders", () => {
       stopPrice: "100.00",
     }));
 
-    await replaceCancelledSellOrder(orderId(21));
+    await replaceCancelledOrder(orderId(21));
 
     expect(createStopLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "0.5", "99.00", "100.00");
   });
@@ -531,9 +554,25 @@ describe("cb service orders", () => {
       stopTriggerPrice: "95.00",
     }));
 
-    await replaceCancelledSellOrder(orderId(22));
+    await replaceCancelledOrder(orderId(22));
 
     expect(createBracketOrderMock).toHaveBeenCalledWith("BTC-USD", "SELL", "1.50", "120.00", "95.00");
+  });
+
+  it("replaces a cancelled buy stop-limit order when USD is available", async () => {
+    getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
+      order_id: orderId(27),
+      product_id: "BTC-USD",
+      side: "BUY",
+      status: "CANCELLED",
+      baseSize: "0.5",
+      limitPrice: "101.00",
+      stopPrice: "102.00",
+    }));
+
+    await replaceCancelledOrder(orderId(27));
+
+    expect(createStopLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "BUY", "0.5", "101.00", "102.00");
   });
 
   it("rejects replacing orders that are not cancelled", async () => {
@@ -543,20 +582,8 @@ describe("cb service orders", () => {
       status: "OPEN",
     }));
 
-    await expect(replaceCancelledSellOrder(orderId(23))).rejects.toThrow(
+    await expect(replaceCancelledOrder(orderId(23))).rejects.toThrow(
       `Order ${orderId(23)} must be CANCELLED before it can be replaced.`,
-    );
-  });
-
-  it("rejects replacing orders that are not sell orders", async () => {
-    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
-      order_id: orderId(24),
-      side: "BUY",
-      status: "CANCELLED",
-    }));
-
-    await expect(replaceCancelledSellOrder(orderId(24))).rejects.toThrow(
-      `Order ${orderId(24)} must be a SELL order before it can be replaced.`,
     );
   });
 
@@ -568,8 +595,23 @@ describe("cb service orders", () => {
       baseSize: "3.00",
     }));
 
-    await expect(replaceCancelledSellOrder(orderId(25))).rejects.toThrow(
+    await expect(replaceCancelledOrder(orderId(25))).rejects.toThrow(
       `Insufficient available BTC balance to replace order ${orderId(25)}: need 3.00, have 2.0.`,
+    );
+  });
+
+  it("rejects buy replacement when available USD is insufficient", async () => {
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(28),
+      product_id: "BTC-USD",
+      side: "BUY",
+      status: "CANCELLED",
+      baseSize: "11",
+      limitPrice: "100.00",
+    }));
+
+    await expect(replaceCancelledOrder(orderId(28))).rejects.toThrow(
+      `Insufficient available USD balance to replace order ${orderId(28)}: need 1100.00, have 1000.00.`,
     );
   });
 
@@ -585,7 +627,7 @@ describe("cb service orders", () => {
       limitPrice: "110.00",
     }));
 
-    await replaceCancelledSellOrder(orderId(26));
+    await replaceCancelledOrder(orderId(26));
 
     expect(logSpy).toHaveBeenCalledWith("\nOrder Change Summary:");
     expect(logSpy).toHaveBeenCalledWith("Action canceled.");

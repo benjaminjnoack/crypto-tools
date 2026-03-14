@@ -33,7 +33,7 @@ import {
   buildStopLimitOrderValues,
   getAttachedTpSlValues,
   getModifiableOrderValues,
-  getReplaceableSellOrderValues,
+  getReplaceableOrderValues,
 } from "./order-builders.js";
 import { confirmOrder, confirmOrderChange } from "./order-prompts.js";
 
@@ -336,30 +336,54 @@ export async function placeBreakEvenStopOrder(
   });
 }
 
-export async function replaceCancelledSellOrder(orderId: string): Promise<void> {
+export async function replaceCancelledOrder(orderId: string): Promise<void> {
   const order = await getOrder(orderId);
-  const values = getReplaceableSellOrderValues(order);
+  const values = getReplaceableOrderValues(order);
   const accounts = await requestAccounts();
-  const baseCurrency = getBaseCurrency(values.productId);
-  const baseAccount = accounts.find((account) => account.currency === baseCurrency);
-
-  if (!baseAccount) {
-    throw new Error(`Could not find ${baseCurrency} account for ${values.productId}.`);
-  }
-
-  const available = parseFloat(baseAccount.available_balance.value);
   const required = parseFloat(values.baseSize);
-  if (!Number.isFinite(available)) {
-    throw new Error(`Invalid available balance for ${baseCurrency} account.`);
-  }
   if (!Number.isFinite(required) || required <= 0) {
     throw new Error(`Invalid base size on order ${orderId}.`);
   }
-  if (available < required) {
-    throw new Error(
-      `Insufficient available ${baseCurrency} balance to replace order ${orderId}: `
-      + `need ${values.baseSize}, have ${baseAccount.available_balance.value}.`,
-    );
+
+  if (values.side === ORDER_SIDE.SELL) {
+    const baseCurrency = getBaseCurrency(values.productId);
+    const baseAccount = accounts.find((account) => account.currency === baseCurrency);
+
+    if (!baseAccount) {
+      throw new Error(`Could not find ${baseCurrency} account for ${values.productId}.`);
+    }
+
+    const available = parseFloat(baseAccount.available_balance.value);
+    if (!Number.isFinite(available)) {
+      throw new Error(`Invalid available balance for ${baseCurrency} account.`);
+    }
+    if (available < required) {
+      throw new Error(
+        `Insufficient available ${baseCurrency} balance to replace order ${orderId}: `
+        + `need ${values.baseSize}, have ${baseAccount.available_balance.value}.`,
+      );
+    }
+  } else {
+    const usdAccount = accounts.find((account) => account.currency === "USD");
+
+    if (!usdAccount) {
+      throw new Error(`Could not find USD account to replace order ${orderId}.`);
+    }
+
+    const available = parseFloat(usdAccount.available_balance.value);
+    const requiredUsd = required * parseFloat(values.limitPrice);
+    if (!Number.isFinite(available)) {
+      throw new Error("Invalid available balance for USD account.");
+    }
+    if (!Number.isFinite(requiredUsd) || requiredUsd <= 0) {
+      throw new Error(`Invalid order value on order ${orderId}.`);
+    }
+    if (available < requiredUsd) {
+      throw new Error(
+        `Insufficient available USD balance to replace order ${orderId}: `
+        + `need ${requiredUsd.toFixed(2)}, have ${usdAccount.available_balance.value}.`,
+      );
+    }
   }
 
   const confirmationPrice = values.stopPrice
@@ -372,7 +396,7 @@ export async function replaceCancelledSellOrder(orderId: string): Promise<void> 
   if (
     !confirmOrder(
       values.orderType,
-      ORDER_SIDE.SELL,
+      values.side,
       values.productId,
       values.baseSize,
       confirmationPrice,
@@ -387,7 +411,7 @@ export async function replaceCancelledSellOrder(orderId: string): Promise<void> 
     case ORDER_TYPES.LIMIT:
       await createLimitOrder(
         values.productId,
-        ORDER_SIDE.SELL,
+        values.side,
         values.baseSize,
         values.limitPrice,
         values.postOnly ?? true,
@@ -396,7 +420,7 @@ export async function replaceCancelledSellOrder(orderId: string): Promise<void> 
     case ORDER_TYPES.STOP_LIMIT:
       await createStopLimitOrder(
         values.productId,
-        ORDER_SIDE.SELL,
+        values.side,
         values.baseSize,
         values.limitPrice,
         values.stopPrice!,
@@ -406,7 +430,7 @@ export async function replaceCancelledSellOrder(orderId: string): Promise<void> 
     case ORDER_TYPES.TAKE_PROFIT_STOP_LOSS:
       await createBracketOrder(
         values.productId,
-        ORDER_SIDE.SELL,
+        values.side,
         values.baseSize,
         values.limitPrice,
         values.stopPrice!,
