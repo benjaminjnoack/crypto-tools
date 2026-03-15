@@ -392,8 +392,36 @@ export async function replaceCancelledOrder(orderId: string): Promise<void> {
   const confirmationValue = values.stopPrice
     ? `${(required * parseFloat(values.limitPrice)).toFixed(2)}/${(required * parseFloat(values.stopPrice)).toFixed(2)}`
     : (required * parseFloat(values.limitPrice)).toFixed(2);
+  const isLimitBuyWithAttachedTpSl = (
+    values.orderType === ORDER_TYPES.LIMIT
+    && values.side === ORDER_SIDE.BUY
+    && values.stopPrice
+    && values.takeProfitPrice
+  );
 
-  if (
+  if (isLimitBuyWithAttachedTpSl) {
+    const stopPrice = values.stopPrice;
+    const takeProfitPrice = values.takeProfitPrice;
+    if (!stopPrice || !takeProfitPrice) {
+      throw new Error("Attached TP/SL replacement requires both stop and take-profit prices.");
+    }
+    const entryValue = (required * parseFloat(values.limitPrice)).toFixed(2);
+    const stopValue = (required * parseFloat(stopPrice)).toFixed(2);
+    if (!confirmOrderChange(`CREATE ${values.orderType.toUpperCase()}`, [
+      { label: "Type", value: values.orderType.toUpperCase() },
+      { label: "Side", value: values.side },
+      { label: "Product", value: values.productId },
+      { label: "Size", value: values.baseSize },
+      { label: "Entry Price", value: `$${values.limitPrice}` },
+      { label: "Take-Profit Price", value: `$${takeProfitPrice}` },
+      { label: "Stop Price", value: `$${stopPrice}` },
+      { label: "Entry Value", value: `$${entryValue}` },
+      { label: "Stop Value", value: `$${stopValue}` },
+    ])) {
+      console.log("Action canceled.");
+      return;
+    }
+  } else if (
     !confirmOrder(
       values.orderType,
       values.side,
@@ -409,6 +437,21 @@ export async function replaceCancelledOrder(orderId: string): Promise<void> {
 
   switch (values.orderType) {
     case ORDER_TYPES.LIMIT:
+      if (
+        values.side === ORDER_SIDE.BUY
+        && values.stopPrice
+        && values.takeProfitPrice
+      ) {
+        await createLimitTpSlOrder(
+          values.productId,
+          values.baseSize,
+          values.limitPrice,
+          values.stopPrice,
+          values.takeProfitPrice,
+          values.postOnly ?? true,
+        );
+        return;
+      }
       await createLimitOrder(
         values.productId,
         values.side,

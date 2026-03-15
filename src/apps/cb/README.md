@@ -131,7 +131,7 @@ Notes:
 - `cb order get <order_id>`
 - `cb order list [product]`
 - `cb order cancel <order_id>`
-- `cb order replace <order_id>` (re-places a cancelled priced order with the same prices when enough funding is available: base asset for sells, USD for buys)
+- `cb order replace <order_id>` (re-places a cancelled priced order with the same prices and attached TP/SL when present; funding must be available: base asset for sells, USD for buys)
 - `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>] [--takeProfitPrice <takeProfitPrice>]` (supports limit, stop-limit, bracket, and TP/SL orders)
 - `cb order breakeven <order_id> --buyPrice <buyPrice> [--limitPrice <limitPrice>]`
 

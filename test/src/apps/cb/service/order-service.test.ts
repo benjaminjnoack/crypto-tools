@@ -528,6 +528,37 @@ describe("cb service orders", () => {
     expect(createLimitOrderMock).toHaveBeenCalledWith("BTC-USD", "BUY", "0.5", "100.00", true);
   });
 
+  it("replaces a cancelled buy limit order with attached TP/SL", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    getOrderMock.mockResolvedValueOnce(makeLimitOrder({
+      order_id: orderId(29),
+      product_id: "BTC-USD",
+      side: "BUY",
+      status: "CANCELLED",
+      baseSize: "0.5",
+      limitPrice: "100.00",
+      postOnly: false,
+      attachedLimitPrice: "120.00",
+      attachedStopPrice: "95.00",
+    }));
+
+    await replaceCancelledOrder(orderId(29));
+
+    expect(logSpy).toHaveBeenCalledWith("  Entry Price: $100.00");
+    expect(logSpy).toHaveBeenCalledWith("  Take-Profit Price: $120.00");
+    expect(logSpy).toHaveBeenCalledWith("  Stop Price: $95.00");
+    expect(createLimitTpSlOrderMock).toHaveBeenCalledWith(
+      "BTC-USD",
+      "0.5",
+      "100.00",
+      "95.00",
+      "120.00",
+      false,
+    );
+    expect(createLimitOrderMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("replaces a cancelled sell stop-limit order when funds are available", async () => {
     getOrderMock.mockResolvedValueOnce(makeStopLimitOrder({
       order_id: orderId(21),

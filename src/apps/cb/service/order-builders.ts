@@ -240,6 +240,7 @@ export type ReplaceableOrderValues = {
   baseSize: string;
   limitPrice: string;
   stopPrice?: string;
+  takeProfitPrice?: string;
   postOnly?: boolean;
 };
 
@@ -296,12 +297,19 @@ export function getReplaceableOrderValues(order: CoinbaseOrder): ReplaceableOrde
   switch (order.order_type) {
     case ORDER_TYPES.LIMIT: {
       const config = order.order_configuration.limit_limit_gtc;
+      const attachedTpSl = getAttachedTpSlValues(order);
       return {
         orderType: order.order_type,
         side: order.side,
         productId: order.product_id,
         baseSize: config.base_size,
         limitPrice: config.limit_price,
+        ...(attachedTpSl
+          ? {
+              stopPrice: attachedTpSl.stopPrice,
+              takeProfitPrice: attachedTpSl.takeProfitPrice,
+            }
+          : {}),
         postOnly: config.post_only,
       };
     }
@@ -329,7 +337,7 @@ export function getReplaceableOrderValues(order: CoinbaseOrder): ReplaceableOrde
       };
     }
     case ORDER_TYPES.MARKET:
-      throw new Error("Only priced sell orders can be replaced.");
+      throw new Error("Only priced orders can be replaced.");
   }
 }
 
