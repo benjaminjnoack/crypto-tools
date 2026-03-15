@@ -6,6 +6,31 @@ import {
   requestAccounts,
   requestCurrencyAccount,
 } from "../../../shared/coinbase/index.js";
+import { type CoinbaseAccount } from "../../../shared/coinbase/schemas/coinbase-rest-schemas.js";
+
+const FIAT_BASE_INCREMENT = "0.01";
+const DEFAULT_CRYPTO_BASE_INCREMENT = "0.00000001";
+
+async function getAccountBaseIncrement(
+  account: Pick<CoinbaseAccount, "currency" | "type">,
+): Promise<string> {
+  const currency = account.currency.toUpperCase();
+  if (currency === "USD" || currency === "USDC" || account.type === "ACCOUNT_TYPE_FIAT") {
+    return FIAT_BASE_INCREMENT;
+  }
+
+  const productCandidates = [`${currency}-USD`, `${currency}-USDC`];
+  for (const productId of productCandidates) {
+    try {
+      const { base_increment } = await getProductInfo(productId, false, { tryFetchOnce: true });
+      return base_increment;
+    } catch {
+      continue;
+    }
+  }
+
+  return DEFAULT_CRYPTO_BASE_INCREMENT;
+}
 
 export async function handleAccountsAction(
   product: string | null,
@@ -19,10 +44,7 @@ export async function handleAccountsAction(
       throw new Error(`Error parsing product: ${product}`);
     }
     accounts = accounts.filter((acc) => acc.currency.toUpperCase() === currency);
-    const { price, price_increment } = await getProductInfo(
-      product,
-      true,
-    );
+    const { price, price_increment } = await getProductInfo(product);
     console.table(
       accounts.map((acc) => {
         const hold = acc.hold.value;
@@ -51,12 +73,28 @@ export async function handleAccountsAction(
       return acc.available_balance.value !== "0" || acc.hold.value !== "0";
     });
 
+    const uniqueAccountsByCurrency = new Map<string, Pick<CoinbaseAccount, "currency" | "type">>();
+    for (const account of accounts) {
+      uniqueAccountsByCurrency.set(account.currency.toUpperCase(), account);
+    }
+    const baseIncrementEntries = await Promise.all(
+      Array.from(uniqueAccountsByCurrency.entries()).map(async ([currency, account]) => {
+        const baseIncrement = await getAccountBaseIncrement(account);
+        return [currency, baseIncrement] as const;
+      }),
+    );
+    const baseIncrementByCurrency = new Map(baseIncrementEntries);
+
     console.table(
-      accounts.map((acc) => ({
-        Currency: acc.currency,
-        Hold: parseFloat(acc.hold.value).toFixed(2),
-        Available: parseFloat(acc.available_balance.value).toFixed(2),
-      })),
+      accounts.map((acc) => {
+        const baseIncrement = baseIncrementByCurrency.get(acc.currency.toUpperCase())
+          ?? DEFAULT_CRYPTO_BASE_INCREMENT;
+        return {
+          Currency: acc.currency,
+          Hold: toIncrement(baseIncrement, parseFloat(acc.hold.value)),
+          Available: toIncrement(baseIncrement, parseFloat(acc.available_balance.value)),
+        };
+      }),
     );
   }
 }

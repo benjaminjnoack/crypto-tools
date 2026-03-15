@@ -4,6 +4,8 @@ const {
   requestProductMock,
   loadProductFromCacheMock,
   saveProductToCacheMock,
+  loadCoinbaseFromCacheMock,
+  saveCoinbaseToCacheMock,
   printErrorMock,
   loggerInfoMock,
   loggerDebugMock,
@@ -24,6 +26,8 @@ const {
     product_type: "SPOT",
   })),
   saveProductToCacheMock: vi.fn(),
+  loadCoinbaseFromCacheMock: vi.fn<(name: string) => unknown>(() => null),
+  saveCoinbaseToCacheMock: vi.fn(),
   printErrorMock: vi.fn(),
   loggerInfoMock: vi.fn(),
   loggerDebugMock: vi.fn(),
@@ -37,6 +41,11 @@ vi.mock("../../../../src/shared/coinbase/rest.js", () => ({
 vi.mock("../../../../src/shared/coinbase/cache/product-cache.js", () => ({
   loadProductFromCache: loadProductFromCacheMock,
   saveProductToCache: saveProductToCacheMock,
+}));
+
+vi.mock("../../../../src/shared/coinbase/cache/coinbase-cache.js", () => ({
+  loadCoinbaseFromCache: loadCoinbaseFromCacheMock,
+  saveCoinbaseToCache: saveCoinbaseToCacheMock,
 }));
 
 vi.mock("../../../../src/shared/log/error.js", () => ({
@@ -100,5 +109,36 @@ describe("coinbase product helpers", () => {
     );
     expect(requestProductMock).toHaveBeenCalledWith("BTC-USD");
     expect(saveProductToCacheMock).toHaveBeenCalledWith("BTC-USD", result);
+  });
+
+  it("tries API once and marks unsupported products on 404-style failures", async () => {
+    loadProductFromCacheMock.mockImplementationOnce(() => {
+      throw new Error("cache miss");
+    });
+    requestProductMock.mockRejectedValueOnce(new Error("Request failed with status code 404"));
+
+    await expect(getProductInfo("MOBILE-USD", false, { tryFetchOnce: true })).rejects.toThrow(
+      "status code 404",
+    );
+
+    expect(requestProductMock).toHaveBeenCalledWith("MOBILE-USD", 1);
+    expect(saveCoinbaseToCacheMock).toHaveBeenCalledWith("unsupported-products", {
+      products: ["MOBILE-USD"],
+    });
+  });
+
+  it("skips API fetch for products already marked unsupported when tryFetchOnce is enabled", async () => {
+    loadProductFromCacheMock.mockImplementationOnce(() => {
+      throw new Error("cache miss");
+    });
+    loadCoinbaseFromCacheMock.mockReturnValueOnce({
+      products: ["MOBILE-USD"],
+    });
+
+    await expect(getProductInfo("MOBILE-USD", false, { tryFetchOnce: true })).rejects.toThrow(
+      "marked unsupported",
+    );
+
+    expect(requestProductMock).not.toHaveBeenCalled();
   });
 });

@@ -22,6 +22,7 @@ const {
   })),
   getProductInfoMock: vi.fn(() => Promise.resolve({
     price: "100.00",
+    base_increment: "0.00000001",
     price_increment: "0.01",
   })),
   getTransactionSummaryMock: vi.fn(() => Promise.resolve({
@@ -91,7 +92,7 @@ describe("accounts command handlers", () => {
 
     await handleAccountsAction("BTC-USD", {});
 
-    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD", true);
+    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD");
     expect(tableSpy).toHaveBeenCalledTimes(1);
     expect(tableSpy.mock.calls[0]?.[0]).toEqual([
       {
@@ -120,11 +121,12 @@ describe("accounts command handlers", () => {
 
     await handleAccountsAction(null, { crypto: true });
 
+    expect(getProductInfoMock).toHaveBeenCalledWith("BTC-USD", false, { tryFetchOnce: true });
     expect(tableSpy.mock.calls[0]?.[0]).toEqual([
       {
         Currency: "BTC",
-        Hold: "0.10",
-        Available: "0.20",
+        Hold: "0.10000000",
+        Available: "0.20000000",
       },
     ]);
     tableSpy.mockRestore();
@@ -141,6 +143,63 @@ describe("accounts command handlers", () => {
         Currency: "USD",
         Hold: "10.00",
         Available: "40.00",
+      },
+    ]);
+    tableSpy.mockRestore();
+  });
+
+  it("uses fiat increment fallback for USDC when no cached product exists", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "USDC",
+        hold: { value: "1.5" },
+        available_balance: { value: "10" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(9),
+      },
+    ]);
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, {});
+
+    expect(getProductInfoMock).not.toHaveBeenCalled();
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "USDC",
+        Hold: "1.50",
+        Available: "10.00",
+      },
+    ]);
+    tableSpy.mockRestore();
+  });
+
+  it("falls back to USDC-quoted product increment when USD-quoted lookup fails", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "SOL",
+        hold: { value: "1.2345" },
+        available_balance: { value: "10.2" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(10),
+      },
+    ]);
+    getProductInfoMock.mockRejectedValueOnce(new Error("cache miss"));
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      price_increment: "0.01",
+      base_increment: "0.001",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, {});
+
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(1, "SOL-USD", false, { tryFetchOnce: true });
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(2, "SOL-USDC", false, { tryFetchOnce: true });
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "SOL",
+        Hold: "1.234",
+        Available: "10.200",
       },
     ]);
     tableSpy.mockRestore();
