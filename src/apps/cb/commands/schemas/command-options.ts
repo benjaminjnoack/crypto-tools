@@ -5,6 +5,7 @@ export const AccountsOptionsSchema = z
   .object({
     crypto: z.boolean().optional(),
     cash: z.boolean().optional(),
+    value: z.boolean().optional(),
   })
   .strict();
 export type AccountsOptions = z.infer<typeof AccountsOptionsSchema>;

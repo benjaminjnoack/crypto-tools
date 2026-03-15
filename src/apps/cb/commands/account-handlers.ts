@@ -6,30 +6,71 @@ import {
   requestAccounts,
   requestCurrencyAccount,
 } from "../../../shared/coinbase/index.js";
-import { type CoinbaseAccount } from "../../../shared/coinbase/schemas/coinbase-rest-schemas.js";
+import { type CoinbaseAccount, type CoinbaseProduct } from "../../../shared/coinbase/schemas/coinbase-rest-schemas.js";
 
 const FIAT_BASE_INCREMENT = "0.01";
 const DEFAULT_CRYPTO_BASE_INCREMENT = "0.00000001";
 
-async function getAccountBaseIncrement(
-  account: Pick<CoinbaseAccount, "currency" | "type">,
-): Promise<string> {
-  const currency = account.currency.toUpperCase();
-  if (currency === "USD" || currency === "USDC" || account.type === "ACCOUNT_TYPE_FIAT") {
-    return FIAT_BASE_INCREMENT;
-  }
+type AccountDisplayMetadata = {
+  baseIncrement: string;
+  price: string | null;
+  priceIncrement: string;
+};
 
+async function getSupportedProduct(
+  account: Pick<CoinbaseAccount, "currency" | "type">,
+): Promise<{ productId: string; product: CoinbaseProduct } | null> {
+  const currency = account.currency.toUpperCase();
   const productCandidates = [`${currency}-USD`, `${currency}-USDC`];
   for (const productId of productCandidates) {
     try {
-      const { base_increment } = await getProductInfo(productId, false, { tryFetchOnce: true });
-      return base_increment;
+      const product = await getProductInfo(productId, false, { tryFetchOnce: true });
+      return { productId, product };
     } catch {
       continue;
     }
   }
 
-  return DEFAULT_CRYPTO_BASE_INCREMENT;
+  return null;
+}
+
+async function getAccountDisplayMetadata(
+  account: Pick<CoinbaseAccount, "currency" | "type">,
+  includeValue: boolean,
+): Promise<AccountDisplayMetadata> {
+  const currency = account.currency.toUpperCase();
+  if (currency === "USD" || currency === "USDC" || account.type === "ACCOUNT_TYPE_FIAT") {
+    return {
+      baseIncrement: FIAT_BASE_INCREMENT,
+      price: includeValue ? "1" : null,
+      priceIncrement: FIAT_BASE_INCREMENT,
+    };
+  }
+
+  const supportedProduct = await getSupportedProduct(account);
+  if (!supportedProduct) {
+    return {
+      baseIncrement: DEFAULT_CRYPTO_BASE_INCREMENT,
+      price: null,
+      priceIncrement: FIAT_BASE_INCREMENT,
+    };
+  }
+
+  let currentProduct = supportedProduct.product;
+  if (includeValue) {
+    try {
+      // Value mode prefers latest pricing for supported products.
+      currentProduct = await getProductInfo(supportedProduct.productId, true);
+    } catch {
+      // Fall back to the cache/initial lookup price if force refresh fails.
+    }
+  }
+
+  return {
+    baseIncrement: currentProduct.base_increment,
+    price: includeValue ? currentProduct.price : null,
+    priceIncrement: currentProduct.price_increment,
+  };
 }
 
 export async function handleAccountsAction(
@@ -77,22 +118,36 @@ export async function handleAccountsAction(
     for (const account of accounts) {
       uniqueAccountsByCurrency.set(account.currency.toUpperCase(), account);
     }
-    const baseIncrementEntries = await Promise.all(
+    const metadataEntries = await Promise.all(
       Array.from(uniqueAccountsByCurrency.entries()).map(async ([currency, account]) => {
-        const baseIncrement = await getAccountBaseIncrement(account);
-        return [currency, baseIncrement] as const;
+        const metadata = await getAccountDisplayMetadata(account, options.value === true);
+        return [currency, metadata] as const;
       }),
     );
-    const baseIncrementByCurrency = new Map(baseIncrementEntries);
+    const metadataByCurrency = new Map(metadataEntries);
 
     console.table(
       accounts.map((acc) => {
-        const baseIncrement = baseIncrementByCurrency.get(acc.currency.toUpperCase())
-          ?? DEFAULT_CRYPTO_BASE_INCREMENT;
-        return {
+        const metadata = metadataByCurrency.get(acc.currency.toUpperCase()) ?? {
+          baseIncrement: DEFAULT_CRYPTO_BASE_INCREMENT,
+          price: null,
+          priceIncrement: FIAT_BASE_INCREMENT,
+        };
+        const accountRow = {
           Currency: acc.currency,
-          Hold: toIncrement(baseIncrement, parseFloat(acc.hold.value)),
-          Available: toIncrement(baseIncrement, parseFloat(acc.available_balance.value)),
+          Hold: toIncrement(metadata.baseIncrement, parseFloat(acc.hold.value)),
+          Available: toIncrement(metadata.baseIncrement, parseFloat(acc.available_balance.value)),
+        };
+        if (!options.value) {
+          return accountRow;
+        }
+        const totalSize = parseFloat(acc.hold.value) + parseFloat(acc.available_balance.value);
+        const value = metadata.price === null
+          ? "N/A"
+          : `$${toIncrement(metadata.priceIncrement, totalSize * parseFloat(metadata.price))}`;
+        return {
+          ...accountRow,
+          Value: value,
         };
       }),
     );

@@ -148,6 +148,35 @@ describe("accounts command handlers", () => {
     tableSpy.mockRestore();
   });
 
+  it("adds value column and forces current price refresh when value mode is enabled", async () => {
+    requestAccountsMock.mockResolvedValueOnce([btcAccount]);
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "95.00",
+      price_increment: "0.01",
+      base_increment: "0.00000001",
+    });
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      price_increment: "0.01",
+      base_increment: "0.001",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { crypto: true, value: true });
+
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(1, "BTC-USD", false, { tryFetchOnce: true });
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(2, "BTC-USD", true);
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "BTC",
+        Hold: "0.100",
+        Available: "0.200",
+        Value: "$30.00",
+      },
+    ]);
+    tableSpy.mockRestore();
+  });
+
   it("uses fiat increment fallback for USDC when no cached product exists", async () => {
     requestAccountsMock.mockResolvedValueOnce([
       {
@@ -200,6 +229,35 @@ describe("accounts command handlers", () => {
         Currency: "SOL",
         Hold: "1.234",
         Available: "10.200",
+      },
+    ]);
+    tableSpy.mockRestore();
+  });
+
+  it("shows N/A value when no supported product can be resolved", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "MOBILE",
+        hold: { value: "5" },
+        available_balance: { value: "10" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(11),
+      },
+    ]);
+    getProductInfoMock.mockRejectedValueOnce(new Error("not supported"));
+    getProductInfoMock.mockRejectedValueOnce(new Error("not supported"));
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { value: true });
+
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(1, "MOBILE-USD", false, { tryFetchOnce: true });
+    expect(getProductInfoMock).toHaveBeenNthCalledWith(2, "MOBILE-USDC", false, { tryFetchOnce: true });
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "MOBILE",
+        Hold: "5.00000000",
+        Available: "10.00000000",
+        Value: "N/A",
       },
     ]);
     tableSpy.mockRestore();
