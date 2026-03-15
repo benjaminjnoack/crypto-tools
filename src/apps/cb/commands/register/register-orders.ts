@@ -18,6 +18,11 @@ import {
 import { OrderIdSchema } from "../../../../shared/schemas/shared-primitives.js";
 
 export function registerOrderCommands(program: Command) {
+  program
+    .command("orders [product]")
+    .description("List open orders, optionally filtered to a single product")
+    .action(withAction("orders", parseOptionalProduct(), handleOrdersAction));
+
   const order = program.command("order").description("Order management commands");
 
   order

@@ -46,6 +46,7 @@ describe("order command topology", () => {
   it("supports nested order get/list/cancel/replace/modify commands", async () => {
     await run(["order", "get", VALID_UUID]);
     await run(["order", "list"]);
+    await run(["orders"]);
     await run(["order", "cancel", VALID_UUID]);
     await run(["order", "replace", VALID_UUID]);
     await run(["order", "modify", VALID_UUID, "--limitPrice", "101.50"]);
@@ -66,7 +67,6 @@ describe("order command topology", () => {
 
   it("rejects legacy alias forms", async () => {
     await expect(run(["order", VALID_UUID])).rejects.toThrow();
-    await expect(run(["orders"])).rejects.toThrow();
     await expect(run(["open"])).rejects.toThrow();
     await expect(run(["cancel", VALID_UUID])).rejects.toThrow();
     await expect(run(["modify", VALID_UUID, "--baseSize", "1.25"])).rejects.toThrow();
