@@ -1,6 +1,6 @@
 # crypto-tools
 
-Production Coinbase operations toolkit: `cb` for trade planning and order lifecycle management, `hdb` for ledger ingestion/reconciliation and tax-facing analytics, `hdb-portal` for local read-only web analysis, plus shared TypeScript modules for authenticated API access and reusable CLI infrastructure.
+Coinbase operations toolkit: `cb` for trade planning and order lifecycle management, `hdb` for ledger ingestion/reconciliation and tax-facing analytics, `hdb-portal` for local read-only web analysis, plus shared TypeScript modules for authenticated API access and reusable CLI infrastructure.
 
 ## What is here
 
