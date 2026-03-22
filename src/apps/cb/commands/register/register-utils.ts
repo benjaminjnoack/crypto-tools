@@ -25,7 +25,6 @@ export const OptionFlags = {
   riskPercent: "-r, --riskPercent <riskPercent>",
   allIn: "-a, --all-in",
   dryRunFlag: "-x, --dryRunFlag",
-  modifyBuyPrice: "--buyPrice <buyPrice>",
   floor: "-f, --floor <price>",
   ceiling: "-c, --ceiling <price>",
   fibEntry: "-e, --entry <extension>",
