@@ -15,6 +15,7 @@ export function registerAccountsCommands(program: Command) {
     .description("List account balances (non-zero only unless [product] is provided)")
     .option("--crypto", "Show only crypto accounts", false)
     .option("--cash", "Show only fiat (cash) accounts; ignored if --crypto is also set", false)
+    .option("--json [filepath]", "Write account balances JSON to a file (defaults to ./accounts.json)")
     .option("--raw", "Show hold and available sizes without increment-based rounding", false)
     .option("--value", "Show estimated USD value using current product prices", false)
     .action(

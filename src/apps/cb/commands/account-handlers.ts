@@ -1,3 +1,6 @@
+import { writeFileSync } from "node:fs";
+import path from "node:path";
+import process from "node:process";
 import type { AccountsOptions } from "./schemas/command-options.js";
 import { toIncrement } from "../../../shared/common/index.js";
 import {
@@ -17,11 +20,89 @@ type AccountDisplayMetadata = {
   priceIncrement: string;
 };
 
+type AccountBalanceRow = {
+  Currency: string;
+  Hold: string;
+  Available: string;
+};
+
+type AccountExportRow = {
+  currency: string;
+  type: CoinbaseAccount["type"];
+  hold: string;
+  available: string;
+};
+
 function formatAccountSize(value: string, baseIncrement: string, raw: boolean | undefined): string {
   if (raw) {
     return value;
   }
   return toIncrement(baseIncrement, parseFloat(value));
+}
+
+function filterAccounts(
+  accounts: CoinbaseAccount[],
+  options: Pick<AccountsOptions, "crypto" | "cash">,
+): CoinbaseAccount[] {
+  if (options.crypto) {
+    return accounts.filter((acc) => acc.type === "ACCOUNT_TYPE_CRYPTO");
+  }
+  if (options.cash) {
+    return accounts.filter((acc) => acc.type === "ACCOUNT_TYPE_FIAT");
+  }
+  return accounts;
+}
+
+async function buildMetadataByCurrency(
+  accounts: CoinbaseAccount[],
+  includeValue: boolean,
+): Promise<Map<string, AccountDisplayMetadata>> {
+  const uniqueAccountsByCurrency = new Map<string, Pick<CoinbaseAccount, "currency" | "type">>();
+  for (const account of accounts) {
+    uniqueAccountsByCurrency.set(account.currency.toUpperCase(), account);
+  }
+  const metadataEntries = await Promise.all(
+    Array.from(uniqueAccountsByCurrency.entries()).map(async ([currency, account]) => {
+      const metadata = await getAccountDisplayMetadata(account, includeValue);
+      return [currency, metadata] as const;
+    }),
+  );
+  return new Map(metadataEntries);
+}
+
+function getAccountMetadata(
+  metadataByCurrency: Map<string, AccountDisplayMetadata>,
+  currency: string,
+): AccountDisplayMetadata {
+  return metadataByCurrency.get(currency.toUpperCase()) ?? {
+    baseIncrement: DEFAULT_CRYPTO_BASE_INCREMENT,
+    price: null,
+    priceIncrement: FIAT_BASE_INCREMENT,
+  };
+}
+
+function toAccountBalanceRow(
+  account: CoinbaseAccount,
+  metadataByCurrency: Map<string, AccountDisplayMetadata>,
+  raw: boolean | undefined,
+): AccountBalanceRow {
+  const metadata = getAccountMetadata(metadataByCurrency, account.currency);
+  return {
+    Currency: account.currency,
+    Hold: formatAccountSize(account.hold.value, metadata.baseIncrement, raw),
+    Available: formatAccountSize(account.available_balance.value, metadata.baseIncrement, raw),
+  };
+}
+
+function writeAccountsJson(accounts: AccountExportRow[], jsonOption: boolean | string | undefined) {
+  if (!jsonOption) {
+    return;
+  }
+  const outputPath = typeof jsonOption === "string" && jsonOption.length > 0
+    ? path.resolve(process.cwd(), jsonOption)
+    : path.join(process.cwd(), "accounts.json");
+  writeFileSync(outputPath, `${JSON.stringify(accounts, null, 2)}\n`);
+  console.log(`Wrote accounts JSON to ${outputPath}`);
 }
 
 async function getSupportedProduct(
@@ -84,7 +165,26 @@ export async function handleAccountsAction(
   product: string | null,
   options: AccountsOptions,
 ): Promise<void> {
-  let accounts = await requestAccounts();
+  const allAccounts = await requestAccounts();
+  const filteredAccounts = filterAccounts(allAccounts, options);
+
+  if (options.json) {
+    const metadataByCurrency = await buildMetadataByCurrency(filteredAccounts, false);
+    writeAccountsJson(
+      filteredAccounts.map((account) => {
+        const row = toAccountBalanceRow(account, metadataByCurrency, options.raw);
+        return {
+          currency: account.currency,
+          type: account.type,
+          hold: row.Hold,
+          available: row.Available,
+        };
+      }),
+      options.json,
+    );
+  }
+
+  let accounts = filteredAccounts;
 
   if (product) {
     const currency = product.split("-")[0];
@@ -111,40 +211,15 @@ export async function handleAccountsAction(
       }),
     );
   } else {
-    if (options.crypto) {
-      accounts = accounts.filter((acc) => acc.type === "ACCOUNT_TYPE_CRYPTO");
-    } else if (options.cash) {
-      accounts = accounts.filter((acc) => acc.type === "ACCOUNT_TYPE_FIAT");
-    }
-
     accounts = accounts.filter((acc) => {
       return acc.available_balance.value !== "0" || acc.hold.value !== "0";
     });
-
-    const uniqueAccountsByCurrency = new Map<string, Pick<CoinbaseAccount, "currency" | "type">>();
-    for (const account of accounts) {
-      uniqueAccountsByCurrency.set(account.currency.toUpperCase(), account);
-    }
-    const metadataEntries = await Promise.all(
-      Array.from(uniqueAccountsByCurrency.entries()).map(async ([currency, account]) => {
-        const metadata = await getAccountDisplayMetadata(account, options.value === true);
-        return [currency, metadata] as const;
-      }),
-    );
-    const metadataByCurrency = new Map(metadataEntries);
+    const metadataByCurrency = await buildMetadataByCurrency(accounts, options.value === true);
 
     console.table(
       accounts.map((acc) => {
-        const metadata = metadataByCurrency.get(acc.currency.toUpperCase()) ?? {
-          baseIncrement: DEFAULT_CRYPTO_BASE_INCREMENT,
-          price: null,
-          priceIncrement: FIAT_BASE_INCREMENT,
-        };
-        const accountRow = {
-          Currency: acc.currency,
-          Hold: formatAccountSize(acc.hold.value, metadata.baseIncrement, options.raw),
-          Available: formatAccountSize(acc.available_balance.value, metadata.baseIncrement, options.raw),
-        };
+        const metadata = getAccountMetadata(metadataByCurrency, acc.currency);
+        const accountRow = toAccountBalanceRow(acc, metadataByCurrency, options.raw);
         if (!options.value) {
           return accountRow;
         }

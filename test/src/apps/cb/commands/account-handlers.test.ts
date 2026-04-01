@@ -7,6 +7,8 @@ const {
   getProductInfoMock,
   getTransactionSummaryMock,
   toIncrementMock,
+  writeFileSyncMock,
+  cwdMock,
 } = vi.hoisted(() => ({
   requestAccountsMock: vi.fn<() => Promise<Array<{
     currency: string;
@@ -39,6 +41,18 @@ const {
     const decimals = increment.includes(".") ? increment.split(".")[1]?.length ?? 0 : 0;
     return value.toFixed(decimals);
   }),
+  writeFileSyncMock: vi.fn(),
+  cwdMock: vi.fn(() => "/mock-cwd"),
+}));
+
+vi.mock("node:fs", () => ({
+  writeFileSync: writeFileSyncMock,
+}));
+
+vi.mock("node:process", () => ({
+  default: {
+    cwd: cwdMock,
+  },
 }));
 
 vi.mock("../../../../../src/shared/coinbase/rest.js", () => ({
@@ -177,6 +191,107 @@ describe("accounts command handlers", () => {
       },
     ]);
     tableSpy.mockRestore();
+  });
+
+  it("writes all filtered accounts to default json file", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      btcAccount,
+      {
+        currency: "ETH",
+        hold: { value: "0" },
+        available_balance: { value: "0" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(13),
+      },
+      usdAccount,
+    ]);
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { crypto: true, json: true });
+
+    expect(writeFileSyncMock).toHaveBeenCalledWith(
+      "/mock-cwd/accounts.json",
+      `${JSON.stringify([
+        {
+          currency: "BTC",
+          type: "ACCOUNT_TYPE_CRYPTO",
+          hold: "0.10000000",
+          available: "0.20000000",
+        },
+        {
+          currency: "ETH",
+          type: "ACCOUNT_TYPE_CRYPTO",
+          hold: "0.00000000",
+          available: "0.00000000",
+        },
+      ], null, 2)}\n`,
+    );
+    expect(logSpy).toHaveBeenCalledWith("Wrote accounts JSON to /mock-cwd/accounts.json");
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "BTC",
+        Hold: "0.10000000",
+        Available: "0.20000000",
+      },
+    ]);
+    tableSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("writes raw balances to a provided json filepath", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "SOL",
+        hold: { value: "1.2345" },
+        available_balance: { value: "10.2" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(14),
+      },
+      usdAccount,
+    ]);
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      price_increment: "0.01",
+      base_increment: "0.001",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { json: "snapshots/accounts.json", raw: true });
+
+    expect(writeFileSyncMock).toHaveBeenCalledWith(
+      "/mock-cwd/snapshots/accounts.json",
+      `${JSON.stringify([
+        {
+          currency: "SOL",
+          type: "ACCOUNT_TYPE_CRYPTO",
+          hold: "1.2345",
+          available: "10.2",
+        },
+        {
+          currency: "USD",
+          type: "ACCOUNT_TYPE_FIAT",
+          hold: "10",
+          available: "40",
+        },
+      ], null, 2)}\n`,
+    );
+    expect(logSpy).toHaveBeenCalledWith("Wrote accounts JSON to /mock-cwd/snapshots/accounts.json");
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "SOL",
+        Hold: "1.2345",
+        Available: "10.2",
+      },
+      {
+        Currency: "USD",
+        Hold: "10",
+        Available: "40",
+      },
+    ]);
+    tableSpy.mockRestore();
+    logSpy.mockRestore();
   });
 
   it("adds value column and forces current price refresh when value mode is enabled", async () => {
