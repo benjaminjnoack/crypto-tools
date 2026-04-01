@@ -7,3 +7,5 @@ src/apps/hdb/old.js
 .env
 .DS_Store
 data/
+.codex
+todo

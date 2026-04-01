@@ -148,6 +148,37 @@ describe("accounts command handlers", () => {
     tableSpy.mockRestore();
   });
 
+  it("shows raw hold and available sizes without increment-based rounding", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "SOL",
+        hold: { value: "1.2345" },
+        available_balance: { value: "10.2" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(12),
+      },
+    ]);
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      price_increment: "0.01",
+      base_increment: "0.001",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { raw: true });
+
+    expect(getProductInfoMock).toHaveBeenCalledWith("SOL-USD", false, { tryFetchOnce: true });
+    expect(toIncrementMock).not.toHaveBeenCalled();
+    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
+      {
+        Currency: "SOL",
+        Hold: "1.2345",
+        Available: "10.2",
+      },
+    ]);
+    tableSpy.mockRestore();
+  });
+
   it("adds value column and forces current price refresh when value mode is enabled", async () => {
     requestAccountsMock.mockResolvedValueOnce([btcAccount]);
     getProductInfoMock.mockResolvedValueOnce({

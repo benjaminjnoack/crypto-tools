@@ -17,6 +17,13 @@ type AccountDisplayMetadata = {
   priceIncrement: string;
 };
 
+function formatAccountSize(value: string, baseIncrement: string, raw: boolean | undefined): string {
+  if (raw) {
+    return value;
+  }
+  return toIncrement(baseIncrement, parseFloat(value));
+}
+
 async function getSupportedProduct(
   account: Pick<CoinbaseAccount, "currency" | "type">,
 ): Promise<{ productId: string; product: CoinbaseProduct } | null> {
@@ -135,8 +142,8 @@ export async function handleAccountsAction(
         };
         const accountRow = {
           Currency: acc.currency,
-          Hold: toIncrement(metadata.baseIncrement, parseFloat(acc.hold.value)),
-          Available: toIncrement(metadata.baseIncrement, parseFloat(acc.available_balance.value)),
+          Hold: formatAccountSize(acc.hold.value, metadata.baseIncrement, options.raw),
+          Available: formatAccountSize(acc.available_balance.value, metadata.baseIncrement, options.raw),
         };
         if (!options.value) {
           return accountRow;

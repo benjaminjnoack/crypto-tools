@@ -95,8 +95,8 @@ Notes:
 
 ### Accounts
 
-- `cb accounts [product] [--crypto] [--cash] [--value]` (alias: `account`)
-  - non-zero balances by default; hold/available are formatted to each currency's base increment using cached product metadata when present
+- `cb accounts [product] [--crypto] [--cash] [--raw] [--value]` (alias: `account`)
+  - non-zero balances by default; hold/available are formatted to each currency's base increment using cached product metadata when present unless `--raw` is used
   - `--value` adds a USD value column based on current product price (forced product refresh for supported products)
   - when `[product]` is provided, matching accounts are shown with price-based USD values
 - `cb balance` (alias: `usd`)
