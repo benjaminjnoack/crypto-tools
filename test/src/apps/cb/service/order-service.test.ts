@@ -300,6 +300,7 @@ describe("cb service orders", () => {
     expect(editOrderMock).toHaveBeenCalledWith(orderId(1), {
       price: "121.00",
       size: "1.50",
+      stop_price: "95.00",
     });
   });
 
@@ -354,6 +355,7 @@ describe("cb service orders", () => {
     expect(editOrderMock).toHaveBeenCalledWith(orderId(11), {
       price: "79100.00",
       size: "0.06571451",
+      stop_price: "64943.37",
     });
   });
 

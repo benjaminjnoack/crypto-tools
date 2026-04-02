@@ -226,6 +226,7 @@ export function buildBreakEvenStopPrice(
 export type ModifiableOrderValues = {
   baseSize: string;
   limitPrice: string;
+  stopPrice?: string;
 };
 
 export type AttachedTpSlValues = {
@@ -259,6 +260,7 @@ export function getModifiableOrderValues(order: CoinbaseOrder): ModifiableOrderV
       return {
         baseSize: config.base_size,
         limitPrice: config.limit_price,
+        stopPrice: config.stop_trigger_price,
       };
     }
     case ORDER_TYPES.STOP_LIMIT: {
@@ -266,6 +268,7 @@ export function getModifiableOrderValues(order: CoinbaseOrder): ModifiableOrderV
       return {
         baseSize: config.base_size,
         limitPrice: config.limit_price,
+        stopPrice: config.stop_price,
       };
     }
     case ORDER_TYPES.MARKET:
@@ -352,6 +355,6 @@ export function buildModifyOrderValues(
   return {
     baseSize: options.baseSize ?? existing.baseSize,
     limitPrice: options.limitPrice ?? existing.limitPrice,
-    ...(options.stopPrice ? { stopPrice: options.stopPrice } : {}),
+    ...(options.stopPrice ?? existing.stopPrice ? { stopPrice: options.stopPrice ?? existing.stopPrice } : {}),
   };
 }

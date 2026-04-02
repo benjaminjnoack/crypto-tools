@@ -217,9 +217,7 @@ export async function placeModifyOrder(orderId: string, options: ModifyOptions):
     if (options.takeProfitPrice) {
       throw new Error("--takeProfitPrice is only supported for limit orders with attached TP/SL.");
     }
-    if (options.stopPrice) {
-      payload.stop_price = options.stopPrice;
-    }
+    payload.stop_price = values.stopPrice;
   } else if (
     order.order_type === ORDER_TYPES.BRACKET
     || order.order_type === ORDER_TYPES.TAKE_PROFIT_STOP_LOSS
@@ -230,9 +228,7 @@ export async function placeModifyOrder(orderId: string, options: ModifyOptions):
     if (options.takeProfitPrice) {
       payload.price = options.takeProfitPrice;
     }
-    if (options.stopPrice) {
-      payload.stop_price = options.stopPrice;
-    }
+    payload.stop_price = values.stopPrice;
   }
 
   const summaryLines = [
