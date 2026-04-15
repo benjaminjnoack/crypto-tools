@@ -26,7 +26,9 @@ export const OptionFlags = {
   allIn: "-a, --all-in",
   dryRunFlag: "-x, --dryRunFlag",
   floor: "-f, --floor <price>",
+  zero: "-z, --zero <price>",
   ceiling: "-c, --ceiling <price>",
+  one: "-o, --one <price>",
   fibEntry: "-e, --entry <extension>",
   fibTakeProfit: "-t, --take-profit <extension>",
   fibRound: "-R, --round",
@@ -63,6 +65,15 @@ export function withAction<TArgs extends unknown[]>(
 }
 
 export { parseNone, parseArg, parseArgOptions };
+
+export function parseOptionalArg<TArg>(argSchema: ZodType<TArg>): Parser<[TArg | null]> {
+  return (raw: unknown) => {
+    if (raw === undefined || raw === null) {
+      return [null];
+    }
+    return [argSchema.parse(raw)];
+  };
+}
 
 export function parseOptionalProduct(): Parser<[ProductId | null]> {
   return (rawProduct: unknown) => {

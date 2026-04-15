@@ -1,4 +1,4 @@
-import type { Command } from "commander";
+import { type Command, Option } from "commander";
 import { handleFibAction } from "../fib-handlers.js";
 import { FibOptionsSchema } from "../schemas/command-options.js";
 import { OptionFlags, parseProductIdOptions, withAction } from "./register-utils.js";
@@ -9,8 +9,10 @@ const DEFAULT_BUFFER_PERCENT = (0.1).toFixed(3); // 0.1%
 export function registerFibCommand(program: Command) {
   program
     .command("fib [product]")
-    .requiredOption(OptionFlags.floor, "Fib floor/0 anchor price in USD")
-    .requiredOption(OptionFlags.ceiling, "Fib ceiling/1 anchor price in USD")
+    .addOption(new Option(OptionFlags.floor, "Fib floor/0 anchor price in USD").makeOptionMandatory())
+    .addOption(Object.assign(new Option(OptionFlags.zero, "Alias for --floor"), { attributeName: () => "floor" }))
+    .addOption(new Option(OptionFlags.ceiling, "Fib ceiling/1 anchor price in USD").makeOptionMandatory())
+    .addOption(Object.assign(new Option(OptionFlags.one, "Alias for --ceiling"), { attributeName: () => "ceiling" }))
     .option(
       OptionFlags.fibEntry,
       "Entry extension (for example: 0.382 or shorthand 382)",

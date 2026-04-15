@@ -1,3 +1,4 @@
+import process from "node:process";
 import { cancelOrder, getOpenOrders, getOrder } from "../../../shared/coinbase/index.js";
 import { logger, printOrder } from "../../../shared/log/index.js";
 import type { ProductId } from "../../../shared/schemas/shared-primitives.js";
@@ -26,8 +27,21 @@ export async function handleOrdersAction(productId: ProductId | null): Promise<v
   }
 }
 
-export async function handleCancelAction(order_id: string): Promise<void> {
-  await cancelOrder(order_id);
+export async function handleCancelAction(orderId: string | null): Promise<void> {
+  if (orderId !== null) {
+    await cancelOrder(orderId);
+    return;
+  }
+  const openOrders = await getOpenOrders(null);
+  if (openOrders.length === 0) {
+    logger.error("No open orders found.");
+    process.exit(1);
+  }
+  if (openOrders.length > 1) {
+    logger.error(`Multiple open orders found (${openOrders.length}). Specify an order ID.`);
+    process.exit(1);
+  }
+  await cancelOrder(openOrders[0]!.order_id);
 }
 
 export async function handleModifyAction(orderId: string, options: ModifyOptions): Promise<void> {

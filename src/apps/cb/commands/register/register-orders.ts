@@ -12,6 +12,7 @@ import {
   OptionFlags,
   parseArg,
   parseArgOptions,
+  parseOptionalArg,
   parseOptionalProduct,
   withAction,
 } from "./register-utils.js";
@@ -36,9 +37,9 @@ export function registerOrderCommands(program: Command) {
     .action(withAction("order list", parseOptionalProduct(), handleOrdersAction));
 
   order
-    .command("cancel <order_id>")
-    .description("Cancel an open order by order ID")
-    .action(withAction("order cancel", parseArg(OrderIdSchema), handleCancelAction));
+    .command("cancel [order_id]")
+    .description("Cancel an open order by order ID, or the only open order if no ID is given")
+    .action(withAction("order cancel", parseOptionalArg(OrderIdSchema), handleCancelAction));
 
   order
     .command("replace <order_id>")
