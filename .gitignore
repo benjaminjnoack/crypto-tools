@@ -9,4 +9,3 @@ src/apps/hdb/old.js
 data/
 .codex
 todo
-data/**/*.csv
