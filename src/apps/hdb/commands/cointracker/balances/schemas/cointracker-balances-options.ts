@@ -12,6 +12,9 @@ const ColonSeparatedAssetStringSchema = z
 export const CointrackerBalancesQueryOptionsSchema = DebugOptionsSchema.extend({
   from: z.string().optional(),
   includeType: z.boolean().optional(),
+  json: z.boolean().optional(),
+  jsonFile: z.string().trim().min(1).optional(),
+  quiet: z.boolean().optional(),
   range: DateRangeSchema.optional(),
   to: z.string().optional(),
   year: z.string().regex(/^\d{4}$/).optional(),

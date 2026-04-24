@@ -5,7 +5,8 @@ export const AccountsOptionsSchema = z
   .object({
     crypto: z.boolean().optional(),
     cash: z.boolean().optional(),
-    json: z.union([z.boolean(), z.string()]).optional(),
+    json: z.boolean().optional(),
+    jsonFile: z.string().trim().min(1).optional(),
     raw: z.boolean().optional(),
     value: z.boolean().optional(),
   })

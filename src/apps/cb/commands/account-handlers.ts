@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import type { AccountsOptions } from "./schemas/command-options.js";
@@ -31,6 +31,25 @@ type AccountExportRow = {
   type: CoinbaseAccount["type"];
   hold: string;
   available: string;
+  price?: string | null;
+  holdValueUsd?: string | null;
+  availableValueUsd?: string | null;
+  totalValueUsd?: string | null;
+};
+
+type AccountsJsonPayload = {
+  rows: AccountExportRow[];
+  filters: {
+    product: string | null;
+    currency: string | null;
+    crypto: boolean;
+    cash: boolean;
+    raw: boolean;
+    value: boolean;
+  };
+  meta: {
+    rowCount: number;
+  };
 };
 
 function formatAccountSize(value: string, baseIncrement: string, raw: boolean | undefined): string {
@@ -94,15 +113,89 @@ function toAccountBalanceRow(
   };
 }
 
-function writeAccountsJson(accounts: AccountExportRow[], jsonOption: boolean | string | undefined) {
-  if (!jsonOption) {
-    return;
-  }
-  const outputPath = typeof jsonOption === "string" && jsonOption.length > 0
-    ? path.resolve(process.cwd(), jsonOption)
-    : path.join(process.cwd(), "accounts.json");
-  writeFileSync(outputPath, `${JSON.stringify(accounts, null, 2)}\n`);
-  console.log(`Wrote accounts JSON to ${outputPath}`);
+function buildAccountsJsonPayload(
+  rows: AccountExportRow[],
+  options: AccountsOptions,
+  product: string | null,
+): AccountsJsonPayload {
+  return {
+    rows,
+    filters: {
+      product,
+      currency: product ? product.split("-")[0] ?? null : null,
+      crypto: Boolean(options.crypto),
+      cash: Boolean(options.cash),
+      raw: Boolean(options.raw),
+      value: Boolean(options.value),
+    },
+    meta: {
+      rowCount: rows.length,
+    },
+  };
+}
+
+function printAccountsJson(payload: AccountsJsonPayload): void {
+  console.log(JSON.stringify(payload, null, 2));
+}
+
+function writeAccountsJsonFile(payload: AccountsJsonPayload, jsonFile: string): void {
+  const outputPath = path.resolve(process.cwd(), jsonFile);
+  mkdirSync(path.dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function buildProductJsonRows(
+  accounts: CoinbaseAccount[],
+  price: string,
+  priceIncrement: string,
+): AccountExportRow[] {
+  return accounts.map((acc) => {
+    const hold = acc.hold.value;
+    const available = acc.available_balance.value;
+    const holdValueUsd = toIncrement(priceIncrement, parseFloat(hold) * parseFloat(price));
+    const availableValueUsd = toIncrement(priceIncrement, parseFloat(available) * parseFloat(price));
+    return {
+      currency: acc.currency,
+      type: acc.type,
+      price,
+      hold,
+      available,
+      holdValueUsd,
+      availableValueUsd,
+      totalValueUsd: toIncrement(
+        priceIncrement,
+        parseFloat(holdValueUsd) + parseFloat(availableValueUsd),
+      ),
+    };
+  });
+}
+
+function buildAccountJsonRows(
+  accounts: CoinbaseAccount[],
+  metadataByCurrency: Map<string, AccountDisplayMetadata>,
+  options: AccountsOptions,
+): AccountExportRow[] {
+  return accounts.map((account) => {
+    const metadata = getAccountMetadata(metadataByCurrency, account.currency);
+    const row = toAccountBalanceRow(account, metadataByCurrency, options.raw);
+    const totalSize = parseFloat(account.hold.value) + parseFloat(account.available_balance.value);
+    return {
+      currency: account.currency,
+      type: account.type,
+      hold: row.Hold,
+      available: row.Available,
+      price: options.value ? metadata.price : null,
+      holdValueUsd: options.value && metadata.price !== null
+        ? toIncrement(metadata.priceIncrement, parseFloat(account.hold.value) * parseFloat(metadata.price))
+        : null,
+      availableValueUsd: options.value && metadata.price !== null
+        ? toIncrement(metadata.priceIncrement, parseFloat(account.available_balance.value) * parseFloat(metadata.price))
+        : null,
+      totalValueUsd: options.value && metadata.price !== null
+        ? toIncrement(metadata.priceIncrement, totalSize * parseFloat(metadata.price))
+        : null,
+    };
+  });
 }
 
 async function getSupportedProduct(
@@ -167,22 +260,7 @@ export async function handleAccountsAction(
 ): Promise<void> {
   const allAccounts = await requestAccounts();
   const filteredAccounts = filterAccounts(allAccounts, options);
-
-  if (options.json) {
-    const metadataByCurrency = await buildMetadataByCurrency(filteredAccounts, false);
-    writeAccountsJson(
-      filteredAccounts.map((account) => {
-        const row = toAccountBalanceRow(account, metadataByCurrency, options.raw);
-        return {
-          currency: account.currency,
-          type: account.type,
-          hold: row.Hold,
-          available: row.Available,
-        };
-      }),
-      options.json,
-    );
-  }
+  const wantsJson = options.json || Boolean(options.jsonFile);
 
   let accounts = filteredAccounts;
 
@@ -193,6 +271,18 @@ export async function handleAccountsAction(
     }
     accounts = accounts.filter((acc) => acc.currency.toUpperCase() === currency);
     const { price, price_increment } = await getProductInfo(product);
+    if (wantsJson) {
+      const payload = buildAccountsJsonPayload(
+        buildProductJsonRows(accounts, price, price_increment),
+        options,
+        product,
+      );
+      if (options.jsonFile) {
+        writeAccountsJsonFile(payload, options.jsonFile);
+      }
+      printAccountsJson(payload);
+      return;
+    }
     console.table(
       accounts.map((acc) => {
         const hold = acc.hold.value;
@@ -215,6 +305,18 @@ export async function handleAccountsAction(
       return acc.available_balance.value !== "0" || acc.hold.value !== "0";
     });
     const metadataByCurrency = await buildMetadataByCurrency(accounts, options.value === true);
+    if (wantsJson) {
+      const payload = buildAccountsJsonPayload(
+        buildAccountJsonRows(accounts, metadataByCurrency, options),
+        options,
+        product,
+      );
+      if (options.jsonFile) {
+        writeAccountsJsonFile(payload, options.jsonFile);
+      }
+      printAccountsJson(payload);
+      return;
+    }
 
     console.table(
       accounts.map((acc) => {

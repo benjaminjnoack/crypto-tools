@@ -7,6 +7,7 @@ import {
   truncateCointrackerBalancesTable,
 } from "../../../db/cointracker/balances/cointracker-balances-repository.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
+import { type JsonObject, printJson, writeJsonFile } from "../../shared/json-output.js";
 import type {
   CointrackerBalancesQueryOptions,
   CointrackerBalancesRegenerateOptions,
@@ -27,19 +28,46 @@ export async function cointrackerBalances(
   currency: string | undefined,
   options: CointrackerBalancesQueryOptions,
 ): Promise<Array<Record<string, unknown>>> {
-  const { includeType } = options;
+  const { includeType, json, jsonFile, quiet } = options;
   const { from, to } = await getToAndFromDates(options);
+  const currencies = normalizeColonSeparatedUppercase(currency);
 
   const rows = await selectCointrackerBalances(
     {
-      currencies: normalizeColonSeparatedUppercase(currency),
+      currencies,
       from,
       to,
     },
     Boolean(includeType),
   );
 
-  console.table(rows);
+  const payload: JsonObject = {
+    rows,
+    filters: {
+      currencies,
+      from: from.toISOString(),
+      to: to.toISOString(),
+    },
+    meta: {
+      rowCount: rows.length,
+      includeType: Boolean(includeType),
+    },
+  };
+
+  if (jsonFile) {
+    await writeJsonFile(jsonFile, payload);
+  }
+
+  if (json || jsonFile) {
+    if (!quiet) {
+      printJson(payload);
+    }
+    return rows as Array<Record<string, unknown>>;
+  }
+
+  if (!quiet) {
+    console.table(rows);
+  }
   return rows as Array<Record<string, unknown>>;
 }
 

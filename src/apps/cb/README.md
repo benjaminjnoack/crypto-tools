@@ -90,14 +90,16 @@ Notes:
 
 - `[product]` defaults to `BTC` when omitted.
 - Use `cb <command> --help` for command-specific options.
+- Prefer `cb ... --json` when you want machine-readable output for automation or agent workflows.
 
 ## Commands
 
 ### Accounts
 
-- `cb accounts [product] [--crypto] [--cash] [--json [filepath]] [--raw] [--value]` (alias: `account`)
+- `cb accounts [product] [--crypto] [--cash] [--json] [--json-file <path>] [--raw] [--value]` (alias: `account`)
   - non-zero balances by default; hold/available are formatted to each currency's base increment using cached product metadata when present unless `--raw` is used
-  - `--json` writes all fetched accounts to `./accounts.json` by default, or to the provided filepath; export rows include currency, type, hold, and available, and honor `--crypto`, `--cash`, and `--raw`
+  - `--json` prints `{ rows, filters, meta }` for machine reading
+  - `--json-file <path>` writes the same structured payload to disk and still prints JSON to stdout
   - `--value` adds a USD value column based on current product price (forced product refresh for supported products)
   - when `[product]` is provided, matching accounts are shown with price-based USD values
 - `cb balance` (alias: `usd`)
@@ -155,6 +157,18 @@ Notes:
 - `STOP_LIMIT`:
   - `--baseSize`, `--limitPrice`, `--stopPrice` are supported
   - `--takeProfitPrice` is rejected
+
+## Troubleshooting Workflow
+
+Prefer `cb accounts --json` when you want a stable machine-readable account snapshot for automation or agent-assisted inspection.
+
+Examples:
+
+```bash
+cb accounts --json
+cb accounts btc-usd --json
+cb accounts --crypto --raw --json-file tmp/accounts.json
+```
 
 ## Development
 

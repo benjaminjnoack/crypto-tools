@@ -1,3 +1,6 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { dateUtc } from "../../../../../fixtures/time.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -46,6 +49,7 @@ describe("cointracker balances handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "table").mockImplementation(tableMock);
+    vi.spyOn(console, "log").mockImplementation(vi.fn());
   });
 
   it("selects balances and prints table", async () => {
@@ -61,6 +65,31 @@ describe("cointracker balances handlers", () => {
     );
     expect(tableMock).toHaveBeenCalledTimes(1);
     expect(rows).toEqual([{ currency: "BTC", balance: "1" }]);
+  });
+
+  it("prints cointracker balances as json", async () => {
+    const logSpy = vi.spyOn(console, "log");
+
+    await cointrackerBalances("btc:eth", { includeType: true, json: true });
+
+    expect(tableMock).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls[0]?.[0]).toContain("\"filters\"");
+    expect(logSpy.mock.calls[0]?.[0]).toContain("\"includeType\": true");
+  });
+
+  it("writes cointracker balances json to disk and respects quiet", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "cointracker-balances-json-"));
+    const filePath = path.join(root, "balances.json");
+    const logSpy = vi.spyOn(console, "log");
+
+    await cointrackerBalances("btc", { jsonFile: filePath, quiet: true });
+
+    const content = await fs.readFile(filePath, "utf8");
+    expect(content).toContain("\"currencies\": [");
+    expect(content).toContain("\"BTC\"");
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(tableMock).not.toHaveBeenCalled();
   });
 
   it("rebuilds balances table with truncate flow", async () => {

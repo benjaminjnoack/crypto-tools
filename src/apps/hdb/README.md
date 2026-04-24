@@ -75,12 +75,15 @@ Install binary in your shell:
 - `hdb coinbase balances list <asset>`
   - `asset` supports colon-separated values
   - `--json` prints structured troubleshooting output
+  - `--json-file <path>` writes the same structured payload to disk
   - `--current` live check requires `--remote`
 - `hdb coinbase balances snapshot`
   - `--json` prints structured troubleshooting output
+  - `--json-file <path>` writes the same structured payload to disk
   - `--current` live check requires `--remote`
 - `hdb coinbase balances trace <asset>`
   - `--json` prints structured troubleshooting output
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase balances rebuild`
 - `hdb coinbase lots analyze <asset>`
 - `hdb coinbase lots analyze-all`
@@ -120,6 +123,8 @@ Coinbase migration status and next slices are tracked in:
 ### CoinTracker
 
 - `hdb cointracker balances list [currency]`
+  - `--json` prints `{ rows, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb cointracker balances rebuild`
 - `hdb cointracker gains list [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`

@@ -57,6 +57,11 @@ From source:
 - `npm run dev -- --help` (runs `cb`)
 - `npm run dev:hdb -- --help` (runs `hdb`)
 
+Machine-readable CLI output:
+
+- prefer `cb ... --json` and `hdb ... --json` when you want structured output for automation or agent workflows
+- use `--json-file <path>` on commands that expose it when you want the same payload written to disk
+
 ## Documentation
 
 - [`cb CLI README`](src/apps/cb/README.md)

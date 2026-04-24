@@ -17,7 +17,7 @@ import {
 } from "../../../db/coinbase/transactions/coinbase-transactions-repository.js";
 import { getClient } from "../../../db/db-client.js";
 import { COINBASE_EPOCH, DUST_THRESHOLD, getToAndFromDates } from "../../shared/date-range-utils.js";
-import { printJson } from "../../shared/json-output.js";
+import { type JsonObject, printJson, writeJsonFile } from "../../shared/json-output.js";
 import type {
   CoinbaseBalancesBatchOptions,
   CoinbaseBalancesQueryOptions,
@@ -92,7 +92,7 @@ function buildConsoleRows(
   return rows.map((row) => toConsoleRow(row, raw, currentBalanceMap?.get(row.asset)));
 }
 
-function printBalanceJson(
+function buildBalanceJsonPayload(
   rows: CoinbaseBalanceRow[],
   options: {
     assets?: string[] | undefined;
@@ -105,11 +105,11 @@ function printBalanceJson(
     last?: string | undefined;
     mode: "list" | "snapshot" | "trace";
   },
-): void {
+): JsonObject {
   const tableRows = buildConsoleRows(rows, options.raw, options.currentBalanceMap);
   const outputRows = options.mode === "snapshot" ? tableRows : applyFirstLastRows(tableRows, options.first, options.last);
 
-  printJson({
+  return {
     rows: outputRows,
     filters: {
       assets: options.assets ?? [],
@@ -126,7 +126,24 @@ function printBalanceJson(
       raw: Boolean(options.raw),
       includesCurrentBalance: Boolean(options.currentBalanceMap),
     },
-  });
+  };
+}
+
+async function emitBalanceJson(
+  payload: JsonObject,
+  options: {
+    json?: boolean | undefined;
+    jsonFile?: string | undefined;
+    quiet?: boolean | undefined;
+  },
+): Promise<void> {
+  if (options.jsonFile) {
+    await writeJsonFile(options.jsonFile, payload);
+  }
+
+  if (!options.quiet && (options.json || options.jsonFile)) {
+    printJson(payload);
+  }
 }
 
 async function getCurrentBalanceMap(remote: boolean | undefined): Promise<Map<string, string>> {
@@ -208,15 +225,28 @@ export async function coinbaseBalances(
   asset: string,
   options: CoinbaseBalancesQueryOptions,
 ): Promise<CoinbaseBalanceRow[]> {
-  const { current, first, last, quiet, raw, remote } = options;
+  const { current, first, json, jsonFile, last, quiet, raw, remote } = options;
   const assets = normalizeColonSeparatedUppercase(asset);
   const { from, to } = current
     ? { from: new Date(COINBASE_EPOCH), to: new Date() }
     : await getToAndFromDates(options);
 
   const rows = await selectCoinbaseBalanceLedger({ assets, from, to });
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
+  const jsonPayload = buildBalanceJsonPayload(rows, {
+    assets,
+    current,
+    currentBalanceMap,
+    first,
+    from,
+    last,
+    mode: "list",
+    raw,
+    to,
+  });
 
-  if (quiet) {
+  if (json || jsonFile) {
+    await emitBalanceJson(jsonPayload, { json, jsonFile, quiet });
     return rows;
   }
 
@@ -225,19 +255,7 @@ export async function coinbaseBalances(
     return rows;
   }
 
-  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
-  if (options.json) {
-    printBalanceJson(rows, {
-      assets,
-      current,
-      currentBalanceMap,
-      first,
-      from,
-      last,
-      mode: "list",
-      raw,
-      to,
-    });
+  if (quiet) {
     return rows;
   }
 
@@ -250,11 +268,20 @@ export async function coinbaseBalances(
 export async function coinbaseBalancesBatch(
   options: CoinbaseBalancesBatchOptions,
 ): Promise<CoinbaseBalanceRow[]> {
-  const { current, quiet, raw, remote } = options;
+  const { current, json, jsonFile, quiet, raw, remote } = options;
   const { to } = current ? { to: new Date() } : await getToAndFromDates(options);
   const rows = await selectCoinbaseBalancesAtTime(to);
+  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
+  const jsonPayload = buildBalanceJsonPayload(rows, {
+    current,
+    currentBalanceMap,
+    mode: "snapshot",
+    raw,
+    to,
+  });
 
-  if (quiet) {
+  if (json || jsonFile) {
+    await emitBalanceJson(jsonPayload, { json, jsonFile, quiet });
     return rows;
   }
 
@@ -263,15 +290,7 @@ export async function coinbaseBalancesBatch(
     return rows;
   }
 
-  const currentBalanceMap = await resolveCurrentBalanceMap(current, remote);
-  if (options.json) {
-    printBalanceJson(rows, {
-      current,
-      currentBalanceMap,
-      mode: "snapshot",
-      raw,
-      to,
-    });
+  if (quiet) {
     return rows;
   }
 
@@ -285,13 +304,20 @@ export async function coinbaseBalancesTrace(
   asset: string,
   options: CoinbaseBalancesTraceOptions,
 ): Promise<CoinbaseBalanceRow[]> {
-  const { quiet, raw } = options;
+  const { json, jsonFile, quiet, raw } = options;
   const ticker = normalizeLedgerAsset(asset);
   const { to } = await getToAndFromDates(options);
 
   const rows = await traceCoinbaseBalanceLedger(ticker, to);
+  const jsonPayload = buildBalanceJsonPayload(rows, {
+    assets: [ticker],
+    mode: "trace",
+    raw,
+    to,
+  });
 
-  if (quiet) {
+  if (json || jsonFile) {
+    await emitBalanceJson(jsonPayload, { json, jsonFile, quiet });
     return rows;
   }
 
@@ -300,13 +326,7 @@ export async function coinbaseBalancesTrace(
     return rows;
   }
 
-  if (options.json) {
-    printBalanceJson(rows, {
-      assets: [ticker],
-      mode: "trace",
-      raw,
-      to,
-    });
+  if (quiet) {
     return rows;
   }
 

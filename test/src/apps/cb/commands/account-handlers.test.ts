@@ -6,6 +6,7 @@ const {
   requestCurrencyAccountMock,
   getProductInfoMock,
   getTransactionSummaryMock,
+  mkdirSyncMock,
   toIncrementMock,
   writeFileSyncMock,
   cwdMock,
@@ -41,11 +42,13 @@ const {
     const decimals = increment.includes(".") ? increment.split(".")[1]?.length ?? 0 : 0;
     return value.toFixed(decimals);
   }),
+  mkdirSyncMock: vi.fn(),
   writeFileSyncMock: vi.fn(),
   cwdMock: vi.fn(() => "/mock-cwd"),
 }));
 
 vi.mock("node:fs", () => ({
+  mkdirSync: mkdirSyncMock,
   writeFileSync: writeFileSyncMock,
 }));
 
@@ -208,38 +211,68 @@ describe("accounts command handlers", () => {
     const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
-    await handleAccountsAction(null, { crypto: true, json: true });
+    await handleAccountsAction(null, { crypto: true, jsonFile: "accounts.json" });
 
+    expect(mkdirSyncMock).toHaveBeenCalledWith("/mock-cwd", { recursive: true });
     expect(writeFileSyncMock).toHaveBeenCalledWith(
       "/mock-cwd/accounts.json",
-      `${JSON.stringify([
+      `${JSON.stringify({
+        rows: [
+          {
+            currency: "BTC",
+            type: "ACCOUNT_TYPE_CRYPTO",
+            hold: "0.10000000",
+            available: "0.20000000",
+            price: null,
+            holdValueUsd: null,
+            availableValueUsd: null,
+            totalValueUsd: null,
+          },
+        ],
+        filters: {
+          product: null,
+          currency: null,
+          crypto: true,
+          cash: false,
+          raw: false,
+          value: false,
+        },
+        meta: {
+          rowCount: 1,
+        },
+      }, null, 2)}\n`,
+    );
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      rows: [
         {
           currency: "BTC",
           type: "ACCOUNT_TYPE_CRYPTO",
           hold: "0.10000000",
           available: "0.20000000",
+          price: null,
+          holdValueUsd: null,
+          availableValueUsd: null,
+          totalValueUsd: null,
         },
-        {
-          currency: "ETH",
-          type: "ACCOUNT_TYPE_CRYPTO",
-          hold: "0.00000000",
-          available: "0.00000000",
-        },
-      ], null, 2)}\n`,
-    );
-    expect(logSpy).toHaveBeenCalledWith("Wrote accounts JSON to /mock-cwd/accounts.json");
-    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
-      {
-        Currency: "BTC",
-        Hold: "0.10000000",
-        Available: "0.20000000",
+      ],
+      filters: {
+        product: null,
+        currency: null,
+        crypto: true,
+        cash: false,
+        raw: false,
+        value: false,
       },
-    ]);
+      meta: {
+        rowCount: 1,
+      },
+    }, null, 2));
+    expect(tableSpy).not.toHaveBeenCalled();
     tableSpy.mockRestore();
     logSpy.mockRestore();
   });
 
-  it("writes raw balances to a provided json filepath", async () => {
+  it("prints json to stdout when requested", async () => {
     requestAccountsMock.mockResolvedValueOnce([
       {
         currency: "SOL",
@@ -258,38 +291,154 @@ describe("accounts command handlers", () => {
     const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
-    await handleAccountsAction(null, { json: "snapshots/accounts.json", raw: true });
+    await handleAccountsAction(null, { json: true, raw: true });
 
-    expect(writeFileSyncMock).toHaveBeenCalledWith(
-      "/mock-cwd/snapshots/accounts.json",
-      `${JSON.stringify([
+    expect(writeFileSyncMock).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      rows: [
         {
           currency: "SOL",
           type: "ACCOUNT_TYPE_CRYPTO",
           hold: "1.2345",
           available: "10.2",
+          price: null,
+          holdValueUsd: null,
+          availableValueUsd: null,
+          totalValueUsd: null,
         },
         {
           currency: "USD",
           type: "ACCOUNT_TYPE_FIAT",
           hold: "10",
           available: "40",
+          price: null,
+          holdValueUsd: null,
+          availableValueUsd: null,
+          totalValueUsd: null,
         },
-      ], null, 2)}\n`,
-    );
-    expect(logSpy).toHaveBeenCalledWith("Wrote accounts JSON to /mock-cwd/snapshots/accounts.json");
-    expect(tableSpy.mock.calls[0]?.[0]).toEqual([
-      {
-        Currency: "SOL",
-        Hold: "1.2345",
-        Available: "10.2",
+      ],
+      filters: {
+        product: null,
+        currency: null,
+        crypto: false,
+        cash: false,
+        raw: true,
+        value: false,
       },
-      {
-        Currency: "USD",
-        Hold: "10",
-        Available: "40",
+      meta: {
+        rowCount: 2,
       },
+    }, null, 2));
+    expect(tableSpy).not.toHaveBeenCalled();
+    tableSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("writes raw balances to a provided json filepath and still prints", async () => {
+    requestAccountsMock.mockResolvedValueOnce([
+      {
+        currency: "SOL",
+        hold: { value: "1.2345" },
+        available_balance: { value: "10.2" },
+        type: "ACCOUNT_TYPE_CRYPTO",
+        uuid: makeEntityUuid(14),
+      },
+      usdAccount,
     ]);
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      price_increment: "0.01",
+      base_increment: "0.001",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleAccountsAction(null, { jsonFile: "snapshots/accounts.json", raw: true });
+
+    expect(mkdirSyncMock).toHaveBeenCalledWith("/mock-cwd/snapshots", { recursive: true });
+
+    expect(writeFileSyncMock).toHaveBeenCalledWith(
+      "/mock-cwd/snapshots/accounts.json",
+      `${JSON.stringify({
+        rows: [
+          {
+            currency: "SOL",
+            type: "ACCOUNT_TYPE_CRYPTO",
+            hold: "1.2345",
+            available: "10.2",
+            price: null,
+            holdValueUsd: null,
+            availableValueUsd: null,
+            totalValueUsd: null,
+          },
+          {
+            currency: "USD",
+            type: "ACCOUNT_TYPE_FIAT",
+            hold: "10",
+            available: "40",
+            price: null,
+            holdValueUsd: null,
+            availableValueUsd: null,
+            totalValueUsd: null,
+          },
+        ],
+        filters: {
+          product: null,
+          currency: null,
+          crypto: false,
+          cash: false,
+          raw: true,
+          value: false,
+        },
+        meta: {
+          rowCount: 2,
+        },
+      }, null, 2)}\n`,
+    );
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(tableSpy).not.toHaveBeenCalled();
+    tableSpy.mockRestore();
+    logSpy.mockRestore();
+  });
+
+  it("prints product-scoped account json with USD valuations", async () => {
+    requestAccountsMock.mockResolvedValueOnce([btcAccount, usdAccount]);
+    getProductInfoMock.mockResolvedValueOnce({
+      price: "100.00",
+      base_increment: "0.00000001",
+      price_increment: "0.01",
+    });
+    const tableSpy = vi.spyOn(console, "table").mockImplementation(() => undefined);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleAccountsAction("BTC-USD", { json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      rows: [
+        {
+          currency: "BTC",
+          type: "ACCOUNT_TYPE_CRYPTO",
+          price: "100.00",
+          hold: "0.1",
+          available: "0.2",
+          holdValueUsd: "10.00",
+          availableValueUsd: "20.00",
+          totalValueUsd: "30.00",
+        },
+      ],
+      filters: {
+        product: "BTC-USD",
+        currency: "BTC",
+        crypto: false,
+        cash: false,
+        raw: false,
+        value: false,
+      },
+      meta: {
+        rowCount: 1,
+      },
+    }, null, 2));
+    expect(tableSpy).not.toHaveBeenCalled();
     tableSpy.mockRestore();
     logSpy.mockRestore();
   });

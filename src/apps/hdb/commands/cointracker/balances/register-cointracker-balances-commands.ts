@@ -30,6 +30,9 @@ export function registerCointrackerBalancesCommands(cointracker: Command): void 
 
   list
     .option("--include-type", "Include transaction type from cointracker_transactions")
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
+    .option("--quiet", "Do not print rows", false)
     .action(
       withAction(
         parseArgWithOptions(z.string().optional()),

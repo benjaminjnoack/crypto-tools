@@ -1,3 +1,6 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { dateUtc, isoUtc } from "../../../../../fixtures/time.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -191,6 +194,24 @@ describe("hdb coinbase balance handlers", () => {
     expect(logMock.mock.calls[0]?.[0]).toContain("\"filters\"");
   });
 
+  it("writes balances json to a nested relative file and still prints stdout", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "coinbase-balances-json-"));
+    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(root);
+
+    try {
+      await coinbaseBalances("btc", { jsonFile: "snapshots/balances.json", raw: false });
+
+      const filePath = path.join(root, "snapshots", "balances.json");
+      const content = await fs.readFile(filePath, "utf8");
+
+      expect(content).toContain("\"mode\": \"list\"");
+      expect(content).toContain("\"rowCount\": 1");
+      expect(logMock).toHaveBeenCalledTimes(1);
+    } finally {
+      cwdSpy.mockRestore();
+    }
+  });
+
   it("prints current snapshot balances as json with current-balance metadata", async () => {
     await coinbaseBalancesBatch({ current: true, remote: true, json: true, raw: true });
 
@@ -199,6 +220,28 @@ describe("hdb coinbase balance handlers", () => {
     expect(logMock.mock.calls[0]?.[0]).toContain("\"mode\": \"snapshot\"");
     expect(logMock.mock.calls[0]?.[0]).toContain("\"includesCurrentBalance\": true");
     expect(logMock.mock.calls[0]?.[0]).toContain("\"raw\": true");
+  });
+
+  it("writes snapshot json without printing when quiet is set", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "coinbase-balances-snapshot-json-"));
+    const filePath = path.join(root, "snapshot.json");
+
+    await coinbaseBalancesBatch({ jsonFile: filePath, quiet: true });
+
+    const content = await fs.readFile(filePath, "utf8");
+    expect(content).toContain("\"mode\": \"snapshot\"");
+    expect(logMock).not.toHaveBeenCalled();
+    expect(tableMock).not.toHaveBeenCalled();
+  });
+
+  it("prints trace json even when no rows are found", async () => {
+    traceCoinbaseBalanceLedgerMock.mockResolvedValueOnce([]);
+
+    await coinbaseBalancesTrace("btc", { json: true });
+
+    expect(logMock).toHaveBeenCalledTimes(1);
+    expect(logMock.mock.calls[0]?.[0]).toContain("\"rowCount\": 0");
+    expect(loggerWarnMock).not.toHaveBeenCalled();
   });
 
   it("queries batch snapshot and trace", async () => {
