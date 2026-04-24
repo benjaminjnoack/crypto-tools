@@ -106,6 +106,21 @@ export const REBUILD_COINTRACKER_BALANCES_LEDGER_SQL = `
       1 AS row_order
     FROM ${COINTRACKER_TRANSACTIONS_TABLE} t
     WHERE t.sent_currency IS NOT NULL
+
+    UNION ALL
+
+    SELECT
+      t.fee_currency AS currency,
+      t.date,
+      t.transaction_id AS cointracker_transaction_id,
+      (0::numeric - COALESCE(t.fee_amount, 0)::numeric) AS delta,
+      0::numeric AS received_quantity,
+      0::numeric AS sent_quantity,
+      2 AS row_order
+    FROM ${COINTRACKER_TRANSACTIONS_TABLE} t
+    WHERE t.fee_currency IS NOT NULL
+      AND t.fee_amount IS NOT NULL
+      AND t.fee_amount::numeric > 0
   ),
   seeded AS (
     SELECT
