@@ -37,6 +37,9 @@ function toOptionalString(value: unknown): string | null {
 }
 
 function toRequiredString(value: unknown, field: string): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
   if (typeof value !== "string") {
     throw new Error(`cointracker transaction row missing ${field}`);
   }

@@ -129,7 +129,8 @@ export async function insertCointrackerTransactionsBatch(
   const sql = `
     INSERT INTO ${COINTRACKER_TRANSACTIONS_TABLE}
     (${INSERT_COLUMNS.join(", ")})
-    VALUES ${placeholders.join(", ")};
+    VALUES ${placeholders.join(", ")}
+    ON CONFLICT (transaction_id) DO NOTHING;
   `;
   await client.query(sql, values);
 }
