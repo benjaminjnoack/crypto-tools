@@ -203,7 +203,8 @@ export async function insertCoinbaseTransactionsBatch(
   const sql = `
     INSERT INTO ${COINBASE_TRANSACTIONS_TABLE}
     (${INSERT_COLUMNS.join(", ")})
-    VALUES ${placeholders.join(", ")};
+    VALUES ${placeholders.join(", ")}
+    ON CONFLICT (id) DO NOTHING;
   `;
   await client.query(sql, values);
 }

@@ -177,6 +177,20 @@ function getSignedDelta(row: CoinbaseTransactionRow): { asset: string; delta: nu
     case "Withdrawal":
     case "Send":
       return { asset, delta: unsigned * -1 };
+    case "Retail Staking Transfer":
+    case "Retail Unstaking Transfer":
+      // Paired internal transfers (+X and -X legs) that net to zero; exclude from balance
+      return { asset, delta: 0 };
+    case "Wrap Asset":
+      // ETH/ETH2 being wrapped into CBETH — reduces ETH holdings
+      if (asset === "ETH") {
+        return { asset: "ETH", delta: unsigned * -1 };
+      }
+      // CBETH received from wrapping — increases CBETH holdings
+      if (asset === "CBETH") {
+        return { asset: "CBETH", delta: unsigned };
+      }
+      throw new Error(`Unsure how to quantify delta for Wrap Asset of ${row.asset}`);
     case "Unwrap":
       if (asset === "ETH") {
         return { asset: "ETH", delta: unsigned };
