@@ -42,6 +42,7 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
 
   show
     .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .action(
       withAction(
         parseArgWithOptions(z.string()),
@@ -57,6 +58,7 @@ export function registerCoinbaseOrderCommands(coinbase: Command): void {
 
   inspect
     .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .action(
       withAction(
         parseArgWithOptions(z.string()),

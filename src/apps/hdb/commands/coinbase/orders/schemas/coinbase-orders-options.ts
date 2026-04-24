@@ -24,6 +24,7 @@ export type CoinbaseOrdersFeesOptions = z.infer<typeof CoinbaseOrdersFeesOptions
 
 export const CoinbaseOrdersReadOptionsSchema = DebugOptionsSchema.extend({
   json: z.boolean().optional(),
+  jsonFile: z.string().trim().min(1).optional(),
 });
 export type CoinbaseOrdersReadOptions = z.infer<typeof CoinbaseOrdersReadOptionsSchema>;
 

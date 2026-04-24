@@ -92,8 +92,10 @@ Install binary in your shell:
   - supports `--csv` and `--f8949` exports
 - `hdb coinbase orders show <orderId>`
   - `--json` prints `{ row, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase orders inspect <orderId>`
   - `--json` prints `{ row, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase orders fees [productId]`
 - `hdb coinbase orders import-one <orderId>`
   - requires explicit live mode: `--remote`
@@ -106,10 +108,13 @@ Install binary in your shell:
 
 - `hdb coinbase transactions list [asset]`
   - `--json` prints `{ rows, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase transactions summary [asset]`
   - `--json` prints `{ rows, totals, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase transactions show [id]`
   - `--json` prints `{ rows, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb coinbase transactions add-manual <asset>`
 - `hdb coinbase transactions import-statement <filepath>`
 - `hdb coinbase transactions rebuild`
@@ -129,15 +134,21 @@ Coinbase migration status and next slices are tracked in:
 - `hdb cointracker gains list [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`, `--json`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb cointracker gains summary [assets]`
   - export flags: `--csv`, `--f8949`, `--headers`, `--pages`
   - totals/format: `--totals`, `--raw`, `--json`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb cointracker gains rebuild`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-capital-gains`
 - `hdb cointracker gains analyze-usdc`
   - use `--buckets` or `--interval <day|week|month|quarter|year>`
 - `hdb cointracker transactions list [asset]`
+  - `--json` prints `{ rows, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb cointracker transactions summary [asset]`
+  - `--json` prints `{ rows, filters, meta }`
+  - `--json-file <path>` writes the same structured payload to disk
 - `hdb cointracker transactions rebuild`
   - input directory: `--input-dir <dir>` or `${HELPER_HDB_ROOT_DIR}/input/cointracker-transactions`
   - also rebuilds `cointracker_balances_ledger`
@@ -164,7 +175,7 @@ hdb cointracker gains summary btc:eth --totals --json
 psql "postgresql://hdb_readonly:readonly_password@localhost:5432/hdb" -c "select count(*) from coinbase_transactions;"
 ```
 
-`--json` is read-only and intended for troubleshooting. It is not available on mutation commands. For CoinTracker gains, `--json` cannot be combined with `--csv` or `--f8949`.
+Structured JSON (`--json` / `--json-file`) is read-only and intended for troubleshooting. It is not available on mutation commands. For CoinTracker gains, structured JSON cannot be combined with `--csv` or `--f8949`.
 
 ## Remaining TODOs
 

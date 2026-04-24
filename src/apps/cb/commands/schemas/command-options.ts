@@ -13,6 +13,14 @@ export const AccountsOptionsSchema = z
   .strict();
 export type AccountsOptions = z.infer<typeof AccountsOptionsSchema>;
 
+export const InspectOptionsSchema = z
+  .object({
+    json: z.boolean().optional(),
+    jsonFile: z.string().trim().min(1).optional(),
+  })
+  .strict();
+export type InspectOptions = z.infer<typeof InspectOptionsSchema>;
+
 export const AskOptionsSchema = z
   .object({
     baseSize: PositiveNumericString.optional(),

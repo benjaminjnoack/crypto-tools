@@ -42,7 +42,7 @@ TypeScript ESM monorepo (`module: NodeNext`). Three CLIs share a `src/shared/` l
 - `test/setup/no-network.ts` — global outbound-network block active in `vitest.config.ts`
 
 **Use explicit relative imports with `.js` specifiers** (NodeNext resolution).
-Prefer machine-readable CLI output for local inspection and automation when available: `cb ... --json` and `hdb ... --json`, plus `--json-file <path>` on commands that support file output.
+Prefer machine-readable CLI output for local inspection and automation when available: use `cb ... --json` and `hdb ... --json` on read-only inspection commands, plus `--json-file <path>` when the same payload should be written to disk.
 
 ### cb app boundaries
 

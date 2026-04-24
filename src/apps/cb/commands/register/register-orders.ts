@@ -7,13 +7,13 @@ import {
   handleOrdersAction,
   handleReplaceAction,
 } from "../order-handlers.js";
-import { BreakEvenStopOptionsSchema, ModifyOptionsSchema } from "../schemas/command-options.js";
+import { BreakEvenStopOptionsSchema, InspectOptionsSchema, ModifyOptionsSchema } from "../schemas/command-options.js";
 import {
   OptionFlags,
   parseArg,
   parseArgOptions,
   parseOptionalArg,
-  parseOptionalProduct,
+  parseOptionalProductOptions,
   withAction,
 } from "./register-utils.js";
 import { OrderIdSchema } from "../../../../shared/schemas/shared-primitives.js";
@@ -22,19 +22,25 @@ export function registerOrderCommands(program: Command) {
   program
     .command("orders [product]")
     .description("List open orders, optionally filtered to a single product")
-    .action(withAction("orders", parseOptionalProduct(), handleOrdersAction));
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
+    .action(withAction("orders", parseOptionalProductOptions(InspectOptionsSchema), handleOrdersAction));
 
   const order = program.command("order").description("Order management commands");
 
   order
     .command("get <order_id>")
     .description("Fetch and display details for a single order ID")
-    .action(withAction("order get", parseArg(OrderIdSchema), handleOrderAction));
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
+    .action(withAction("order get", parseArgOptions(OrderIdSchema, InspectOptionsSchema), handleOrderAction));
 
   order
     .command("list [product]")
     .description("List open orders, optionally filtered to a single product")
-    .action(withAction("order list", parseOptionalProduct(), handleOrdersAction));
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
+    .action(withAction("order list", parseOptionalProductOptions(InspectOptionsSchema), handleOrdersAction));
 
   order
     .command("cancel [order_id]")

@@ -60,7 +60,7 @@ From source:
 Machine-readable CLI output:
 
 - prefer `cb ... --json` and `hdb ... --json` when you want structured output for automation or agent workflows
-- use `--json-file <path>` on commands that expose it when you want the same payload written to disk
+- use `--json-file <path>` on read-only inspection commands that expose it when you want the same payload written to disk
 
 ## Documentation
 

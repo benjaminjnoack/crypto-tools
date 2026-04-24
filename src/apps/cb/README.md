@@ -102,14 +102,19 @@ Notes:
   - `--json-file <path>` writes the same structured payload to disk and still prints JSON to stdout
   - `--value` adds a USD value column based on current product price (forced product refresh for supported products)
   - when `[product]` is provided, matching accounts are shown with price-based USD values
-- `cb balance` (alias: `usd`)
-- `cb cash`
-- `cb fees`
+- `cb balance [--json] [--json-file <path>]` (alias: `usd`)
+  - `--json` prints `{ row, meta }`
+- `cb cash [--json] [--json-file <path>] [--raw] [--value]`
+  - same structured payload and formatting flags as `cb accounts --cash`
+- `cb fees [--json] [--json-file <path>]`
+  - `--json` prints `{ row, meta }`
 
 ### Products
 
-- `cb product [product]`
-- `cb price [product]`
+- `cb product [product] [--json] [--json-file <path>]`
+  - `--json` prints `{ row, meta }`
+- `cb price [product] [--json] [--json-file <path>]`
+  - `--json` prints `{ row, meta }`
 
 ### Market Orders
 
@@ -133,8 +138,10 @@ Notes:
 
 ### Orders
 
-- `cb order get <order_id>`
-- `cb order list [product]` (alias: `cb orders [product]`)
+- `cb order get <order_id> [--json] [--json-file <path>]`
+  - `--json` prints `{ row, meta }`
+- `cb order list [product] [--json] [--json-file <path>]` (alias: `cb orders [product]`)
+  - `--json` prints `{ rows, filters, meta }`
 - `cb order cancel <order_id>`
 - `cb order replace <order_id>` (re-places a cancelled priced order with the same prices and attached TP/SL when present; funding must be available: base asset for sells, USD for buys)
 - `cb order modify <order_id> [--baseSize <baseSize>] [--limitPrice <limitPrice>] [--stopPrice <stopPrice>] [--takeProfitPrice <takeProfitPrice>]` (supports limit, stop-limit, bracket, and TP/SL orders)
@@ -168,6 +175,8 @@ Examples:
 cb accounts --json
 cb accounts btc-usd --json
 cb accounts --crypto --raw --json-file tmp/accounts.json
+cb price eth --json
+cb order list btc-usd --json-file tmp/open-orders.json
 ```
 
 ## Development

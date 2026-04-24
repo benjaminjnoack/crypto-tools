@@ -12,6 +12,7 @@ import {
 import { parseCointrackerTransactionsCsv } from "../../../db/cointracker/transactions/cointracker-transactions-mappers.js";
 import { getClient } from "../../../db/db-client.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
+import { emitJsonOutput } from "../../shared/json-output.js";
 import { cointrackerBalancesRegenerate } from "../balances/cointracker-balances-handlers.js";
 import type {
   CointrackerTransactionsGroupOptions,
@@ -92,19 +93,44 @@ export async function cointrackerTransactions(
 ): Promise<Array<Record<string, unknown>>> {
   const { includeBalances, quiet } = options;
   const { from, to } = await getToAndFromDates(options);
+  const assets = normalizeColonSeparatedUppercase(asset);
+  const excluded = normalizeColonSeparatedUppercase(options.exclude);
+  const types = normalizeColonSeparatedUppercase(options.type);
+  const received = normalizeColonSeparatedUppercase(options.received);
+  const sent = normalizeColonSeparatedUppercase(options.sent);
 
   const rows = await selectCointrackerTransactions(
     {
       from,
       to,
-      assets: normalizeColonSeparatedUppercase(asset),
-      excluded: normalizeColonSeparatedUppercase(options.exclude),
-      types: normalizeColonSeparatedUppercase(options.type),
-      received: normalizeColonSeparatedUppercase(options.received),
-      sent: normalizeColonSeparatedUppercase(options.sent),
+      assets,
+      excluded,
+      types,
+      received,
+      sent,
     },
     Boolean(includeBalances),
   );
+
+  if (options.json || options.jsonFile) {
+    await emitJsonOutput({
+      rows: toTransactionConsoleRows(rows, Boolean(includeBalances)),
+      filters: {
+        from: from.toISOString(),
+        to: to.toISOString(),
+        assets,
+        excluded,
+        types,
+        received,
+        sent,
+      },
+      meta: {
+        rowCount: rows.length,
+        includeBalances: Boolean(includeBalances),
+      },
+    }, options);
+    return rows as Array<Record<string, unknown>>;
+  }
 
   if (!quiet) {
     console.table(toTransactionConsoleRows(rows, Boolean(includeBalances)));
@@ -119,19 +145,44 @@ export async function cointrackerTransactionsGroup(
 ): Promise<Array<Record<string, unknown>>> {
   const { interval, quiet } = options;
   const { from, to } = await getToAndFromDates(options);
+  const assets = normalizeColonSeparatedUppercase(asset);
+  const excluded = normalizeColonSeparatedUppercase(options.exclude);
+  const types = normalizeColonSeparatedUppercase(options.type);
+  const received = normalizeColonSeparatedUppercase(options.received);
+  const sent = normalizeColonSeparatedUppercase(options.sent);
 
   const rows = await selectCointrackerTransactionsGroup(
     {
       from,
       to,
-      assets: normalizeColonSeparatedUppercase(asset),
-      excluded: normalizeColonSeparatedUppercase(options.exclude),
-      types: normalizeColonSeparatedUppercase(options.type),
-      received: normalizeColonSeparatedUppercase(options.received),
-      sent: normalizeColonSeparatedUppercase(options.sent),
+      assets,
+      excluded,
+      types,
+      received,
+      sent,
     },
     interval,
   );
+
+  if (options.json || options.jsonFile) {
+    await emitJsonOutput({
+      rows,
+      filters: {
+        from: from.toISOString(),
+        to: to.toISOString(),
+        assets,
+        excluded,
+        types,
+        received,
+        sent,
+        interval: interval ?? null,
+      },
+      meta: {
+        rowCount: rows.length,
+      },
+    }, options);
+    return rows as Array<Record<string, unknown>>;
+  }
 
   if (!quiet) {
     console.table(rows);

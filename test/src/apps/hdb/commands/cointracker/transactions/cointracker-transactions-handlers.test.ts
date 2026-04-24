@@ -122,6 +122,7 @@ describe("cointracker transaction handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "table").mockImplementation(tableMock);
+    vi.spyOn(console, "log").mockImplementation(vi.fn());
   });
 
   it("normalizes filters and prints transaction rows", async () => {
@@ -176,6 +177,26 @@ describe("cointracker transaction handlers", () => {
     );
     expect(tableMock).toHaveBeenCalledTimes(1);
     expect(rows).toHaveLength(1);
+  });
+
+  it("prints transactions as json", async () => {
+    const logSpy = vi.spyOn(console, "log");
+
+    await cointrackerTransactions("btc", { json: true, includeBalances: true });
+
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls[0]?.[0]).toContain("\"includeBalances\": true");
+    expect(tableMock).not.toHaveBeenCalled();
+  });
+
+  it("prints grouped transactions as json", async () => {
+    const logSpy = vi.spyOn(console, "log");
+
+    await cointrackerTransactionsGroup("btc", { json: true, interval: "month" });
+
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy.mock.calls[0]?.[0]).toContain("\"interval\": \"month\"");
+    expect(tableMock).not.toHaveBeenCalled();
   });
 
   it("returns zero when no csv input files are found", async () => {

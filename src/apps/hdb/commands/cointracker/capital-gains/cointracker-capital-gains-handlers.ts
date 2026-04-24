@@ -36,7 +36,7 @@ import {
 } from "./cointracker-capital-gains-export.js";
 import { getEnvConfig } from "../../../../../shared/common/index.js";
 import { logger } from "../../../../../shared/log/index.js";
-import { assertNoJsonWithFileExport, printJson } from "../../shared/json-output.js";
+import { assertNoStructuredJsonWithFileExport, emitJsonOutput } from "../../shared/json-output.js";
 
 function normalizeColonSeparatedUppercase(input?: string): string[] {
   if (!input) {
@@ -157,7 +157,7 @@ export async function cointrackerCapitalGains(
 ): Promise<Array<Record<string, unknown>>> {
   const { cash, crypto, csv, f8949, first, gains, headers, json, last, pages, quiet, raw, received, sent, totals, zero } = options;
   const { from, to } = await getToAndFromDates(options);
-  assertNoJsonWithFileExport(json, csv, f8949);
+  assertNoStructuredJsonWithFileExport(json, options.jsonFile, csv, f8949);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
   const baseExcluding = normalizeColonSeparatedUppercase(options.exclude);
@@ -184,8 +184,8 @@ export async function cointrackerCapitalGains(
   const outputRows = applyFirstLastRows(rows, first, last);
   const totalsRow = totals ? await selectCointrackerCapitalGainsTotals({ assets, excluding, from, to }) : undefined;
 
-  if (json) {
-    printJson({
+  if (json || options.jsonFile) {
+    await emitJsonOutput({
       rows: outputRows,
       totals: totalsRow ?? null,
       filters: {
@@ -203,7 +203,7 @@ export async function cointrackerCapitalGains(
         orderByGains: Boolean(gains),
         raw: Boolean(raw),
       },
-    });
+    }, options);
     return rows as Array<Record<string, unknown>>;
   }
 
@@ -263,7 +263,7 @@ export async function cointrackerCapitalGainsGroup(
     zero,
   } = options;
   const { from, to } = await getToAndFromDates(options);
-  assertNoJsonWithFileExport(json, csv, f8949);
+  assertNoStructuredJsonWithFileExport(json, options.jsonFile, csv, f8949);
 
   const baseAssets = normalizeColonSeparatedUppercase(assetsArg);
   const baseExcluding = normalizeColonSeparatedUppercase(options.exclude);
@@ -298,8 +298,8 @@ export async function cointrackerCapitalGainsGroup(
   const outputRows = applyFirstLastRows(formattedRows, first, last);
   const totalsRow = totals ? await selectCointrackerCapitalGainsGroupTotals(filters) : undefined;
 
-  if (json) {
-    printJson({
+  if (json || options.jsonFile) {
+    await emitJsonOutput({
       rows: outputRows,
       totals: totalsRow ?? null,
       filters: {
@@ -317,7 +317,7 @@ export async function cointrackerCapitalGainsGroup(
         orderByGains: Boolean(gains),
         raw: Boolean(raw),
       },
-    });
+    }, options);
     return rows as Array<Record<string, unknown>>;
   }
 

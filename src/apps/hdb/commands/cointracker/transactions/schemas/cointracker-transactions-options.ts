@@ -41,6 +41,8 @@ export const CointrackerTransactionsQueryOptionsSchema = DebugOptionsSchema.exte
   exclude: ColonSeparatedAssetStringSchema,
   from: z.string().optional(),
   includeBalances: z.boolean().optional(),
+  json: z.boolean().optional(),
+  jsonFile: z.string().trim().min(1).optional(),
   quiet: z.boolean().optional(),
   range: DateRangeSchema.optional(),
   raw: z.boolean().optional(),

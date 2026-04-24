@@ -32,6 +32,8 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
 
   list
     .option("--include-balances", "Include balances from cointracker_balances_ledger", false)
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .option("--quiet", "Do not print anything to the console", false)
     .option("--raw", "Print values raw from the DB", false)
     .option("--received <asset>", "Select records where received_currency is <asset>")
@@ -63,6 +65,8 @@ export function registerCointrackerTransactionCommands(cointracker: Command): vo
 
   summary
     .option("--interval <interval>", "Group by interval (day, week, month, quarter, year)")
+    .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .option("--quiet", "Do not print anything to the console", false)
     .option("--received <asset>", "Select records where received_currency is <asset>")
     .option("--sent <asset>", "Select records where sent_currency is <asset>")

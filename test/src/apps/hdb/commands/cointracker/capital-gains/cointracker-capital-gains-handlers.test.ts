@@ -239,7 +239,7 @@ describe("cointracker capital gains handlers", () => {
 
   it("rejects json with file export flags", async () => {
     await expect(cointrackerCapitalGains("btc", { json: true, csv: true })).rejects.toThrow(
-      "Invalid output mode: --json cannot be combined with file export flags.",
+      "Invalid output mode: structured JSON cannot be combined with file export flags.",
     );
   });
 });

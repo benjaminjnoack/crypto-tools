@@ -1,7 +1,5 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import path from "node:path";
-import process from "node:process";
-import type { AccountsOptions } from "./schemas/command-options.js";
+import { emitJsonOutput } from "./json-output.js";
+import type { AccountsOptions, InspectOptions } from "./schemas/command-options.js";
 import { toIncrement } from "../../../shared/common/index.js";
 import {
   getProductInfo,
@@ -132,16 +130,6 @@ function buildAccountsJsonPayload(
       rowCount: rows.length,
     },
   };
-}
-
-function printAccountsJson(payload: AccountsJsonPayload): void {
-  console.log(JSON.stringify(payload, null, 2));
-}
-
-function writeAccountsJsonFile(payload: AccountsJsonPayload, jsonFile: string): void {
-  const outputPath = path.resolve(process.cwd(), jsonFile);
-  mkdirSync(path.dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
 function buildProductJsonRows(
@@ -277,10 +265,7 @@ export async function handleAccountsAction(
         options,
         product,
       );
-      if (options.jsonFile) {
-        writeAccountsJsonFile(payload, options.jsonFile);
-      }
-      printAccountsJson(payload);
+      emitJsonOutput(payload, options);
       return;
     }
     console.table(
@@ -311,10 +296,7 @@ export async function handleAccountsAction(
         options,
         product,
       );
-      if (options.jsonFile) {
-        writeAccountsJsonFile(payload, options.jsonFile);
-      }
-      printAccountsJson(payload);
+      emitJsonOutput(payload, options);
       return;
     }
 
@@ -338,24 +320,55 @@ export async function handleAccountsAction(
   }
 }
 
-export async function handleBalanceAction() {
+export async function handleBalanceAction(options: InspectOptions = {}): Promise<void> {
   const { available, hold, total } = await requestCurrencyAccount("USD", "0.01");
+  if (options.json || options.jsonFile) {
+    emitJsonOutput({
+      row: {
+        currency: "USD",
+        available,
+        hold,
+        total,
+      },
+      meta: {
+        view: "balance",
+      },
+    }, options);
+    return;
+  }
   console.log("USD ($)");
   console.log(`Available: $${available}`);
   console.log(`Hold: $${hold}`);
   console.log(`Total: $${total}`);
 }
 
-export async function handleCashAction() {
+export async function handleCashAction(options: AccountsOptions = {}): Promise<void> {
   const accountsOptions: AccountsOptions = {
     cash: true,
+    ...options,
   };
   return handleAccountsAction(null, accountsOptions);
 }
 
-export async function handleFeesAction() {
+export async function handleFeesAction(options: InspectOptions = {}): Promise<void> {
   const { total_fees, total_volume, fee_tier, total_balance } = await getTransactionSummary();
   const { pricing_tier, taker_fee_rate, maker_fee_rate } = fee_tier;
+  if (options.json || options.jsonFile) {
+    emitJsonOutput({
+      row: {
+        totalBalance: total_balance,
+        totalVolume: total_volume,
+        pricingTier: pricing_tier,
+        takerFeeRate: taker_fee_rate,
+        makerFeeRate: maker_fee_rate,
+        totalFees: total_fees,
+      },
+      meta: {
+        view: "fees",
+      },
+    }, options);
+    return;
+  }
   console.log("Transaction Summary:");
   console.log(`  Total balance: ${total_balance}`);
   console.log(`  Total volume: ${total_volume}`);

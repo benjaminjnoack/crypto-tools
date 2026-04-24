@@ -27,7 +27,7 @@ import type { CoinbaseTransactionFilters } from "../../../db/coinbase/transactio
 import { parseCoinbaseTransactionsStatementCsv } from "../../../db/coinbase/transactions/coinbase-transactions-mappers.js";
 import { getClient } from "../../../db/db-client.js";
 import { getToAndFromDates } from "../../shared/date-range-utils.js";
-import { printJson } from "../../shared/json-output.js";
+import { emitJsonOutput } from "../../shared/json-output.js";
 import type {
   CoinbaseTransactionsGroupOptions,
   CoinbaseTransactionsIdOptions,
@@ -166,13 +166,17 @@ function buildTransactionFilters(
   };
 }
 
-function printTransactionJson(payload: {
+async function printTransactionJson(payload: {
   rows: Array<Record<string, unknown>>;
   filters: Record<string, unknown>;
   meta: Record<string, unknown>;
   totals?: Array<Record<string, unknown>> | undefined;
-}): void {
-  printJson(payload);
+}, options: {
+  json?: boolean | undefined;
+  jsonFile?: string | undefined;
+  quiet?: boolean | undefined;
+}): Promise<void> {
+  await emitJsonOutput(payload, options);
 }
 
 function resolveCoinbaseTransactionsInputDir(inputDir?: string): string {
@@ -217,10 +221,10 @@ export async function coinbaseTransactions(
   const filters = buildTransactionFilters(asset, options, from, to);
   const rows = await selectCoinbaseTransactions(filters, Boolean(balance), Boolean(paired));
 
-  if (options.json) {
+  if (options.json || options.jsonFile) {
     const tableRows = rows.map((row) => toTransactionConsoleRow(row, options));
     const outputRows = applyFirstLastRows(tableRows, first, last);
-    printTransactionJson({
+    await printTransactionJson({
       rows: outputRows,
       filters: {
         ...filters,
@@ -237,7 +241,7 @@ export async function coinbaseTransactions(
         notes: Boolean(options.notes),
         classify: Boolean(options.classify),
       },
-    });
+    }, options);
     return rows as Array<Record<string, unknown>>;
   }
 
@@ -265,7 +269,7 @@ export async function coinbaseTransactionsGroup(
   const rows = await selectCoinbaseTransactionsGroup(filters, interval);
   const totals = interval ? await selectCoinbaseTransactionsGroup(filters) : undefined;
 
-  if (options.json) {
+  if (options.json || options.jsonFile) {
     const payload: Parameters<typeof printTransactionJson>[0] = {
       rows,
       filters: {
@@ -282,7 +286,7 @@ export async function coinbaseTransactionsGroup(
     if (totals) {
       payload.totals = totals;
     }
-    printTransactionJson(payload);
+    await printTransactionJson(payload, options);
     return rows as Array<Record<string, unknown>>;
   }
 
@@ -313,9 +317,9 @@ export async function coinbaseTransactionsId(
   const ids = normalizeColonSeparated(id);
   const rows = await selectCoinbaseTransactionsByIds(ids);
 
-  if (options.json) {
+  if (options.json || options.jsonFile) {
     const tableRows = rows.map((row) => toTransactionConsoleRow(row, { ...options, balance }));
-    printTransactionJson({
+    await printTransactionJson({
       rows: tableRows,
       filters: {
         ids,
@@ -326,7 +330,7 @@ export async function coinbaseTransactionsId(
         notes: Boolean(options.notes),
         classify: Boolean(options.classify),
       },
-    });
+    }, options);
     return rows as Array<Record<string, unknown>>;
   }
 

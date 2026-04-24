@@ -53,8 +53,8 @@ describe("order command topology", () => {
     await run(["order", "modify", VALID_UUID, "--takeProfitPrice", "121.50"]);
     await run(["order", "breakeven", VALID_UUID, "--buyPrice", "100", "--limitPrice", "101.50"]);
 
-    expect(handleOrderActionMock).toHaveBeenCalledWith(VALID_UUID);
-    expect(handleOrdersActionMock).toHaveBeenCalledWith(null);
+    expect(handleOrderActionMock).toHaveBeenCalledWith(VALID_UUID, { json: false });
+    expect(handleOrdersActionMock).toHaveBeenCalledWith(null, { json: false });
     expect(handleCancelActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleReplaceActionMock).toHaveBeenCalledWith(VALID_UUID);
     expect(handleModifyActionMock).toHaveBeenCalledWith(VALID_UUID, { limitPrice: "101.50" });

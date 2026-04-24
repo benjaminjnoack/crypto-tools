@@ -571,6 +571,25 @@ describe("accounts command handlers", () => {
     logSpy.mockRestore();
   });
 
+  it("prints usd balance as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleBalanceAction({ json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      row: {
+        currency: "USD",
+        available: "1000.00",
+        hold: "50.00",
+        total: "1050.00",
+      },
+      meta: {
+        view: "balance",
+      },
+    }, null, 2));
+    logSpy.mockRestore();
+  });
+
   it("prints transaction summary fee information", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
@@ -582,6 +601,27 @@ describe("accounts command handlers", () => {
     expect(logSpy).toHaveBeenCalledWith("  Taker Fee Rate: 0.002");
     expect(logSpy).toHaveBeenCalledWith("  Maker Fee Rate: 0.001");
     expect(logSpy).toHaveBeenCalledWith("  Total fees: 123.45");
+    logSpy.mockRestore();
+  });
+
+  it("prints transaction summary as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleFeesAction({ json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      row: {
+        totalBalance: "1234.56",
+        totalVolume: 10000,
+        pricingTier: "tier_1",
+        takerFeeRate: "0.002",
+        makerFeeRate: "0.001",
+        totalFees: 123.45,
+      },
+      meta: {
+        view: "fees",
+      },
+    }, null, 2));
     logSpy.mockRestore();
   });
 });

@@ -18,11 +18,38 @@ export async function writeJsonFile(filePath: string, payload: JsonObject): Prom
   return resolvedPath;
 }
 
+export async function emitJsonOutput(
+  payload: JsonObject,
+  options: {
+    json?: boolean | undefined;
+    jsonFile?: string | undefined;
+    quiet?: boolean | undefined;
+  },
+): Promise<void> {
+  if (options.jsonFile) {
+    await writeJsonFile(options.jsonFile, payload);
+  }
+
+  if (!options.quiet && (options.json || options.jsonFile)) {
+    printJson(payload);
+  }
+}
+
 export function assertNoJsonWithFileExport(
   json: boolean | undefined,
   ...exports: Array<boolean | undefined>
 ): void {
   if (json && exports.some(Boolean)) {
     throw new Error("Invalid output mode: --json cannot be combined with file export flags.");
+  }
+}
+
+export function assertNoStructuredJsonWithFileExport(
+  json: boolean | undefined,
+  jsonFile: string | undefined,
+  ...exports: Array<boolean | undefined>
+): void {
+  if ((json || Boolean(jsonFile)) && exports.some(Boolean)) {
+    throw new Error("Invalid output mode: structured JSON cannot be combined with file export flags.");
   }
 }

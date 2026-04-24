@@ -1,3 +1,6 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { dateUtc, isoUtc } from "../../../../../fixtures/time.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -48,11 +51,18 @@ const {
   logMock: vi.fn(),
 }));
 
-vi.mock("node:fs/promises", () => ({
-  default: {
+vi.mock("node:fs/promises", async () => {
+  const actualUnknown: unknown = await vi.importActual<typeof fs>("node:fs/promises");
+  const actual = actualUnknown as typeof fs;
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      readdir: readdirMock,
+    },
     readdir: readdirMock,
-  },
-}));
+  };
+});
 
 vi.mock("../../../../../../../src/apps/hdb/db/coinbase/orders/coinbase-orders-repository.js", () => ({
   COINBASE_ORDERS_TABLE: "coinbase_orders",
@@ -150,6 +160,17 @@ describe("hdb coinbase order handlers", () => {
     expect(logMock).toHaveBeenCalledTimes(2);
     expect(logMock.mock.calls[0]?.[0]).toContain("\"view\": \"show\"");
     expect(logMock.mock.calls[1]?.[0]).toContain("\"view\": \"inspect\"");
+  });
+
+  it("writes order json to disk and still prints stdout", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "hdb-coinbase-orders-"));
+    const filePath = path.join(root, "order.json");
+
+    await coinbaseOrders("abc", { jsonFile: filePath });
+
+    const content = await fs.readFile(filePath, "utf8");
+    expect(content).toContain("\"view\": \"show\"");
+    expect(logMock).toHaveBeenCalledTimes(1);
   });
 
   it("downloads one order then inserts it", async () => {

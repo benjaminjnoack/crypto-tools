@@ -2,20 +2,43 @@ import process from "node:process";
 import { cancelOrder, getOpenOrders, getOrder } from "../../../shared/coinbase/index.js";
 import { logger, printOrder } from "../../../shared/log/index.js";
 import type { ProductId } from "../../../shared/schemas/shared-primitives.js";
-import type { BreakEvenStopOptions, ModifyOptions } from "./schemas/command-options.js";
+import { emitJsonOutput } from "./json-output.js";
+import type { BreakEvenStopOptions, InspectOptions, ModifyOptions } from "./schemas/command-options.js";
 import {
   placeBreakEvenStopOrder,
   placeModifyOrder,
   replaceCancelledOrder,
 } from "../service/order-service.js";
 
-export async function handleOrderAction(orderId: string): Promise<void> {
+export async function handleOrderAction(orderId: string, options: InspectOptions = {}): Promise<void> {
   const order = await getOrder(orderId);
+  if (options.json || options.jsonFile) {
+    emitJsonOutput({
+      row: order,
+      meta: {
+        orderId,
+        view: "get",
+      },
+    }, options);
+    return;
+  }
   printOrder(order);
 }
 
-export async function handleOrdersAction(productId: ProductId | null): Promise<void> {
+export async function handleOrdersAction(productId: ProductId | null, options: InspectOptions = {}): Promise<void> {
   const openOrders = await getOpenOrders(productId);
+  if (options.json || options.jsonFile) {
+    emitJsonOutput({
+      rows: openOrders,
+      filters: {
+        productId,
+      },
+      meta: {
+        rowCount: openOrders.length,
+      },
+    }, options);
+    return;
+  }
   if (openOrders.length === 0) {
     logger.info("No open orders found.");
   } else {

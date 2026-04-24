@@ -42,6 +42,7 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
     .option("--balance", "Include balances from coinbase_balance_ledger", false)
     .option("--classifier <classifier>", "Filter by classifier")
     .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .option("--manual", "Select manual transactions", false)
     .option("--exclude-manual", "Exclude manual transactions", false)
     .option("--not-classifier <classifier>", "Exclude classifier")
@@ -83,6 +84,7 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
     .option("--classifier <classifier>", "Filter by classifier")
     .option("--interval <interval>", "Group by interval (day, week, month, quarter, year)")
     .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .option("--manual", "Select manual transactions", false)
     .option("--exclude-manual", "Exclude manual transactions", false)
     .option("--synthetic", "Select synthetic transactions", false)
@@ -113,6 +115,7 @@ export function registerCoinbaseTransactionCommands(coinbase: Command): void {
   show
     .option("--balance", "Include balances from coinbase_balance_ledger", false)
     .option("--json", "Print machine-readable JSON output", false)
+    .option("--json-file <path>", "Write machine-readable JSON output to <path>")
     .option("--lot-id <lotId>", "Legacy lot-id selector (not yet migrated)")
     .option("--classify", "Show classifier columns", false)
     .option("--notes", "Show abbreviated type + notes", false)

@@ -66,6 +66,12 @@ export function withAction<TArgs extends unknown[]>(
 
 export { parseNone, parseArg, parseArgOptions };
 
+export function parseOptions<TOptions>(
+  optionsSchema: ZodType<TOptions>,
+): Parser<[TOptions]> {
+  return (rawOptions: unknown) => [optionsSchema.parse(rawOptions)];
+}
+
 export function parseOptionalArg<TArg>(argSchema: ZodType<TArg>): Parser<[TArg | null]> {
   return (raw: unknown) => {
     if (raw === undefined || raw === null) {

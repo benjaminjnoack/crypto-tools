@@ -94,6 +94,41 @@ describe("orders command handlers", () => {
     expect(printOrderMock).toHaveBeenNthCalledWith(2, openOrders[1]);
   });
 
+  it("prints a single order as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleOrderAction("abc-123", { json: true });
+
+    expect(printOrderMock).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      row: { order_id: "order-1" },
+      meta: {
+        orderId: "abc-123",
+        view: "get",
+      },
+    }, null, 2));
+    logSpy.mockRestore();
+  });
+
+  it("prints open orders as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    getOpenOrdersMock.mockResolvedValueOnce([{ order_id: "a" }, { order_id: "b" }]);
+
+    await handleOrdersAction("BTC-USD", { json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      rows: [{ order_id: "a" }, { order_id: "b" }],
+      filters: {
+        productId: "BTC-USD",
+      },
+      meta: {
+        rowCount: 2,
+      },
+    }, null, 2));
+    expect(printOrderMock).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
   it("cancels the requested order id", async () => {
     await handleCancelAction("cancel-me");
 

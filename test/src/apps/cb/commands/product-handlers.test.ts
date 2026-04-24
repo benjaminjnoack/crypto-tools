@@ -64,6 +64,41 @@ describe("products command handlers", () => {
     tableSpy.mockRestore();
   });
 
+  it("prints product info as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handleProductAction("btc", { json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      row: { product_id: "BTC-USD", price: "100.00" },
+      meta: {
+        productId: "BTC-USD",
+        view: "product",
+      },
+    }, null, 2));
+    logSpy.mockRestore();
+  });
+
+  it("prints price info as json", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await handlePriceAction("eth", { json: true });
+
+    expect(logSpy).toHaveBeenCalledWith(JSON.stringify({
+      row: {
+        productId: "ETH-USD",
+        price: "123.45",
+        bid: "123.40",
+        ask: "123.50",
+      },
+      meta: {
+        productId: "ETH-USD",
+        view: "price",
+      },
+    }, null, 2));
+    logSpy.mockRestore();
+  });
+
   it("throws when no trades are returned", async () => {
     requestMarketTradesMock.mockResolvedValueOnce({
       trades: [],

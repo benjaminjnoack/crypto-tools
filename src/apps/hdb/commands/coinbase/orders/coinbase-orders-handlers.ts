@@ -27,7 +27,7 @@ import { requestOrder, requestOrders } from "../../../../../shared/coinbase/rest
 import { ORDER_STATUS, OrderPlacementValues } from "../../../../../shared/coinbase/schemas/coinbase-enum-schemas.js";
 import type { CoinbaseOrder } from "../../../../../shared/coinbase/schemas/coinbase-order-schemas.js";
 import { logger, printOrder } from "../../../../../shared/log/index.js";
-import { printJson } from "../../shared/json-output.js";
+import { emitJsonOutput } from "../../shared/json-output.js";
 
 function assertUpdateSource(cache?: boolean, remote?: boolean): void {
   if (cache && remote) {
@@ -113,14 +113,14 @@ async function loadOrdersFromRemote(options: CoinbaseOrdersUpdateOptions): Promi
 
 export async function coinbaseOrders(orderId: string, options: CoinbaseOrdersReadOptions): Promise<CoinbaseOrder> {
   const order = await selectCoinbaseOrder(orderId);
-  if (options.json) {
-    printJson({
+  if (options.json || options.jsonFile) {
+    await emitJsonOutput({
       row: order,
       meta: {
         orderId,
         view: "show",
       },
-    });
+    }, options);
     return order;
   }
 
@@ -130,14 +130,14 @@ export async function coinbaseOrders(orderId: string, options: CoinbaseOrdersRea
 
 export async function coinbaseOrdersObject(orderId: string, options: CoinbaseOrdersReadOptions): Promise<CoinbaseOrder> {
   const order = await selectCoinbaseOrder(orderId);
-  if (options.json) {
-    printJson({
+  if (options.json || options.jsonFile) {
+    await emitJsonOutput({
       row: order,
       meta: {
         orderId,
         view: "inspect",
       },
-    });
+    }, options);
     return order;
   }
 
