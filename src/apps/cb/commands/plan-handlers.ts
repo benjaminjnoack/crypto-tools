@@ -1,3 +1,7 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import process from "node:process";
 import type { LimitTpSlOptions, PlanOptions } from "./schemas/command-options.js";
 import { placeLimitTpSlOrder } from "../service/order-service.js";
 import {
@@ -7,6 +11,7 @@ import {
   requestCurrencyAccount,
 } from "../../../shared/coinbase/index.js";
 import { toIncrement } from "../../../shared/common/index.js";
+import { serializeJson } from "./json-output.js";
 
 type TradePlanBuildInput = {
   product: string;
@@ -71,6 +76,17 @@ type TradePlanBuildSuccess = {
 };
 
 type TradePlanBuildResult = TradePlanBuildFailure | TradePlanBuildSuccess;
+
+export function savePlanFile(plan: TradePlanBuildSuccess, postOnly: boolean): string {
+  const configDir = process.env["XDG_CONFIG_HOME"] ?? path.join(os.homedir(), ".config");
+  const plansDir = path.join(configDir, "helper", "plans");
+  mkdirSync(plansDir, { recursive: true });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `${plan.product.toLowerCase()}-${timestamp}.json`;
+  const filePath = path.join(plansDir, filename);
+  writeFileSync(filePath, serializeJson({ ...plan, orderOptions: { ...plan.orderOptions, postOnly } } as Record<string, unknown>));
+  return filePath;
+}
 
 function toIncrementUp(increment: string, value: number): string {
   const floored = parseFloat(toIncrement(increment, value));
@@ -368,5 +384,9 @@ export async function handlePlanAction(product: string, options: PlanOptions): P
   console.log(`  Stop Price: ${limitTpSlOptions.stopPrice}`);
   console.log(`  Post Only: ${limitTpSlOptions.postOnly}`);
 
-  await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
+  const placed = await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
+  if (placed) {
+    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly ?? true);
+    console.log(`Plan saved: ${filePath}`);
+  }
 }

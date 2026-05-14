@@ -104,7 +104,7 @@ export async function placeLimitOrder(productId: string, options: LimitOptions):
 export async function placeLimitTpSlOrder(
   productId: string,
   options: LimitTpSlOptions,
-): Promise<void> {
+): Promise<boolean> {
   const values = buildLimitTpSlValues(options);
 
   if (
@@ -125,8 +125,10 @@ export async function placeLimitTpSlOrder(
       options.takeProfitPrice,
       values.postOnly,
     );
+    return true;
   } else {
     console.log("Action canceled.");
+    return false;
   }
 }
 

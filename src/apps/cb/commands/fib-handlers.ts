@@ -1,7 +1,7 @@
 import readlineSync from "readline-sync";
 import type { FibOptions, LimitTpSlOptions } from "./schemas/command-options.js";
 import { placeLimitTpSlOrder } from "../service/order-service.js";
-import { buildTradePlan, renderTradePlan } from "./plan-handlers.js";
+import { buildTradePlan, renderTradePlan, savePlanFile } from "./plan-handlers.js";
 import {
   getProductId,
   getProductInfo,
@@ -230,5 +230,9 @@ export async function handleFibAction(product: string, options: FibOptions): Pro
   console.log(`  Stop Price: ${limitTpSlOptions.stopPrice}`);
   console.log(`  Post Only: ${limitTpSlOptions.postOnly}`);
 
-  await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
+  const placed = await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
+  if (placed) {
+    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly ?? true);
+    console.log(`Plan saved: ${filePath}`);
+  }
 }
