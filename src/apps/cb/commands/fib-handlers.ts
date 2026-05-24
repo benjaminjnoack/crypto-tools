@@ -230,9 +230,9 @@ export async function handleFibAction(product: string, options: FibOptions): Pro
   console.log(`  Stop Price: ${limitTpSlOptions.stopPrice}`);
   console.log(`  Post Only: ${limitTpSlOptions.postOnly}`);
 
-  const placed = await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
-  if (placed) {
-    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly ?? true);
+  const orderId = await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
+  if (orderId) {
+    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly ?? true, orderId);
     console.log(`Plan saved: ${filePath}`);
   }
 }
