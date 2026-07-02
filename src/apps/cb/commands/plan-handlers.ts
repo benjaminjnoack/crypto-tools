@@ -81,8 +81,7 @@ export function savePlanFile(plan: TradePlanBuildSuccess, postOnly: boolean, ord
   const configDir = process.env["XDG_CONFIG_HOME"] ?? path.join(os.homedir(), ".config");
   const plansDir = path.join(configDir, "helper", "plans");
   mkdirSync(plansDir, { recursive: true });
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const filename = `${plan.product.toLowerCase()}-${timestamp}.json`;
+  const filename = `${orderId}.json`;
   const filePath = path.join(plansDir, filename);
   writeFileSync(filePath, serializeJson({ ...plan, orderId, orderOptions: { ...plan.orderOptions, postOnly } } as Record<string, unknown>));
   return filePath;
