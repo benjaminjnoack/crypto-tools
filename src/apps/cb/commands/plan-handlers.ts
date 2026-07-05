@@ -385,7 +385,7 @@ export async function handlePlanAction(product: string, options: PlanOptions): P
 
   const orderId = await placeLimitTpSlOrder(getProductId(product), limitTpSlOptions);
   if (orderId) {
-    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly ?? true, orderId);
+    const filePath = savePlanFile(plan, limitTpSlOptions.postOnly, orderId);
     console.log(`Plan saved: ${filePath}`);
   }
 }
