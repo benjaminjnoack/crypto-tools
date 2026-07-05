@@ -200,8 +200,8 @@ describe("handleFibAction", () => {
     }));
 
     expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("BTC-USD", expect.objectContaining({
-      limitPrice: "93900.00",
-      takeProfitPrice: "106100.00",
+      limitPrice: "94000.00",
+      takeProfitPrice: "106000.00",
     }));
   });
 
@@ -220,12 +220,12 @@ describe("handleFibAction", () => {
     }));
 
     expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("BONK-USD", expect.objectContaining({
-      limitPrice: "0.00000539",
-      takeProfitPrice: "0.00000661",
+      limitPrice: "0.00000540",
+      takeProfitPrice: "0.00000660",
     }));
   });
 
-  it("rounds ADA with contextual 0.0005 buckets", async () => {
+  it("rounds ADA with contextual 0.001 buckets", async () => {
     getProductInfoMock.mockResolvedValueOnce({
       base_increment: "0.00000001",
       price_increment: "0.0001",
@@ -240,12 +240,12 @@ describe("handleFibAction", () => {
     }));
 
     expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("ADA-USD", expect.objectContaining({
-      limitPrice: "0.2385",
-      takeProfitPrice: "0.3615",
+      limitPrice: "0.2390",
+      takeProfitPrice: "0.3610",
     }));
   });
 
-  it("rounds SOL with contextual 0.1 buckets", async () => {
+  it("rounds SOL with contextual 0.5 buckets", async () => {
     getProductInfoMock.mockResolvedValueOnce({
       base_increment: "0.00000001",
       price_increment: "0.01",
@@ -260,12 +260,12 @@ describe("handleFibAction", () => {
     }));
 
     expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("SOL-USD", expect.objectContaining({
-      limitPrice: "77.70",
-      takeProfitPrice: "102.30",
+      limitPrice: "78.00",
+      takeProfitPrice: "102.00",
     }));
   });
 
-  it("rounds ETH with contextual 5-dollar buckets", async () => {
+  it("rounds ETH with contextual 10-dollar buckets", async () => {
     getProductInfoMock.mockResolvedValueOnce({
       base_increment: "0.00000001",
       price_increment: "0.01",
@@ -280,8 +280,8 @@ describe("handleFibAction", () => {
     }));
 
     expect(placeLimitTpSlOrderMock).toHaveBeenCalledWith("ETH-USD", expect.objectContaining({
-      limitPrice: "1915.00",
-      takeProfitPrice: "2285.00",
+      limitPrice: "1920.00",
+      takeProfitPrice: "2280.00",
     }));
   });
 });

@@ -113,9 +113,13 @@ function roundDown(value: number, step: number): number {
   return Math.floor((value + EPSILON) / step) * step;
 }
 
+// Relative bucket size (as a fraction of price) fed into the nice-step rounder below.
+// Scales the same way for any asset: no per-symbol cases needed.
+const ROUND_TARGET_PERCENT = 0.003;
+
 function resolveRoundStep(entryPrice: number, takeProfitPrice: number, priceIncrement: number): number {
   const referencePrice = Math.max((entryPrice + takeProfitPrice) / 2, priceIncrement);
-  const target = Math.max(referencePrice * 0.001, priceIncrement);
+  const target = Math.max(referencePrice * ROUND_TARGET_PERCENT, priceIncrement);
   const niceStep = toNiceStep(target);
   const increments = Math.max(1, Math.round(niceStep / priceIncrement));
   return increments * priceIncrement;
