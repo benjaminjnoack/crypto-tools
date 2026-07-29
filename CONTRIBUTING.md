@@ -22,7 +22,7 @@ This document describes setup, architecture, tooling, and contributor workflow f
 ## Initial Setup
 
 1. Install dependencies:
-   - `npm install`
+   - `npm ci`
 2. Configure env file in the default helper path:
    - `mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"`
    - `cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"`
@@ -159,7 +159,8 @@ Behavior matrix for Coinbase REST calls:
 ## hdb Database Notes
 
 - `hdb` uses PostgreSQL for local workflows.
-- Use `DATABASE_URL` for connection configuration.
+- Configure `HELPER_POSTGRES_DATABASE`, `HELPER_POSTGRES_USERNAME`, and
+  `HELPER_POSTGRES_PASSWORD`; `hdb` does not currently read `DATABASE_URL`.
 - Local Postgres setup examples are documented in `src/apps/hdb/README.postgres.md`.
 - For troubleshooting, prefer `hdb ... --json` for command-owned read-only views and use a local read-only SQL role such as `hdb_readonly` for ad hoc inspection.
 
@@ -185,6 +186,19 @@ After `npm run build`, package binaries are:
 For local shell usage:
 
 - `npm link`
+- `export PATH="$(npm prefix -g)/bin:$PATH"`
+- `command -v cb hdb helper-env-check`
+
+`npm link` creates the command symlinks under `$(npm prefix -g)/bin`. Persist
+that directory in your shell's `PATH` if the verification command cannot find
+them. For a permissions error, configure a user-owned npm prefix; do not run
+`npm link` with `sudo`.
+
+Verify the linked entrypoints without making network or database requests:
+
+- `cb --help`
+- `hdb --help`
+- `helper-env-check --help`
 
 ## Pre-commit Hooks
 

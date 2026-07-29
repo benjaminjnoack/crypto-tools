@@ -58,7 +58,13 @@ Run built CLI:
 Install binary in your shell:
 
 - `npm link`
+- `export PATH="$(npm prefix -g)/bin:$PATH"`
+- `command -v hdb`
 - `hdb --help`
+
+Persist `$(npm prefix -g)/bin` in your shell's `PATH` if `command -v hdb`
+cannot find the linked binary. Do not use `sudo npm link`; configure a
+user-owned npm prefix if npm reports a permissions error.
 
 ## Commands
 

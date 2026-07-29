@@ -22,7 +22,24 @@ Use explicit relative imports with `.js` specifiers under NodeNext.
 ## Quick Start
 
 ```bash
-npm install
+npm ci
+npm run build
+npm link
+export PATH="$(npm prefix -g)/bin:$PATH"
+command -v cb hdb helper-env-check
+cb --help
+hdb --help
+helper-env-check --help
+```
+
+`npm link` installs the command symlinks under `$(npm prefix -g)/bin`. If the
+commands are not found after linking, add that directory to `PATH` in your shell
+startup file, then open a new shell. If `npm link` reports a permissions error,
+configure a user-owned npm prefix rather than running it with `sudo`.
+
+Configure the application after verifying the binaries:
+
+```bash
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/helper"
 cp .env.example "${XDG_CONFIG_HOME:-$HOME/.config}/helper/.env"
 ```
@@ -31,26 +48,28 @@ Set this value in the env file:
 
 ```bash
 HELPER_COINBASE_CREDENTIALS_PATH=/absolute/path/to/coinbase-credentials.json
-HELPER_ALLOW_LIVE_EXCHANGE=true
+HELPER_POSTGRES_DATABASE=hdb
+HELPER_POSTGRES_USERNAME=hdb_user
+HELPER_POSTGRES_PASSWORD=replace-with-a-local-password
 ```
 
 Create Coinbase App API credentials using:
 https://docs.cdp.coinbase.com/coinbase-app/authentication-authorization/api-key-authentication
 
 When creating the key in CDP, select the `ECDSA` signature algorithm (`ES256`).
+Live Coinbase requests remain disabled unless
+`HELPER_ALLOW_LIVE_EXCHANGE=true` is explicitly set.
 
-Build and link binaries locally:
-
-```bash
-npm run build
-npm link
-```
+The PostgreSQL values are required by `hdb` and `hdb-portal`, but not by `cb`.
+See [`src/apps/hdb/README.postgres.md`](src/apps/hdb/README.postgres.md) for
+local database creation instructions.
 
 ## Running CLIs
 
 - `cb --help`
 - `hdb --help`
 - `helper-env-check --help`
+- `npm run dev:hdb-portal` (the portal is not installed as a linked binary)
 
 From source:
 

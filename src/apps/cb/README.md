@@ -84,7 +84,13 @@ Run built CLI:
 Install binary in your shell:
 
 - `npm link`
+- `export PATH="$(npm prefix -g)/bin:$PATH"`
+- `command -v cb`
 - `cb --help`
+
+Persist `$(npm prefix -g)/bin` in your shell's `PATH` if `command -v cb`
+cannot find the linked binary. Do not use `sudo npm link`; configure a
+user-owned npm prefix if npm reports a permissions error.
 
 Notes:
 

@@ -80,18 +80,21 @@ describe("hdb db pool", () => {
     expect(loggerDebugMock).not.toHaveBeenCalledWith("Postgres pool closed.");
   });
 
-  it("throws at import when required env vars are missing", async () => {
+  it("defers required env validation until the pool is requested", async () => {
     envConfig.HELPER_POSTGRES_DATABASE = "";
-    await expect(loadPoolModule()).rejects.toThrow("Environment is missing HELPER_POSTGRES_DATABASE");
+    const databaseModule = await loadPoolModule();
+    expect(() => databaseModule.getPool()).toThrow("Environment is missing HELPER_POSTGRES_DATABASE");
 
     vi.resetModules();
     envConfig.HELPER_POSTGRES_DATABASE = "helper_db";
     envConfig.HELPER_POSTGRES_USERNAME = "";
-    await expect(loadPoolModule()).rejects.toThrow("Environment is missing HELPER_POSTGRES_USERNAME");
+    const usernameModule = await loadPoolModule();
+    expect(() => usernameModule.getPool()).toThrow("Environment is missing HELPER_POSTGRES_USERNAME");
 
     vi.resetModules();
     envConfig.HELPER_POSTGRES_USERNAME = "helper_user";
     envConfig.HELPER_POSTGRES_PASSWORD = "";
-    await expect(loadPoolModule()).rejects.toThrow("Environment is missing HELPER_POSTGRES_PASSWORD");
+    const passwordModule = await loadPoolModule();
+    expect(() => passwordModule.getPool()).toThrow("Environment is missing HELPER_POSTGRES_PASSWORD");
   });
 });

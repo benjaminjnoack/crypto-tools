@@ -45,14 +45,19 @@ function defaultEnvPath(): string {
 }
 
 function printHelp(): void {
-  logger.log("Validate helper environment and Coinbase credentials.");
-  logger.log("");
-  logger.log("Usage:");
-  logger.log("  helper-env-check [--env-file <path>]");
-  logger.log("");
-  logger.log("Options:");
-  logger.log("  --env-file <path>  Override env file path");
-  logger.log("  -h, --help         Show this help message");
+  process.stdout.write(
+    [
+      "Validate helper environment and Coinbase credentials.",
+      "",
+      "Usage:",
+      "  helper-env-check [--env-file <path>]",
+      "",
+      "Options:",
+      "  --env-file <path>  Override env file path",
+      "  -h, --help         Show this help message",
+      "",
+    ].join("\n"),
+  );
 }
 
 async function run(): Promise<void> {
@@ -73,6 +78,6 @@ async function run(): Promise<void> {
 
 run().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  logger.error(`Environment validation failed: ${message}`);
+  process.stderr.write(`Environment validation failed: ${message}\n`);
   process.exit(1);
 });

@@ -4,13 +4,12 @@ import type { DebugOptions } from "../schemas/debug-options.js";
 import { getEnvConfig } from "../../../../shared/common/index.js";
 import { logger, printError } from "../../../../shared/log/index.js";
 
-const E = getEnvConfig();
-
 function setDebugEnabled(debug: boolean | undefined): void {
   if (!debug) {
     return;
   }
 
+  const E = getEnvConfig();
   E.HELPER_LOG_LEVEL = "debug";
   process.env.HELPER_LOG_LEVEL = "debug";
 }
