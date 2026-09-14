@@ -258,8 +258,8 @@ export function buildTradePlan(input: TradePlanBuildInput): TradePlanBuildResult
 }
 
 export function renderTradePlan(plan: TradePlanBuildSuccess): void {
-  const formatUsd = (value: number): string => `$${value.toFixed(2)}`;
-  const formatSignedUsd = (value: number): string => `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(2)}`;
+  const formatUsd = (value: number): string => value.toFixed(2);
+  const formatSignedUsd = (value: number): string => `${value >= 0 ? "+" : "-"}${Math.abs(value).toFixed(2)}`;
   const formatSignedPercent = (value: number): string => `${value >= 0 ? "+" : "-"}${Math.abs(value).toFixed(2)}%`;
 
   if (plan.adjustedForUsdBalance) {
@@ -273,12 +273,12 @@ export function renderTradePlan(plan: TradePlanBuildSuccess): void {
   console.log(`  Max Risk Allowed:  ${formatUsd(plan.maxRiskAmount)}`);
   console.log(`  Actual Risk:       ${formatUsd(plan.actualRisk)}`);
   console.log("\nEntry Details:");
-  console.log(`  Buy Price:         $${plan.buyPrice}`);
+  console.log(`  Buy Price:         ${plan.buyPrice}`);
   console.log(`  Position Size:     ${plan.positionSizeDisplay} ${plan.product.toUpperCase()}`);
   console.log(`  Entry Fee (${(plan.makerFeeRate * 100).toFixed(2)}%): ${formatUsd(plan.buyFee)}`);
   console.log(`  Total Entry Cost:  ${formatUsd(plan.totalCostWithFee)}`);
   console.log("\nProfit Details:");
-  console.log(`  Price:             $${plan.takeProfitPrice} (${plan.rewardPercentage.toFixed(2)}%)`);
+  console.log(`  Price:             ${plan.takeProfitPrice} (${plan.rewardPercentage.toFixed(2)}%)`);
   console.log(`  Gross Proceeds:    ${formatUsd(plan.takeProfitSubtotal)}`);
   console.log(`  Exit Fee (${(plan.makerFeeRate * 100).toFixed(2)}%):  ${formatUsd(plan.takeProfitFee)}`);
   console.log(`  Total Fees:        ${formatUsd(plan.totalFeesWhenProfit)}`);
@@ -286,7 +286,7 @@ export function renderTradePlan(plan: TradePlanBuildSuccess): void {
   console.log(`  Net PnL:           ${formatSignedUsd(plan.netTakeProfitPnl)}`);
   console.log(`  Account ROI:       ${formatSignedPercent(plan.accountRoiOnWinPercentage)}`);
   console.log("\nStop-Loss Details:");
-  console.log(`  Price:             $${plan.stopPrice} (-${plan.riskPercentageCalc.toFixed(2)}%)`);
+  console.log(`  Price:             ${plan.stopPrice} (-${plan.riskPercentageCalc.toFixed(2)}%)`);
   console.log(`  Gross Proceeds:    ${formatUsd(plan.stopLossSubtotal)}`);
   console.log(`  Exit Fee (${(plan.takerFeeRate * 100).toFixed(2)}%):  ${formatUsd(plan.stopLossFee)}`);
   console.log(`  Total Fees:        ${formatUsd(plan.totalFeesWhenLoss)}`);
@@ -294,7 +294,7 @@ export function renderTradePlan(plan: TradePlanBuildSuccess): void {
   console.log(`  Net PnL:           ${formatSignedUsd(plan.netStopLossPnL)}`);
   console.log(`  Account ROI:       ${formatSignedPercent(plan.accountRoiOnLossPercentage)}`);
   console.log("\nTrailing Stop Guide:");
-  console.log(`  Break-Even Stop:   $${plan.breakEvenStopPrice} (+${plan.breakEvenMovePercentage.toFixed(2)}% from entry)`);
+  console.log(`  Break-Even Stop:   ${plan.breakEvenStopPrice} (+${plan.breakEvenMovePercentage.toFixed(2)}% from entry)`);
   console.log(`  Net PnL at Stop:   ${formatSignedUsd(plan.breakEvenNetPnl)}`);
   console.log("\nRisk/Reward:");
   console.log(`  Raw R/R:           ${plan.rawRatio.toFixed(2)}:1`);
